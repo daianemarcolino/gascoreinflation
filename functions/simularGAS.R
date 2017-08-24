@@ -38,8 +38,8 @@ simularGAS <- function(density = "normal", n = 100, link = FALSE, mean = "variav
       set.seed(seed)
       epsilon <- ts(rnorm(n+1, mean = 0, sd = 1))
       
-      # valor inicial de sigma = 0
-      f2 <- 0
+      # valor inicial de sigma = 0.1
+      f2 <- 0.1
       y <- NULL
       for(t in 1:(n+1)){
         y[t] <- mu + sqrt(f2[t])*epsilon[t]
@@ -66,7 +66,7 @@ simularGAS <- function(density = "normal", n = 100, link = FALSE, mean = "variav
       # valor inicial de mu = 0
       # valor inicial de sigma = 0
       f1 <- 0
-      f2 <- 0
+      f2 <- 0.1
       y <- NULL
       for(t in 1:(n+1)){
         y[t] <- f1[t-1] + sqrt(f2[t-1])*epsilon[t]
@@ -120,8 +120,8 @@ simularGAS <- function(density = "normal", n = 100, link = FALSE, mean = "variav
       set.seed(seed)
       epsilon <- ts(rnorm(n+1, mean = 0, sd = 1))
       
-      # valor inicial de sigma = 0
-      f2 <- 0
+      # valor inicial de sigma = 0.1
+      f2 <- 0.1
       y <- NULL
       for(t in 1:(n+1)){
         y[t] <- mu + exp(f2[t]/2)*epsilon[t]
@@ -146,9 +146,9 @@ simularGAS <- function(density = "normal", n = 100, link = FALSE, mean = "variav
       epsilon <- ts(rnorm(n+1, mean = 0, sd = 1))
       
       # valor inicial de mu = 0
-      # valor inicial de sigma = 0
+      # valor inicial de sigma = 0.1
       f1 <- 0
-      f2 <- 0
+      f2 <- 0.1
       y <- NA
       for(t in 1:(n+1)){
         y[t] <- mu + exp(f2[t]/2)*epsilon[t]
@@ -195,23 +195,23 @@ simularGAS <- function(density = "normal", n = 100, link = FALSE, mean = "variav
       
       # T: média fixa, variância fixa, link FALSE ---------------------------
       
-      # > estimação de y com densidade condicional de normal com média fixa e variância no tempo
+      # > estimação de y com densidade condicional t com média fixa e variância variante no tempo
       # theta (parâmetros estáticos): c(mean y, w, A0, B1)
       
       # epsilon 
       set.seed(seed)
       epsilon <- ts(rt(n+1, df = df))
       
-      # valor inicial de sigma = 0
-      f2 <- 0
+      # valor inicial de sigma = 0.1
+      f2 <- 0.1
       y <- NULL
       for(t in 1:(n+1)){
         y[t] <- mu + sqrt(f2[t])*epsilon[t]
-        f2[t+1] <- w + A1[1]*((df + 3)/df * f2[t] * (((df + 1)* ((y[t] - f1[t])^2/(df*f2[t]))/(1 + (y[t] - f1[t])^2/(df*f2[t]))) - 1)) + B1*f2[t]
+        f2[t+1] <- w + A1*((df + 3)/df * f2[t] * (((df + 1)* ((y[t] - mu)^2/(df*f2[t]))/(1 + (y[t] - mu)^2/(df*f2[t]))) - 1)) + B1*f2[t]
       }
       
-      y <- ts(y)
-      f2 <- ts(f2)
+      y <- ts(y[2:(n+1)])
+      f2 <- ts(f2[2:(n+1)])
       
       # retornar y, sigma2 e epsilon
       return(cbind(y, f2, epsilon))
@@ -220,27 +220,27 @@ simularGAS <- function(density = "normal", n = 100, link = FALSE, mean = "variav
       
       #  T: média variável, variância variável, link FALSE ---------------------------
       
-      # > estimação de y com densidade condicional de normal com média fixa e variância no tempo
+      # > estimação de y com densidade condicional t com média e variância variante no tempo
       # theta (parâmetros estáticos): c(w, A0, B1, w, A0, B1)
       
       # epsilon 
       set.seed(seed)
-      epsilon <- ts(rnorm(n, mean = 0, sd = 1))
+      epsilon <- ts(rt(n+1, df = df))
       
       # valor inicial de mu = 0
-      # valor inicial de sigma = 0
+      # valor inicial de sigma = 0.1
       f1 <- 0
-      f2 <- 0
-      y <- NA
-      for(t in 2:n){
-        y[t] <- f1[t-1] + sqrt(f2[t-1])*epsilon[t]
-        f1[t] <- theta[1] + theta[2]*(y[t] -  f1[t-1]) + theta[3]*f1[t-1]
-        f2[t] <- theta[4] + theta[5]*((y[t] -  f1[t-1])^2 - f2[t-1])+ theta[6]*f2[t-1]
+      f2 <- 0.1
+      y <- NULL
+      for(t in 1:(n+1)){
+        y[t] <- f1[t] + sqrt(f2[t])*epsilon[t]
+        f1[t+1] <- w + A1[1]*( 1/(df + 1) * (y[t] - f1[t])/(1 + (y[t] - f1[t])^2/df) * beta(1/2, df/2)/beta(3/2, (df + 2)/2)) + B1[1]*f1[t]
+        f2[t+1] <- w + A1[2]*((df + 3)/df * f2[t] * (((df + 1)* ((y[t] - f1[t])^2/(df*f2[t]))/(1 + (y[t] - f1[t])^2/(df*f2[t]))) - 1)) + B1[2]*f2[t]
       }
       
-      y <- ts(y)
-      f1 <- ts(f1)
-      f2 <- ts(f2)
+      y <- ts(y[2:(n+1)])
+      f1 <- ts(f1[2:(n+1)])
+      f2 <- ts(f2[2:(n+1)])
       
       # retornar y, sigma2 e epsilon
       return(cbind(y, f1, f2, epsilon))
@@ -252,48 +252,49 @@ simularGAS <- function(density = "normal", n = 100, link = FALSE, mean = "variav
       
       #  T: média variável, variância fixa, link TRUE ---------------------------
       
-      # > estimação de y com densidade condicional de normal com média variante no tempo e variância fixa no tempo
-      # theta (parâmetros estáticos): c(sigma2, w, A0, B1)
+      # > estimação de y com densidade condicional t com média variante no tempo e variância fixa
+      # parâmetros estáticos: c(sigma2 = var y, w, A1, B1)
       
       # epsilon 
       set.seed(seed)
-      epsilon <- ts(rnorm(n, mean = 0, sd = sqrt(theta[1])))
+      epsilon <- ts(rt(n+1, df = df))
       
-      # valor inicial de mu = 0
+      # valor inicial de f1 = 0
       f1 <- 0
-      y <- NA
-      for(t in 2:n){
-        y[t] <- f1[t-1] + epsilon[t]
-        f1[t] <- theta[2] + theta[3]*(y[t] -  f1[t-1]) + theta[4]*f1[t-1]
+      y <- NULL
+      for(t in 1:(n+1)){
+        y[t] <- f1[t] + epsilon[t]
+        f1[t+1] <- w + A1*( 1/(df + 1) * (y[t] - f1[t])/(1 + (y[t] - f1[t])^2/df) * beta(1/2, df/2)/beta(3/2, (df + 2)/2)) + B1*f1[t]
       }
       
-      y <- ts(y)
-      f1 <- ts(f1)
+      y <- ts(y[2:(n+1)])
+      f1 <- ts(f1[2:(n+1)])
       
       # retornar y, mu e epsilon
       return(cbind(y, f1, epsilon))
+      
       
     }else if(mean == "fixa" & sd == "variavel"){
       
       #  T: média fixa, variância variável, link TRUE ---------------------------
       
-      # > estimação de y com densidade condicional de normal com média fixa e variância no tempo
+      # > estimação de y com densidade condicional t com média fixa e variância variante no tempo
       # theta (parâmetros estáticos): c(mean y, w, A0, B1)
       
       # epsilon 
       set.seed(seed)
-      epsilon <- ts(rnorm(n, mean = 0, sd = 1))
+      epsilon <- ts(rt(n+1, df = df))
       
-      # valor inicial de sigma = 0
-      f2 <- 0
-      y <- NA
-      for(t in 2:n){
-        y[t] <- theta[1] + sqrt(exp(f2[t-1]))*epsilon[t]
-        f2[t] <- theta[2] + theta[3]*((y[t] -  theta[1])^2/exp(f2[t-1]) - 1)+ theta[4]*f2[t-1]
+      # valor inicial de sigma = 0.1
+      f2 <- 0.1
+      y <- NULL
+      for(t in 1:(n+1)){
+        y[t] <- mu + sqrt(exp(f2[t]))*epsilon[t]
+        f2[t+1] <- w + A1*((df + 3)/df * (((df + 1)*((y[t] - mu)^2/(df*exp(f2[t])))/(1 + (y[t] - mu)^2/(df*exp(f2[t])))) - 1)) + B1*f2[t]
       }
       
-      y <- ts(y)
-      f2 <- ts(f2)
+      y <- ts(y[2:(n+1)])
+      f2 <- ts(f2[2:(n+1)])
       
       # retornar y, sigma2 e epsilon
       return(cbind(y, f2, epsilon))
@@ -302,27 +303,27 @@ simularGAS <- function(density = "normal", n = 100, link = FALSE, mean = "variav
       
       #  T: média variável, variância variável, link TRUE ---------------------------
       
-      # > estimação de y com densidade condicional de normal com média fixa e variância no tempo
+      # > estimação de y com densidade condicional t com média e variância variante no tempo
       # theta (parâmetros estáticos): c(w, A0, B1, w, A0, B1)
       
       # epsilon 
       set.seed(seed)
-      epsilon <- ts(rnorm(n, mean = 0, sd = 1))
+      epsilon <- ts(rt(n+1, df = df))
       
       # valor inicial de mu = 0
-      # valor inicial de sigma = 0
+      # valor inicial de sigma = 0.1
       f1 <- 0
-      f2 <- 0
-      y <- NA
-      for(t in 2:n){
-        y[t] <- f1[t-1] + sqrt(f2[t-1])*epsilon[t]
-        f1[t] <- theta[1] + theta[2]*(y[t] -  f1[t-1]) + theta[3]*f1[t-1]
-        f2[t] <- theta[4] + theta[5]*((y[t] -  f1[t-1])^2/exp(f2[t-1]) - 1) + theta[6]*f2[t-1]
+      f2 <- 0.1
+      y <- NULL
+      for(t in 1:(n+1)){
+        y[t] <- f1[t] + sqrt(exp(f2[t]))*epsilon[t]
+        f1[t+1] <- w + A1[1]*( 1/(df + 1) * (y[t] - f1[t])/(1 + (y[t] - f1[t])^2/df) * beta(1/2, df/2)/beta(3/2, (df + 2)/2)) + B1[1]*f1[t]
+        f2[t+1] <- w + A1[2]*((df + 3)/df * (((df + 1)* ((y[t] - f1[t])^2/(df*exp(f2[t])))/(1 + (y[t] - f1[t])^2/(df*exp(f2[t])))) - 1)) + B1[2]*f2[t]
       }
       
-      y <- ts(y)
-      f1 <- ts(f1)
-      f2 <- ts(f2)
+      y <- ts(y[2:(n+1)])
+      f1 <- ts(f1[2:(n+1)])
+      f2 <- ts(f2[2:(n+1)])
       
       # retornar y, sigma2 e epsilon
       return(cbind(y, f1, f2, epsilon))
