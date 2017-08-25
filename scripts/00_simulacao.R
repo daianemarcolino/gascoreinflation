@@ -10,7 +10,8 @@ source("functions/simularGAS.R")
 # theta (parâmetros estáticos): c(sigma2, w, A0, B1)
 
 # simular série
-sim1 <- simularGAS(density = "normal", n = 300, link = F, mean = "variavel", sd = "fixa", seed = 1, theta = c(0.5, 1, 0.5, 0.8))
+sim1 <- simularGAS(density = "normal", n = 300, link = F, mean = "variavel", sd = "fixa", seed = 1, 
+                   sigma2 = 0.3, w = 0.1, A1 = 2, B1 = 1)
 plot(sim1)
 
 
