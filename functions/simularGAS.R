@@ -18,11 +18,12 @@ simularGAS <- function(density = "normal", n = 100, link = FALSE, mean = "variav
       y <- NULL
       for(t in 1:(n+1)){
         y[t] <- f1[t] + epsilon[t]
-        f1[t+1] <- w + A1*(y[t] - f1[t]) + B1*f1[t]
+        f1[t+1] <- w + A1[1]*(y[t] - f1[t]) + B1[1]*f1[t]
       }
       
       y <- ts(y[2:(n+1)])
       f1 <- ts(f1[2:(n+1)])
+      epsilon <- ts(epsilon[2:(n+1)])
       
       # retornar y, mu e epsilon
       return(cbind(y, f1, epsilon))
@@ -43,11 +44,12 @@ simularGAS <- function(density = "normal", n = 100, link = FALSE, mean = "variav
       y <- NULL
       for(t in 1:(n+1)){
         y[t] <- mu + sqrt(f2[t])*epsilon[t]
-        f2[t+1] <- w + A1*((y[t] -  mu)^2 - f2[t]) + B1*f2[t]
+        f2[t+1] <- w + A1[1]*((y[t] -  mu)^2 - f2[t]) + B1[1]*f2[t]
       }
       
       y <- ts(y[2:(n+1)])
       f2 <- ts(f2[2:(n+1)])
+      epsilon <- ts(epsilon[2:(n+1)])
       
       # retornar y, sigma2 e epsilon
       return(cbind(y, f2, epsilon))
@@ -77,6 +79,7 @@ simularGAS <- function(density = "normal", n = 100, link = FALSE, mean = "variav
       y <- ts(y[2:(n+1)])
       f1 <- ts(f1[2:(n+1)])
       f2 <- ts(f2[2:(n+1)])
+      epsilon <- ts(epsilon[2:(n+1)])
       
       # retornar y, sigma2 e epsilon
       return(cbind(y, f1, f2, epsilon))
@@ -99,12 +102,13 @@ simularGAS <- function(density = "normal", n = 100, link = FALSE, mean = "variav
       f1 <- 0
       y <- NULL
       for(t in 1:(n+1)){
-        y[t] <- mu + epsilon[t]
-        f1[t+1] <- w + A1*(y[t] - f1[t]) + B1*f1[t]
+        y[t] <- f1[t] + epsilon[t]
+        f1[t+1] <- w + A1[1]*(y[t] - f1[t]) + B1[1]*f1[t]
       }
       
       y <- ts(y[2:(n+1)])
       f1 <- ts(f1[2:(n+1)])
+      epsilon <- ts(epsilon[2:(n+1)])
       
       # retornar y, mu e epsilon
       return(cbind(y, f1, epsilon))
@@ -125,11 +129,12 @@ simularGAS <- function(density = "normal", n = 100, link = FALSE, mean = "variav
       y <- NULL
       for(t in 1:(n+1)){
         y[t] <- mu + exp(f2[t]/2)*epsilon[t]
-        f2[t+1] <- w + A1*((y[t] -  mu)^2/exp(f2[t]) - 1) + B1*f2[t]
+        f2[t+1] <- w + A1[1]*((y[t] -  mu)^2/exp(f2[t]) - 1) + B1[1]*f2[t]
       }
       
       y <- ts(y[2:(n+1)])
-      f2 <- ts(f2[2:(n+1)])
+      f2 <- exp(ts(f2[2:(n+1)]))
+      epsilon <- ts(epsilon[2:(n+1)])
       
       # retornar y, sigma2 e epsilon
       return(cbind(y, f2, epsilon))
@@ -158,7 +163,8 @@ simularGAS <- function(density = "normal", n = 100, link = FALSE, mean = "variav
       
       y <- ts(y[2:(n+1)])
       f1 <- ts(f1[2:(n+1)])
-      f2 <- ts(f2[2:(n+1)])
+      f2 <- exp(ts(f2[2:(n+1)]))
+      epsilon <- ts(epsilon[2:(n+1)])
       
       # retornar y, sigma2 e epsilon
       return(cbind(y, f1, f2, epsilon))
@@ -182,11 +188,12 @@ simularGAS <- function(density = "normal", n = 100, link = FALSE, mean = "variav
       y <- NULL
       for(t in 1:(n+1)){
         y[t] <- f1[t] + epsilon[t]
-        f1[t+1] <- w + A1*( 1/(df + 1) * (y[t] - f1[t])/(1 + (y[t] - f1[t])^2/df) * beta(1/2, df/2)/beta(3/2, (df + 2)/2)) + B1*f1[t]
+        f1[t+1] <- w + A1[1]*( 1/(df + 1) * (y[t] - f1[t])/(1 + (y[t] - f1[t])^2/df) * beta(1/2, df/2)/beta(3/2, (df + 2)/2)) + B1[1]*f1[t]
       }
       
       y <- ts(y[2:(n+1)])
       f1 <- ts(f1[2:(n+1)])
+      epsilon <- ts(epsilon[2:(n+1)])
       
       # retornar y, mu e epsilon
       return(cbind(y, f1, epsilon))
@@ -207,11 +214,12 @@ simularGAS <- function(density = "normal", n = 100, link = FALSE, mean = "variav
       y <- NULL
       for(t in 1:(n+1)){
         y[t] <- mu + sqrt(f2[t])*epsilon[t]
-        f2[t+1] <- w + A1*((df + 3)/df * f2[t] * (((df + 1)* ((y[t] - mu)^2/(df*f2[t]))/(1 + (y[t] - mu)^2/(df*f2[t]))) - 1)) + B1*f2[t]
+        f2[t+1] <- w + A1[1]*((df + 3)/df * f2[t] * (((df + 1)* ((y[t] - mu)^2/(df*f2[t]))/(1 + (y[t] - mu)^2/(df*f2[t]))) - 1)) + B1[1]*f2[t]
       }
       
       y <- ts(y[2:(n+1)])
       f2 <- ts(f2[2:(n+1)])
+      epsilon <- ts(epsilon[2:(n+1)])
       
       # retornar y, sigma2 e epsilon
       return(cbind(y, f2, epsilon))
@@ -241,6 +249,7 @@ simularGAS <- function(density = "normal", n = 100, link = FALSE, mean = "variav
       y <- ts(y[2:(n+1)])
       f1 <- ts(f1[2:(n+1)])
       f2 <- ts(f2[2:(n+1)])
+      epsilon <- ts(epsilon[2:(n+1)])
       
       # retornar y, sigma2 e epsilon
       return(cbind(y, f1, f2, epsilon))
@@ -264,11 +273,12 @@ simularGAS <- function(density = "normal", n = 100, link = FALSE, mean = "variav
       y <- NULL
       for(t in 1:(n+1)){
         y[t] <- f1[t] + epsilon[t]
-        f1[t+1] <- w + A1*( 1/(df + 1) * (y[t] - f1[t])/(1 + (y[t] - f1[t])^2/df) * beta(1/2, df/2)/beta(3/2, (df + 2)/2)) + B1*f1[t]
+        f1[t+1] <- w + A1[1]*( 1/(df + 1) * (y[t] - f1[t])/(1 + (y[t] - f1[t])^2/df) * beta(1/2, df/2)/beta(3/2, (df + 2)/2)) + B1[1]*f1[t]
       }
       
       y <- ts(y[2:(n+1)])
       f1 <- ts(f1[2:(n+1)])
+      epsilon <- ts(epsilon[2:(n+1)])
       
       # retornar y, mu e epsilon
       return(cbind(y, f1, epsilon))
@@ -290,11 +300,12 @@ simularGAS <- function(density = "normal", n = 100, link = FALSE, mean = "variav
       y <- NULL
       for(t in 1:(n+1)){
         y[t] <- mu + sqrt(exp(f2[t]))*epsilon[t]
-        f2[t+1] <- w + A1*((df + 3)/df * (((df + 1)*((y[t] - mu)^2/(df*exp(f2[t])))/(1 + (y[t] - mu)^2/(df*exp(f2[t])))) - 1)) + B1*f2[t]
+        f2[t+1] <- w + A1[1]*((df + 3)/df * (((df + 1)*((y[t] - mu)^2/(df*exp(f2[t])))/(1 + (y[t] - mu)^2/(df*exp(f2[t])))) - 1)) + B1[1]*f2[t]
       }
       
       y <- ts(y[2:(n+1)])
-      f2 <- ts(f2[2:(n+1)])
+      f2 <- exp(ts(f2[2:(n+1)]))
+      epsilon <- ts(epsilon[2:(n+1)])
       
       # retornar y, sigma2 e epsilon
       return(cbind(y, f2, epsilon))
@@ -323,7 +334,8 @@ simularGAS <- function(density = "normal", n = 100, link = FALSE, mean = "variav
       
       y <- ts(y[2:(n+1)])
       f1 <- ts(f1[2:(n+1)])
-      f2 <- ts(f2[2:(n+1)])
+      f2 <- exp(ts(f2[2:(n+1)]))
+      epsilon <- ts(epsilon[2:(n+1)])
       
       # retornar y, sigma2 e epsilon
       return(cbind(y, f1, f2, epsilon))
