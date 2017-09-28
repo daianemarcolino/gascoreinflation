@@ -1,5 +1,6 @@
 server <- function(input, output) {
   
+  # SIMULAÇÃO -----------------------------------------------------------------------------
   # condições para habilitar/desabilitar inputs
   observe({
     shinyjs::toggleState("df", input$density == "t")
@@ -73,5 +74,8 @@ server <- function(input, output) {
     }
   })
   
+  # BETA-T-EGARCH -------------------------------------------------------------------------
   
+  output$dygraph_rotina <- renderDygraph({graphs$graph_rotina})
+  output$dygraph_betategarch <- renderDygraph({graphs$graph_betategarch})
 }

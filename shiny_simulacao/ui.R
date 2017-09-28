@@ -65,7 +65,11 @@ shinyUI(
                       
              ),
              # PAINEL BETATEGARCH --------------------------------------
-             tabPanel("Beta-t-egarch",""
+             tabPanel("Beta-t-egarch",
+                      fluidRow(
+                        column(5,offset = 1, div("Package betategarch", style = "text-align:center"), br(), dygraphOutput("dygraph_betategarch")),
+                        column(5, div("rotina desenvolvida", style = "text-align:center"), br(), dygraphOutput("dygraph_rotina"))
+                      )
              )
              
   )

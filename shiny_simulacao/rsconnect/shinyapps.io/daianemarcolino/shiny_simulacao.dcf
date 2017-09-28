@@ -1,0 +1,12 @@
+name: shiny_simulacao
+title: shiny_simulacao
+username:
+account: daianemarcolino
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 209048
+bundleId: 960643
+url: https://daianemarcolino.shinyapps.io/shiny_simulacao/
+when: 1504106040.61463
+asMultiple: FALSE
+asStatic: FALSE
