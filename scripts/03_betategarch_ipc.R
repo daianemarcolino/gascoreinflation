@@ -62,3 +62,22 @@ resultados <- list(dygraphs_y = list(d1y = d1y, d2y = d2y, d3y = d3y),
                    dygraphs_ep = list(d1ep = d1ep, d2ep = d2ep, d3ep = d3ep),
                    estimation = list(m1 = m1, m2 = m2, m3 = m3))
 saveRDS(resultados, "shiny_simulacao/data/resultados_betategarch_estimation.rds")
+
+
+
+# estimar modelo: variância + média, s(t-11) s(t-12)
+m4 <- betategarch_estimation(ipc, initial = c(0.05,0.05,0.05,0.5,0.5,0.5,0.5,0.5,4.3), type = "mean-var3")
+plot(m4$out)
+ver <- cbind(ipc,m4$out[,c("f1","sigma")])
+colnames(ver) <- c("ipc","f1","sigma")
+d4y <- dygraph(ver) %>%
+  dySeries("ipc", label = "FGV IPC", color = "darkgrey", strokeWidth = 1) %>%
+  dySeries("f1", label = "Média", color = "steelblue", strokeWidth = 2) %>%
+  dySeries("sigma", label = "Sigma", color = "orangered", strokeWidth = 2) %>%
+  dyRangeSelector()
+d4y 
+
+plot(m4$out[,"epsilon"])
+acf(m4$out[,"epsilon"], lag.max = 48)
+Box.test(m4$out[,"epsilon"], lag = 12, type = "Ljung-Box")
+
