@@ -1,7 +1,29 @@
 shinyUI(
   navbarPage(theme = shinytheme("lumen"), shinyjs::useShinyjs(),
+             
+             # PAINEL BETATEGARCH IPC --------------------------------------
+             tabPanel("IPC FGV",
+                      fluidRow(
+                        column(4, div("Modelo 1: y[t] = exp(f2[t])*epsilon[t]", style = "text-align:center"), br(), 
+                               dygraphOutput("dygraph_d1y"), br(), dygraphOutput("dygraph_d1ep", height = 150)),
+                        column(4, div("Modelo 2: y[t] = f1 + exp(f2[t])*epsilon[t]", style = "text-align:center"), br(), 
+                               dygraphOutput("dygraph_d2y"), br(), dygraphOutput("dygraph_d2ep", height = 150)),
+                        column(4, div("Modelo 3: y[t] = f1[t] + exp(f2[t])*epsilon[t]", style = "text-align:center"), br(), 
+                               dygraphOutput("dygraph_d3y"), br(), dygraphOutput("dygraph_d3ep", height = 150))
+                      )
+                      
+             ),
+             
+             # PAINEL BETATEGARCH --------------------------------------
+             tabPanel("Beta-t-egarch",
+                      fluidRow(
+                        column(5,offset = 1, div("Package betategarch", style = "text-align:center"), br(), dygraphOutput("dygraph_betategarch")),
+                        column(5, div("rotina desenvolvida", style = "text-align:center"), br(), dygraphOutput("dygraph_rotina"))
+                      )
+             ),
+             
              # PAINEL SIMULAÇÃO --------------------------------------
-             tabPanel("Simulação",
+             tabPanel("Simulação", 
                       sidebarLayout(
                         sidebarPanel(
                           width = 3,
@@ -63,14 +85,9 @@ shinyUI(
                         )
                       )              
                       
-             ),
-             # PAINEL BETATEGARCH --------------------------------------
-             tabPanel("Beta-t-egarch",
-                      fluidRow(
-                        column(5,offset = 1, div("Package betategarch", style = "text-align:center"), br(), dygraphOutput("dygraph_betategarch")),
-                        column(5, div("rotina desenvolvida", style = "text-align:center"), br(), dygraphOutput("dygraph_rotina"))
-                      )
              )
+             
+            
              
   )
 )

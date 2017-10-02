@@ -78,4 +78,17 @@ server <- function(input, output) {
   
   output$dygraph_rotina <- renderDygraph({graphs$graph_rotina})
   output$dygraph_betategarch <- renderDygraph({graphs$graph_betategarch})
+  
+  # IPC FGV BETA-T-EGARCH -----------------------------------------------------------------
+  
+  # estimações
+  output$dygraph_d1y <- renderDygraph({resul$dygraphs_y$d1y})
+  output$dygraph_d2y <- renderDygraph({resul$dygraphs_y$d2y})
+  output$dygraph_d3y <- renderDygraph({resul$dygraphs_y$d3y})
+  
+  # epsilons
+  output$dygraph_d1ep <- renderDygraph({resul$dygraphs_ep$d1ep})
+  output$dygraph_d2ep <- renderDygraph({resul$dygraphs_ep$d2ep})
+  output$dygraph_d3ep <- renderDygraph({resul$dygraphs_ep$d3ep})
+  
 }

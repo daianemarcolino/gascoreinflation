@@ -29,8 +29,8 @@ graph_rotina <- dygraph(cbind(y,yhat)) %>%
 graph_rotina
 
 # usando o GAS
-GASSpec <- UniGASSpec(Dist = "std", ScalingType = "Inv",
-                      GASPar = list(location = FALSE, scale = TRUE, shape = FALSE))
+GASSpec <- UniGASSpec(Dist = "std", ScalingType = "Identity",
+                      GASPar = list(location = FALSE, scale = TRUE, shape = TRUE))
 Fit <- UniGASFit(GASSpec, y)
 yhat <- ts(getFilteredParameters(Fit)[,"scale"], end = end(y), freq = frequency(y))
 
