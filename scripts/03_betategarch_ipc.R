@@ -164,3 +164,25 @@ resp <- (m7$out[,"epsilon"] - mean(m7$out[,"epsilon"]))/sd(m7$out[,"epsilon"])
 dygraph(resp) %>%
   dySeries("V1", label = "resíduo") %>%
   dyShading(from = -3, to = 3, axis = "y")
+
+# previsão
+prev <- betategarch_forecasting(out = m7, y = ipc, type = "mean-var6", dummy = dummies, h = 4)
+ts.plot(ipc,prev[,1], col = 1:2)
+
+
+# EXERCÍCIO DENTRO DA AMOSTRA
+y0 <- window(ipc, end = c(2016,12), freq = 12)
+
+# OUTLIERS: JULHO DE 2000 E NOVEMBRO DE 2002
+d1 <- BETS.dummy(start = start(y0), end = end(y0), year = 2000, month = 7)
+d2 <- BETS.dummy(start = start(y0), end = end(y0), year = 2002, month = 11)
+d3 <- BETS.dummy(start = start(y0), end = end(y0), year = 2015, month = 1)
+d4 <- BETS.dummy(start = start(y0), end = end(y0), year = 2016, month = 1)
+dummies <- cbind(d1,d2,d3,d4)
+
+# estimar modelo: variância + média, s(t-1) s(t-11) f(t-1)
+d <- data.frame(param = c("w1", "w2",  "A1_00","A1_01","A1_11","B1_00","B1_01","A2_00","B2_00","df","D1","D2","D3","D4"),
+                valor = c(0.29, -0.002,  0.04  ,0.01  ,0.05   , 0.40  ,0.5    ,0.03   ,0.99   , 4.47, 1,1,1,1 ))
+m <- betategarch_estimation(y0, initial = d[,2], type = "mean-var6", dummy = dummies)
+prev <- betategarch_forecasting(out = m, y = y0, type = "mean-var6", dummy = dummies, h = 8)
+ts.plot(ipc,prev[,1], col = 1:2)

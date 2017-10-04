@@ -458,11 +458,13 @@ betategarch_estimation <- function(y, initial = NULL, type = "var", dummy = NULL
     
     f1 <- ts(f1[13:N], end = end(y), freq = frequency(y))
     f2 <- ts(f2[13:N], end = end(y), freq = frequency(y))
+    u1 <- ts(c(u1[13:(N-1)], NA), end = end(y), freq =  frequency(y))
+    u2 <- ts(c(u2[13:(N-1)], NA), end = end(y), freq =  frequency(y))
     
     loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - sum(f2) - ((df + 1)/2)*sum(log(1 + (y - f1)^2/(df*exp(2*f2))))
     epsilon <- (y - f1)/exp(f2)
-    out <- cbind(f1, f2, exp(f2), epsilon)
-    colnames(out) <- c("f1", "f2", "sigma","epsilon")
+    out <- cbind(f1, f2, exp(f2), epsilon, u1, u2)
+    colnames(out) <- c("f1", "f2", "sigma","epsilon", "u1", "u2")
     
     # output
     print(otimizados)
