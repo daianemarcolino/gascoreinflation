@@ -3,6 +3,7 @@ library(betategarch)
 library(dygraphs)
 library(BETS)
 source("functions/betategarch_estimation.R")
+source("functions/betategarch_forecasting.R")
 ipc <- ts(read.csv2("dados/VARIAÇÃO IPC-DI.csv")[,2], start = c(1999,1), freq = 12)
 
 # estimar modelo: somente variância
@@ -141,7 +142,7 @@ d4 <- BETS.dummy(start = start(ipc), end = end(ipc), year = 2016, month = 1)
 dummies <- cbind(d1,d2,d3,d4)
 
 # estimar modelo: variância + média, s(t-1) s(t-11) f(t-1)
-d <- data.frame(param = c("w1", "w2",  "A1_00","A1_01","A1_11","B1_00","B1_01","A2_00","B2_00","df","D1","D2","D3","D4"),
+d <- data.frame(param = c("w1", "w2",  "A1_00","A1_01","A1_11","B1_00","B1_01", "A2_00","B2_00","df","D1","D2","D3","D4"),
                 valor = c(0.29, -0.002,  0.04  ,0.01  ,0.05   , 0.40  ,0.5    ,0.03   ,0.99   , 4.47, 1,1,1,1 ))
 m7 <- betategarch_estimation(ipc, initial = d[,2], type = "mean-var6", dummy = dummies)
 plot(m7$out)
@@ -170,7 +171,7 @@ prev <- betategarch_forecasting(out = m7, y = ipc, type = "mean-var6", dummy = d
 ts.plot(ipc,prev[,1], col = 1:2)
 
 
-# EXERCÍCIO DENTRO DA AMOSTRA
+# EXERCÍCIO DENTRO DA AMOSTRA 1 ------------------------------------
 y0 <- window(ipc, end = c(2016,12), freq = 12)
 
 # OUTLIERS: JULHO DE 2000 E NOVEMBRO DE 2002
@@ -186,3 +187,98 @@ d <- data.frame(param = c("w1", "w2",  "A1_00","A1_01","A1_11","B1_00","B1_01","
 m <- betategarch_estimation(y0, initial = d[,2], type = "mean-var6", dummy = dummies)
 prev <- betategarch_forecasting(out = m, y = y0, type = "mean-var6", dummy = dummies, h = 8)
 ts.plot(ipc,prev[,1], col = 1:2)
+
+# EXERCÍCIO DENTRO DA AMOSTRA 2 ------------------------------------
+data <- data.frame(ano = c(rep(2016,5),rep(2017,7)),
+                   mes = c(8:12,1:7))
+# estimar modelo: variância + média, s(t-1) s(t-11) f(t-1)
+d <- data.frame(param = c("w1", "w2",  "A1_00","A1_01","A1_11","B1_00","B1_01","A2_00","B2_00","df","D1","D2","D3","D4"),
+                valor = c(0.29, -0.002,  0.04  ,0.01  ,0.05   , 0.40  ,0.5    ,0.03   ,0.99   , 4.47, 1,1,1,1 ))
+prev <- NULL
+for(i in 1:nrow(data)){
+  
+  y0 <- window(ipc, end = c(data$ano[i],data$mes[i]), freq = 12)
+  
+  # OUTLIERS: JULHO DE 2000 E NOVEMBRO DE 2002
+  d1 <- BETS.dummy(start = start(y0), end = end(y0), year = 2000, month = 7)
+  d2 <- BETS.dummy(start = start(y0), end = end(y0), year = 2002, month = 11)
+  d3 <- BETS.dummy(start = start(y0), end = end(y0), year = 2015, month = 1)
+  d4 <- BETS.dummy(start = start(y0), end = end(y0), year = 2016, month = 1)
+  dummies <- cbind(d1,d2,d3,d4)
+  
+  m <- betategarch_estimation(y0, initial = d[,2], type = "mean-var6", dummy = dummies)
+  prev <- rbind(prev, betategarch_forecasting(out = m, y = y0, type = "mean-var6", dummy = dummies, h = 1))
+}
+
+ychapeu <- ts(prev[,1], start = c(2016,9), freq = 12)
+k <- na.omit(cbind(ychapeu,ipc))
+ts.plot(k, col  = 2:1)
+
+
+# OUTLIERS: JULHO DE 2000 E NOVEMBRO DE 2002
+d1 <- BETS.dummy(start = start(ipc), end = end(ipc), year = 2000, month = 7)
+d2 <- BETS.dummy(start = start(ipc), end = end(ipc), year = 2002, month = 11)
+d3 <- BETS.dummy(start = start(ipc), end = end(ipc), year = 2015, month = 1)
+d4 <- BETS.dummy(start = start(ipc), end = end(ipc), year = 2016, month = 1)
+dummies <- cbind(d1,d2,d3,d4)
+
+# estimar modelo: variância + média, s(t-1) s(t-11) f(t-1)
+d <- data.frame(param = c("w1", "w2",  "A1_00","A1_01","A1_11","B1_00","B1_01", "B1_11","A2_00","B2_00","df","D1","D2","D3","D4"),
+                valor = c(0.29, -0.002,  0.04  ,0.01  ,0.05   , 0.40  ,0.5    ,0.05     ,0.03   ,0.5   , 4.47, 1,1,1,1 ))
+m8 <- betategarch_estimation(ipc, initial = d[,2], type = "mean-var7", dummy = dummies)
+plot(m8$out)
+ver <- cbind(ipc,m7$out[,c("f1","sigma")])
+colnames(ver) <- c("ipc","f1","sigma")
+d8y <- dygraph(ver) %>%
+  dySeries("ipc", label = "FGV IPC", color = "darkgrey", strokeWidth = 1) %>%
+  dySeries("f1", label = "Média", color = "steelblue", strokeWidth = 2) %>%
+  dySeries("sigma", label = "Sigma", color = "orangered", strokeWidth = 2) %>%
+  dyRangeSelector()
+d8y 
+
+plot(m8$out[,"epsilon"])
+acf(m8$out[,"epsilon"], lag.max = 48)
+Box.test(m8$out[,"epsilon"], lag = 24, type = "Ljung-Box")
+m8$otimizados
+
+
+resp <- (m8$out[,"epsilon"] - mean(m8$out[,"epsilon"]))/sd(m8$out[,"epsilon"])
+dygraph(resp) %>%
+  dySeries("V1", label = "resíduo") %>%
+  dyShading(from = -3, to = 3, axis = "y")
+
+# previsão
+prev <- betategarch_forecasting(out = m8, y = ipc, type = "mean-var7", dummy = dummies, h = 36)
+ts.plot(ipc,prev[,1], col = 1:2)
+
+# EXERCÍCIO DENTRO DA AMOSTRA 3 ------------------------------------
+data <- data.frame(ano = c(rep(2016,5),rep(2017,7)),
+                   mes = c(8:12,1:7))
+
+data <- data.frame(ano = c(rep(2016,11),rep(2017,7)),
+                   mes = c(2:12,1:7))
+
+# estimar modelo: variância + média, s(t-1) s(t-11) f(t-1)
+d <- data.frame(param = c("w1", "w2",  "A1_00","A1_01","A1_11","B1_00","B1_01","B1_11","A2_00","B2_00","df","D1","D2","D3","D4"),
+                valor = c(0.29, -0.002,  0.04  ,0.01  ,0.05   , 0.40  ,0.5    ,0.05   ,0.03   ,0.5   , 4.47, 1,1,1,1 ))
+prev <- NULL
+for(i in 1:nrow(data)){
+  
+  y0 <- window(ipc, end = c(data$ano[i],data$mes[i]), freq = 12)
+  
+  # OUTLIERS: JULHO DE 2000 E NOVEMBRO DE 2002
+  d1 <- BETS.dummy(start = start(y0), end = end(y0), year = 2000, month = 7)
+  d2 <- BETS.dummy(start = start(y0), end = end(y0), year = 2002, month = 11)
+  d3 <- BETS.dummy(start = start(y0), end = end(y0), year = 2015, month = 1)
+  d4 <- BETS.dummy(start = start(y0), end = end(y0), year = 2016, month = 1)
+  dummies <- cbind(d1,d2,d3,d4)
+  
+  m <- betategarch_estimation(y0, initial = d[,2], type = "mean-var7", dummy = dummies)
+  prev <- rbind(prev, betategarch_forecasting(out = m, y = y0, type = "mean-var7", dummy = dummies, h = 1))
+}
+
+ychapeu <- ts(prev[,1], start = c(2016,12), freq = 12)
+k <- na.omit(cbind(ipc,ychapeu))
+ts.plot(k, col  = 1:2)
+k
+ERRO(k[,1],k[,2])
