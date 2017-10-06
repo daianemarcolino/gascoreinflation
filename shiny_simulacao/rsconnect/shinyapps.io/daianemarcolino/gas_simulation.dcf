@@ -5,8 +5,8 @@ account: daianemarcolino
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 207541
-bundleId: 1003854
+bundleId: 1012838
 url: https://daianemarcolino.shinyapps.io/gas_simulation/
-when: 1506709798.96235
+when: 1507229255.3279
 asMultiple: FALSE
 asStatic: FALSE
