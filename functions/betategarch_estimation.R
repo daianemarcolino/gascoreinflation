@@ -151,10 +151,14 @@ betategarch_estimation <- function(y, initial = NULL, type = "var", dummy = NULL
     }
     f1 <- ts(f1[-(N+1)], start = start(y), freq = frequency(y))
     f2 <- ts(f2[-(N+1)], start = start(y), freq = frequency(y))
+    u1 <- ts(c(u1[1:(N-1)], NA), end = end(y), freq =  frequency(y))
+    u2 <- ts(c(u2[1:(N-1)], NA), end = end(y), freq =  frequency(y))
+    
+    
     loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - sum(f2) - ((df + 1)/2)*sum(log(1 + (y - f1)^2/(df*exp(2*f2))))
     epsilon <- (y - f1)/exp(f2)
-    out <- cbind(f1, f2, exp(f2), epsilon)
-    colnames(out) <- c("f1", "f2", "sigma","epsilon")
+    out <- cbind(f1, f2, exp(f2), epsilon, u1, u2)
+    colnames(out) <- c("f1", "f2", "sigma","epsilon","u1","u2")
     
     # output
     print(otimizados)
@@ -294,11 +298,12 @@ betategarch_estimation <- function(y, initial = NULL, type = "var", dummy = NULL
     }
     f1 <- ts(f1[2:N], end = end(y), freq = frequency(y))
     f2 <- ts(f2[2:N], end = end(y), freq = frequency(y))
-    
+    u1 <- ts(c(u1[2:(N-1)], NA), end = end(y), freq =  frequency(y))
+    u2 <- ts(c(u2[2:(N-1)], NA), end = end(y), freq =  frequency(y))
     loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - sum(f2) - ((df + 1)/2)*sum(log(1 + (y - f1)^2/(df*exp(2*f2))))
     epsilon <- (y - f1)/exp(f2)
-    out <- cbind(f1, f2, exp(f2), epsilon)
-    colnames(out) <- c("f1", "f2", "sigma","epsilon")
+    out <- cbind(f1, f2, exp(f2), epsilon, u1, u2)
+    colnames(out) <- c("f1", "f2", "sigma","epsilon","u1","u2")
     
     # output
     print(otimizados)
@@ -483,6 +488,87 @@ betategarch_estimation <- function(y, initial = NULL, type = "var", dummy = NULL
       A2_00 <- par[9]
       B2_00 <- par[10]
       df <- par[11]
+      f1 <- rep(w1/(1 - B1_00 - B1_01 - B1_11),12)
+      f2 <- rep(w2/(1 - B2_00),12)
+      N <- length(y)
+      u1 <- NULL
+      u2 <- NULL
+      for(t in 1:11){
+        u1[t] <- (df + 1)*((y[t] - f1[t])/(df*exp(2*f2[t])))/(1 + (y[t] - f1[t])^2/(df*exp(2*f2[t])))
+        u2[t] <- (((df + 1)*(y[t] - f1[t])^2) / (df*exp(2*f2[t]) + (y[t] - f1[t])^2)) - 1
+      }
+      for(t in 12:(N-1)){
+        u1[t] <- (df + 1)*((y[t] - f1[t])/(df*exp(2*f2[t])))/(1 + (y[t] - f1[t])^2/(df*exp(2*f2[t])))
+        u2[t] <- (((df + 1)*(y[t] - f1[t])^2) / (df*exp(2*f2[t]) + (y[t] - f1[t])^2)) - 1
+        f1[t+1] <- w1 + A1_00*u1[t] + A1_01*u1[t-1] + A1_11*u1[t-11] + B1_00*f1[t] + B1_01*f1[t-1] + B1_11*f1[t-11]
+        f2[t+1] <- w2 + A2_00*u2[t] + B2_00*f2[t]
+      }
+      
+      f1 <- ts(f1[13:N], end = end(y), freq = frequency(y))
+      f2 <- ts(f2[13:N], end = end(y), freq = frequency(y))
+      
+      # loglik
+      loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - sum(f2) - ((df + 1)/2)*sum(log(1 + (y - f1)^2/(df*exp(2*f2))))
+      -loglik
+    }
+    
+    otimizados <- nlminb(start = c(initial), objective = otimizar, y = y,  
+                         lower = c(-Inf,-Inf,-Inf,-Inf,-Inf,-1,-1,-1,-Inf,-1,2), upper = c(Inf,Inf,Inf,Inf,Inf,1,1,1,Inf,1,Inf), control = list(eval.max = 10000, iter.max = 10000))
+    
+    w1 <- otimizados$par[1]
+    w2 <- otimizados$par[2]
+    A1_00 <- otimizados$par[3]
+    A1_01 <- otimizados$par[4]
+    A1_11 <- otimizados$par[5]
+    B1_00 <- otimizados$par[6]
+    B1_01 <- otimizados$par[7]
+    B1_11 <- otimizados$par[8]
+    A2_00 <- otimizados$par[9]
+    B2_00 <- otimizados$par[10]
+    df <- otimizados$par[11]
+    f1 <- rep(w1/(1 - B1_00 - B1_01 - B1_11),12)
+    f2 <- rep(w2/(1 - B2_00),12)
+    N <- length(y)
+    u1 <- NULL
+    u2 <- NULL
+    for(t in 1:11){
+      u1[t] <- (df + 1)*((y[t] - f1[t])/(df*exp(2*f2[t])))/(1 + (y[t] - f1[t])^2/(df*exp(2*f2[t])))
+      u2[t] <- (((df + 1)*(y[t] - f1[t])^2) / (df*exp(2*f2[t]) + (y[t] - f1[t])^2)) - 1
+    }
+    for(t in 12:(N-1)){
+      u1[t] <- (df + 1)*((y[t] - f1[t])/(df*exp(2*f2[t])))/(1 + (y[t] - f1[t])^2/(df*exp(2*f2[t])))
+      u2[t] <- (((df + 1)*(y[t] - f1[t])^2) / (df*exp(2*f2[t]) + (y[t] - f1[t])^2)) - 1
+      f1[t+1] <- w1 + A1_00*u1[t] + A1_01*u1[t-1] + A1_11*u1[t-11] + B1_00*f1[t] + B1_01*f1[t-1] + B1_11*f1[t-11]
+      f2[t+1] <- w2 + A2_00*u2[t] + B2_00*f2[t]
+    }
+    
+    f1 <- ts(f1[13:N], end = end(y), freq = frequency(y))
+    f2 <- ts(f2[13:N], end = end(y), freq = frequency(y))
+    u1 <- ts(c(u1[13:(N-1)], NA), end = end(y), freq =  frequency(y))
+    u2 <- ts(c(u2[13:(N-1)], NA), end = end(y), freq =  frequency(y))
+    
+    loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - sum(f2) - ((df + 1)/2)*sum(log(1 + (y - f1)^2/(df*exp(2*f2))))
+    epsilon <- (y - f1)/exp(f2)
+    out <- cbind(f1, f2, exp(f2), epsilon, u1, u2)
+    colnames(out) <- c("f1", "f2", "sigma","epsilon", "u1", "u2")
+    
+    # output
+    print(otimizados)
+    invisible(list(out = out, otimizados = otimizados, loglik = -loglik))
+  }else if(type == "mean-var8"){ # modelo y[t] = f1[t] + exp(f2[t])*epsilon[t], epsilon[t] ~ t(v) c/ dummy
+    # > estimação via ML para densidade condicional de y t-student com média constante e variância variante no tempo
+    otimizar <- function(y, par){
+      w1 <- par[1]
+      w2 <- par[2]
+      A1_00 <- par[3]
+      A1_01 <- par[4]
+      A1_11 <- par[5]
+      B1_00 <- par[6]
+      B1_01 <- par[7]
+      B1_11 <- par[8]
+      A2_00 <- par[9]
+      B2_00 <- par[10]
+      df <- par[11]
       D1 <- par[12]
       D2 <- par[13]
       D3 <- par[14]
@@ -499,7 +585,7 @@ betategarch_estimation <- function(y, initial = NULL, type = "var", dummy = NULL
       for(t in 12:(N-1)){
         u1[t] <- (df + 1)*((y[t] - f1[t])/(df*exp(2*f2[t])))/(1 + (y[t] - f1[t])^2/(df*exp(2*f2[t])))
         u2[t] <- (((df + 1)*(y[t] - f1[t])^2) / (df*exp(2*f2[t]) + (y[t] - f1[t])^2)) - 1
-        f1[t+1] <- w1 + A1_00*u1[t] + A1_01*u1[t-1] + A1_11*u1[t-11] + B1_00*f1[t] + B1_01*f1[t-1] + B1_11*f1[t-11] + D1*dummy[t+1,1] + D2*dummy[t+1,2]  + D3*dummy[t+1,3] #+ D4*dummy[t+1,4]
+        f1[t+1] <- w1 + A1_00*u1[t] + A1_01*u1[t-1] + A1_11*u1[t-11] + B1_00*f1[t] + B1_01*f1[t-1] + B1_11*f1[t-11] + D1*dummy[t+1,1] + D2*dummy[t+1,2] + D3*dummy[t+1,3] #+ D4*dummy[t+1,4]
         f2[t+1] <- w2 + A2_00*u2[t] + B2_00*f2[t]
       }
       
@@ -549,6 +635,186 @@ betategarch_estimation <- function(y, initial = NULL, type = "var", dummy = NULL
     f2 <- ts(f2[13:N], end = end(y), freq = frequency(y))
     u1 <- ts(c(u1[13:(N-1)], NA), end = end(y), freq =  frequency(y))
     u2 <- ts(c(u2[13:(N-1)], NA), end = end(y), freq =  frequency(y))
+    
+    loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - sum(f2) - ((df + 1)/2)*sum(log(1 + (y - f1)^2/(df*exp(2*f2))))
+    epsilon <- (y - f1)/exp(f2)
+    out <- cbind(f1, f2, exp(f2), epsilon, u1, u2)
+    colnames(out) <- c("f1", "f2", "sigma","epsilon", "u1", "u2")
+    
+    # output
+    print(otimizados)
+    invisible(list(out = out, otimizados = otimizados, loglik = -loglik))
+    
+  }else if(type == "mean-var9"){ # modelo y[t] = f1[t] + exp(f2[t])*epsilon[t], epsilon[t] ~ t(v) c/ dummy
+    # > estimação via ML para densidade condicional de y t-student com média constante e variância variante no tempo
+    otimizar <- function(y, par){
+      w1 <- par[1]
+      w2 <- par[2]
+      A1_00 <- par[3]
+      A1_01 <- par[4]
+      A1_11 <- par[5]
+      A1_12 <- par[6]
+      B1_00 <- par[7]
+      B1_01 <- par[8]
+      B1_11 <- par[9]
+      A2_00 <- par[10]
+      B2_00 <- par[11]
+      df <- par[12]
+      f1 <- rep(w1/(1 - B1_00 - B1_01 - B1_11),13)
+      f2 <- rep(w2/(1 - B2_00),13)
+      N <- length(y)
+      u1 <- NULL
+      u2 <- NULL
+      for(t in 1:12){
+        u1[t] <- (df + 1)*((y[t] - f1[t])/(df*exp(2*f2[t])))/(1 + (y[t] - f1[t])^2/(df*exp(2*f2[t])))
+        u2[t] <- (((df + 1)*(y[t] - f1[t])^2) / (df*exp(2*f2[t]) + (y[t] - f1[t])^2)) - 1
+      }
+      for(t in 13:(N-1)){
+        u1[t] <- (df + 1)*((y[t] - f1[t])/(df*exp(2*f2[t])))/(1 + (y[t] - f1[t])^2/(df*exp(2*f2[t])))
+        u2[t] <- (((df + 1)*(y[t] - f1[t])^2) / (df*exp(2*f2[t]) + (y[t] - f1[t])^2)) - 1
+        f1[t+1] <- w1 + A1_00*u1[t] + A1_01*u1[t-1] + A1_11*u1[t-11] + A1_12*u1[t-12] + B1_00*f1[t] + B1_01*f1[t-1] + B1_11*f1[t-11]
+        f2[t+1] <- w2 + A2_00*u2[t] + B2_00*f2[t]
+      }
+      
+      f1 <- ts(f1[14:N], end = end(y), freq = frequency(y))
+      f2 <- ts(f2[14:N], end = end(y), freq = frequency(y))
+      
+      # loglik
+      loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - sum(f2) - ((df + 1)/2)*sum(log(1 + (y - f1)^2/(df*exp(2*f2))))
+      -loglik
+    }
+    
+    otimizados <- nlminb(start = c(initial), objective = otimizar, y = y,  
+                         lower = c(-Inf,-Inf,-Inf,-Inf,-Inf,-Inf,-1,-1,-1,-Inf,-1,2), upper = c(Inf,Inf,Inf,Inf,Inf,Inf,1,1,1,Inf,1,Inf), control = list(eval.max = 10000, iter.max = 10000))
+    
+    w1 <- otimizados$par[1]
+    w2 <- otimizados$par[2]
+    A1_00 <- otimizados$par[3]
+    A1_01 <- otimizados$par[4]
+    A1_11 <- otimizados$par[5]
+    A1_12 <- otimizados$par[6]
+    B1_00 <- otimizados$par[7]
+    B1_01 <- otimizados$par[8]
+    B1_11 <- otimizados$par[9]
+    A2_00 <- otimizados$par[10]
+    B2_00 <- otimizados$par[11]
+    df <- otimizados$par[12]
+    f1 <- rep(w1/(1 - B1_00 - B1_01 - B1_11),13)
+    f2 <- rep(w2/(1 - B2_00),13)
+    N <- length(y)
+    u1 <- NULL
+    u2 <- NULL
+    for(t in 1:12){
+      u1[t] <- (df + 1)*((y[t] - f1[t])/(df*exp(2*f2[t])))/(1 + (y[t] - f1[t])^2/(df*exp(2*f2[t])))
+      u2[t] <- (((df + 1)*(y[t] - f1[t])^2) / (df*exp(2*f2[t]) + (y[t] - f1[t])^2)) - 1
+    }
+    for(t in 13:(N-1)){
+      u1[t] <- (df + 1)*((y[t] - f1[t])/(df*exp(2*f2[t])))/(1 + (y[t] - f1[t])^2/(df*exp(2*f2[t])))
+      u2[t] <- (((df + 1)*(y[t] - f1[t])^2) / (df*exp(2*f2[t]) + (y[t] - f1[t])^2)) - 1
+      f1[t+1] <- w1 + A1_00*u1[t] + A1_01*u1[t-1] + A1_11*u1[t-11] + A1_12*u1[t-12] + B1_00*f1[t] + B1_01*f1[t-1] + B1_11*f1[t-11]
+      f2[t+1] <- w2 + A2_00*u2[t] + B2_00*f2[t]
+    }
+    
+    f1 <- ts(f1[14:N], end = end(y), freq = frequency(y))
+    f2 <- ts(f2[14:N], end = end(y), freq = frequency(y))
+    u1 <- ts(c(u1[14:(N-1)], NA), end = end(y), freq =  frequency(y))
+    u2 <- ts(c(u2[14:(N-1)], NA), end = end(y), freq =  frequency(y))
+    
+    loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - sum(f2) - ((df + 1)/2)*sum(log(1 + (y - f1)^2/(df*exp(2*f2))))
+    epsilon <- (y - f1)/exp(f2)
+    out <- cbind(f1, f2, exp(f2), epsilon, u1, u2)
+    colnames(out) <- c("f1", "f2", "sigma","epsilon", "u1", "u2")
+    
+    # output
+    print(otimizados)
+    invisible(list(out = out, otimizados = otimizados, loglik = -loglik))
+    
+  }else if(type == "mean-var10"){ # modelo y[t] = f1[t] + exp(f2[t])*epsilon[t], epsilon[t] ~ t(v) c/ dummy
+    # > estimação via ML para densidade condicional de y t-student com média constante e variância variante no tempo
+    otimizar <- function(y, par){
+      w1 <- par[1]
+      w2 <- par[2]
+      A1_00 <- par[3]
+      A1_01 <- par[4]
+      A1_11 <- par[5]
+      A1_12 <- par[6]
+      B1_00 <- par[7]
+      B1_01 <- par[8]
+      B1_11 <- par[9]
+      A2_00 <- par[10]
+      B2_00 <- par[11]
+      df <- par[12]
+      D1 <- par[13]
+      D2 <- par[14]
+      D3 <- par[15]
+      D4 <- par[16]
+      D5 <- par[17]
+      D6 <- par[18]
+      f1 <- rep(w1/(1 - B1_00 - B1_01 - B1_11),13)
+      f2 <- rep(w2/(1 - B2_00),13)
+      N <- length(y)
+      u1 <- NULL
+      u2 <- NULL
+      for(t in 1:12){
+        u1[t] <- (df + 1)*((y[t] - f1[t])/(df*exp(2*f2[t])))/(1 + (y[t] - f1[t])^2/(df*exp(2*f2[t])))
+        u2[t] <- (((df + 1)*(y[t] - f1[t])^2) / (df*exp(2*f2[t]) + (y[t] - f1[t])^2)) - 1
+      }
+      for(t in 13:(N-1)){
+        u1[t] <- (df + 1)*((y[t] - f1[t])/(df*exp(2*f2[t])))/(1 + (y[t] - f1[t])^2/(df*exp(2*f2[t])))
+        u2[t] <- (((df + 1)*(y[t] - f1[t])^2) / (df*exp(2*f2[t]) + (y[t] - f1[t])^2)) - 1
+        f1[t+1] <- w1 + A1_00*u1[t] + A1_01*u1[t-1] + A1_11*u1[t-11] + A1_12*u1[t-12] + B1_00*f1[t] + B1_01*f1[t-1] + B1_11*f1[t-11] + D1*dummy[t+1,1] + D2*dummy[t+1,2] + D3*dummy[t+1,3] + D4*dummy[t+1,4] + D5*dummy[t+1,5] + D6*dummy[t+1,6]
+        f2[t+1] <- w2 + A2_00*u2[t] + B2_00*f2[t]
+      }
+      
+      f1 <- ts(f1[14:N], end = end(y), freq = frequency(y))
+      f2 <- ts(f2[14:N], end = end(y), freq = frequency(y))
+      
+      # loglik
+      loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - sum(f2) - ((df + 1)/2)*sum(log(1 + (y - f1)^2/(df*exp(2*f2))))
+      -loglik
+    }
+    
+    otimizados <- nlminb(start = c(initial), objective = otimizar, y = y,  
+                         lower = c(-Inf,-Inf,-Inf,-Inf,-Inf,-Inf,-1,-1,-1,-Inf,-1,2,-Inf,-Inf,-Inf,-Inf,-Inf,-Inf), upper = c(Inf,Inf,Inf,Inf,Inf,Inf,1,1,1,Inf,1,Inf,Inf,Inf,Inf,Inf,Inf,Inf), control = list(eval.max = 10000, iter.max = 10000))
+    
+    w1 <- otimizados$par[1]
+    w2 <- otimizados$par[2]
+    A1_00 <- otimizados$par[3]
+    A1_01 <- otimizados$par[4]
+    A1_11 <- otimizados$par[5]
+    A1_12 <- otimizados$par[6]
+    B1_00 <- otimizados$par[7]
+    B1_01 <- otimizados$par[8]
+    B1_11 <- otimizados$par[9]
+    A2_00 <- otimizados$par[10]
+    B2_00 <- otimizados$par[11]
+    df <- otimizados$par[12]
+    D1 <- otimizados$par[13]
+    D2 <- otimizados$par[14]
+    D3 <- otimizados$par[15]
+    D4 <- otimizados$par[16]
+    D5 <- otimizados$par[17]
+    D6 <- otimizados$par[18]
+    f1 <- rep(w1/(1 - B1_00 - B1_01 - B1_11),13)
+    f2 <- rep(w2/(1 - B2_00),13)
+    N <- length(y)
+    u1 <- NULL
+    u2 <- NULL
+    for(t in 1:12){
+      u1[t] <- (df + 1)*((y[t] - f1[t])/(df*exp(2*f2[t])))/(1 + (y[t] - f1[t])^2/(df*exp(2*f2[t])))
+      u2[t] <- (((df + 1)*(y[t] - f1[t])^2) / (df*exp(2*f2[t]) + (y[t] - f1[t])^2)) - 1
+    }
+    for(t in 13:(N-1)){
+      u1[t] <- (df + 1)*((y[t] - f1[t])/(df*exp(2*f2[t])))/(1 + (y[t] - f1[t])^2/(df*exp(2*f2[t])))
+      u2[t] <- (((df + 1)*(y[t] - f1[t])^2) / (df*exp(2*f2[t]) + (y[t] - f1[t])^2)) - 1
+      f1[t+1] <- w1 + A1_00*u1[t] + A1_01*u1[t-1] + A1_11*u1[t-11] + A1_12*u1[t-12] + B1_00*f1[t] + B1_01*f1[t-1] + B1_11*f1[t-11] + D1*dummy[t+1,1] + D2*dummy[t+1,2] + D3*dummy[t+1,3] + D4*dummy[t+1,4] + D5*dummy[t+1,5] + D6*dummy[t+1,6]
+      f2[t+1] <- w2 + A2_00*u2[t] + B2_00*f2[t]
+    }
+    
+    f1 <- ts(f1[14:N], end = end(y), freq = frequency(y))
+    f2 <- ts(f2[14:N], end = end(y), freq = frequency(y))
+    u1 <- ts(c(u1[14:(N-1)], NA), end = end(y), freq =  frequency(y))
+    u2 <- ts(c(u2[14:(N-1)], NA), end = end(y), freq =  frequency(y))
     
     loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - sum(f2) - ((df + 1)/2)*sum(log(1 + (y - f1)^2/(df*exp(2*f2))))
     epsilon <- (y - f1)/exp(f2)

@@ -1,6 +1,46 @@
 shinyUI(
   navbarPage(theme = shinytheme("lumen"), shinyjs::useShinyjs(),
              
+             # PAINEL Modelos Novos --------------------------------------
+             tabPanel("Modelos Novos",
+                      
+                      
+                      fluidRow(
+                        column(10, offset = 1,
+                               span(withMathJax(sprintf("\\( y_t = f_{1,t} + \\exp(f_{2,t})\\epsilon_t \\)")), style = "font-size:110%"),
+                               span(withMathJax(sprintf("\\( f_{1,t+1} = w_{1} +
+                                                        A_{1,0} s_{1,t} + A_{1,1} s_{1,t-1} + A_{1,11} s_{1,t-11} + A_{1,12} s_{1,t-12} +
+                                                        B_{1,0} f_{1,t} + B_{1,1} f_{1,t-1} + B_{1,11} f_{1,t-11} +
+                                                        \\delta_{1} D_{\\text{nov/2002,t+1}} +  \\delta_{2} D_{\\text{jan/2003,t+1}} +
+                                                        \\delta_{3} D_{\\text{jul/2000,t+1}} +  \\delta_{4} D_{\\text{jan/2015,t+1}} +
+                                                        \\delta_{5} D_{\\text{jan/2016,t+1}} +  \\delta_{6} D_{\\text{jan/2010,t+1}} \\)")), style = "font-size:110%"),
+                               span(withMathJax(sprintf("\\( f_{2,t+1} = w_{2} + A_{2,0}  s_{2,t} + B_{2,0} f_{2,t} \\)")), style = "font-size:110%"),
+                               
+                               hr(),
+                               div("y[t], f1[t] e exp(f2[t])", style = "text-align:center; background-color:#EDEDED; font-weight:bold"), br(),
+                               fluidRow(
+                                 column(8, dygraphOutput("novo_dygraph_d6y")),
+                                 column(4, div(tableOutput("tabela"), style = "font-size:90%"))
+                               ),
+                               hr(),
+                               div("Resíduos Padronizados", style = "text-align:center; background-color:#EDEDED; font-weight:bold"), br(),
+                               dygraphOutput("novo_dygraph_d6ep"),
+                               hr(),
+                               plotOutput("hist6"),
+                               hr(),
+                               plotOutput("acf6"),
+                               hr(),
+                               fluidRow(
+                                 column(6, div("Análise dentro da amostra", style = "text-align:center; background-color:#FFF5EE; font-weight:bold"), br(),
+                                        dygraphOutput("previsao_dentro6")),
+                                 column(6, div("Previsão para 2017", style = "text-align:center; background-color:#FFF5EE; font-weight:bold"), br(),
+                                        dygraphOutput("previsao_fora6"))
+                               )
+                        
+                        )
+                      )
+             ),
+             
              # PAINEL BETATEGARCH IPC --------------------------------------
              tabPanel("IPC FGV",
                       fluidRow(
@@ -11,7 +51,6 @@ shinyUI(
                         column(4, div("Modelo 3: y[t] = f1[t] + exp(f2[t])*epsilon[t]", style = "text-align:center"), br(), 
                                dygraphOutput("dygraph_d3y"), br(), dygraphOutput("dygraph_d3ep", height = 150))
                       )
-                      
              ),
              
              # PAINEL BETATEGARCH --------------------------------------

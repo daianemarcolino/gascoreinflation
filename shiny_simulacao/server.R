@@ -91,4 +91,65 @@ server <- function(input, output) {
   output$dygraph_d2ep <- renderDygraph({resul$dygraphs_ep$d2ep})
   output$dygraph_d3ep <- renderDygraph({resul$dygraphs_ep$d3ep})
   
+  # NOVOS MODELOS -----------------------------------------------------------------
+  
+  # estimações
+  # output$novo_dygraph_d1y <- renderDygraph({resul_novo$graphs_y$d1y})
+  # output$novo_dygraph_d2y <- renderDygraph({resul_novo$graphs_y$d2y})
+  # output$novo_dygraph_d3y <- renderDygraph({resul_novo$graphs_y$d3y})
+  # output$novo_dygraph_d4y <- renderDygraph({resul_novo$graphs_y$d4y})
+  # output$novo_dygraph_d5y <- renderDygraph({resul_novo$graphs_y$d5y})
+  output$novo_dygraph_d6y <- renderDygraph({resul_novo$graphs_y$d6y})
+  
+  # epsilons
+  # output$novo_dygraph_d1ep <- renderDygraph({resul_novo$graphs_resp$d1ep})
+  # output$novo_dygraph_d2ep <- renderDygraph({resul_novo$graphs_resp$d2ep})
+  # output$novo_dygraph_d3ep <- renderDygraph({resul_novo$graphs_resp$d3ep})
+  # output$novo_dygraph_d4ep <- renderDygraph({resul_novo$graphs_resp$d4ep})
+  # output$novo_dygraph_d5ep <- renderDygraph({resul_novo$graphs_resp$d5ep})
+  output$novo_dygraph_d6ep <- renderDygraph({resul_novo$graphs_resp$d6ep})
+  
+  # ACF
+  output$acf6 <- renderPlot({
+    acf(  resul_novo$residuos$resp6, lag.max = 96, ci.col = "red", main = "", xaxt = "n")
+    axis(1, at = c(0,1,2,3,4,5,6,7,8,9), labels = c(0,1,2,3,4,5,6,7,8,9)*12)
+    grid(nx = NA, ny = NULL)
+  })
+  
+  # histograma
+  output$hist6 <- renderPlot({
+    hist(resul_novo$residuos$resp6, xlim = c(-3,3), main = "", border = "#AD2D1F", col = "#F0DFDB", xlab = "")
+  })
+
+  # previsão
+  output$previsao_dentro6 <- renderDygraph({
+    dygraph(resul_novo$previsao$dentro) %>%
+        dySeries("ipc", label = "FGV IPC", color = "black", strokeWidth = 1, strokePattern = "dashed") %>%
+        dySeries("prev", label = "Previsão", color = "orangered", strokeWidth = 2) %>%
+        dyRangeSelector()
+  })
+  # previsão
+  output$previsao_fora6 <- renderDygraph({
+    
+    k <- cbind(ipc, resul_novo$previsao$fora)
+    colnames(k) <- c("ipc","prev")
+    
+    dygraph(k) %>%
+      dySeries("ipc", label = "FGV IPC", color = "black", strokeWidth = 1, strokePattern = "dashed") %>%
+      dySeries("prev", label = "Previsão", color = "orangered", strokeWidth = 2) %>%
+      dyRangeSelector(dateWindow = c("2012-01-01","2017-12-31"))
+  })
+  
+  # tabela de parâmetros
+  
+  output$tabela <- renderTable({
+    
+   a <- data.frame(parâmetro = c("w1","w2","A{1,0}","A{1,1}","A{1,11}","A{1,12}","B{1,0}","B{1,1}","B{1,11}"),
+               estimativa = round(resul_novo$modelos$m6$otimizados$par,2)[1:9],
+               parâmetro = c("A{2,0}","B{2,0}","df","delta1","delta2","delta3","delta4","delta5","delta6"),
+               estimativa = round(resul_novo$modelos$m6$otimizados$par,2)[10:18])
+    colnames(a) <- c("parâmetro","estimativa","parâmetro", "estimativa")
+      a         
+  })
+
 }
