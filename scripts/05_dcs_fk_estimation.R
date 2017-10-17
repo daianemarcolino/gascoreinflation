@@ -33,5 +33,17 @@ round(m1$otimizados$par,4)
 round(m2$otimizados$par,4)
 ts.plot(ipc,m1$out[,c(1)], col = 1:2, lwd = 1:2)
 ts.plot(ipc,m2$out[,c(1)], col = 1:2, lwd = 1:2)
+ts.plot(ipc,m3$out[,"mu"] + m3$out[,"beta"] + m3$out[,"gamma"], col = 1:2, lwd = 1:2)
+ts.plot(ipc,m3$out[,"mu"], col = 1:2, lwd = 1:2)
 ts.plot(ipc,m3$out[,"mu"] + m3$out[,"beta"], col = 1:2, lwd = 1:2)
+ts.plot(ipc,m3$out[,"beta"], col = 1:2, lwd = 1:2)
+
 plot(m3$out)
+
+m <- dcs_fk_estimation(ipc, type = "cn3")
+y=ipc
+ts.plot(y,m[,"mu"], col = 1:2, lwd = c(1,2), main = "IPC e Tendência + Sazonalidade")
+ts.plot(y,m[,"f1"], col = 1:2, lwd = c(1,2), main = "IPC e Tendência")
+ts.plot(y,m[,"f2"], col = 1:2, lwd = c(1,2), main = "IPC e Sazonalidade")
+ts.plot(y,m[,"sigma"], col = 1:2, lwd = c(1,2), main = "IPC e Sigma")
+plot(m[,c("f1","f2")], col = 1:2, lwd = c(1,2), main = "Tendência e Sazonalidade")
