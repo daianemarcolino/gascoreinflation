@@ -1,6 +1,22 @@
 shinyUI(
   navbarPage(theme = shinytheme("lumen"), shinyjs::useShinyjs(),
              
+             # PAINEL Turistas --------------------------------------
+             tabPanel("Artigo Caivano, Harvey & Luati",
+                      div(style = "text-align:center", a(href = "artigo_robust.pdf", "Caivano, Harvey & Luati (2016) - Robust time series models with trend and seasonal components", target = "_blank")),
+                      br(),
+                      fluidRow(
+                        column(offset = 1, width = 10,
+                               fluidRow(column(offset = 4, width = 4, 
+                                               tableOutput("turistas_tabela"))),
+                               plotOutput("turistas_plot1"),
+                               plotOutput("turistas_plot2")
+                        )
+                      )
+             ),
+             
+             
+             
              # PAINEL Modelos Novos --------------------------------------
              tabPanel("Modelos Novos",
                       
@@ -36,7 +52,7 @@ shinyUI(
                                  column(6, div("Previsão para 2017", style = "text-align:center; background-color:#FFF5EE; font-weight:bold"), br(),
                                         dygraphOutput("previsao_fora6"))
                                )
-                        
+                               
                         )
                       )
              ),
@@ -126,7 +142,7 @@ shinyUI(
                       
              )
              
-            
+             
              
   )
 )

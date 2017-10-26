@@ -152,4 +152,34 @@ server <- function(input, output) {
       a         
   })
 
+  
+  # Turistas --------------------------------------------------
+  
+  output$turistas_plot1 <- renderPlot({
+    
+    par(mfrow = c(2,2), mar = c(3,3,2,3))
+    ts.plot(turistas,bsm$out[,"mu"], col = 1, lwd = c(1,2), main = "Y e Tendência", ylab = "")
+    ts.plot(bsm$out[,"mu"], col = 1, lwd = c(1), main = "Tendência", ylab = "")
+    ts.plot(bsm$out[,"gamma"], col = 1, lwd = c(1,2), main = "Sazonalidade", ylab = "")
+    ts.plot(bsm$out[,c("scorestd","epsilonstd")], col = 1, lty = c(1,3), main = "Score e Epsilon padr.", ylab = "")
+    
+  })
+  
+  output$turistas_plot2 <- renderPlot({
+    
+    par(mfrow = c(2,2), mar = c(3,3,2,3))
+    ts.plot(bsm$out[,c("epsilonstd")], col = 1, lty = c(1,3), main = "Epsilon padr.", ylab = "", ylim = c(-3,3))
+    ts.plot(bsm$out[,c("scorestd")], col = 1, lty = c(1,3), main = "Score padr.", ylab = "", ylim = c(-3,3))
+    acf(bsm$out[,c("epsilonstd")], 20, drop.lag.0 = T, main = "Epsilon padr.")
+    acf(bsm$out[,c("scorestd")], 20, drop.lag.0 = T, main = "Score padr.")
+    
+  })
+  
+  output$turistas_tabela <- renderTable({
+    
+    data.frame(Parâmetros = c("k1","ks","f2","df"),
+                        Estimados = bsm$otimizados$par[1:4],
+                        Artigo =  c(0.4906, 1.0068,-3.2573,6.006))
+  })
+  
 }
