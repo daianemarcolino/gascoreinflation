@@ -20,9 +20,10 @@ shinyUI(
                                  ),
                                  column(10,
                                         div("Resultados", style = "font-weight:bold; text-align: center"),
+                                        hr(),
                                         fluidRow(
-                                          column(width = 2,tableOutput("dcsipc_param")),
-                                          column(offset=1,width = 9,verbatimTextOutput("dcsipc_optim"))),
+                                          column(offset=1,width = 2,tableOutput("dcsipc_param")),
+                                          column(offset=1,width = 8,tableOutput("dcsipc_optim"))),
                                         br(),
                                         plotOutput("dcsipc_plot", height = 900)
                                         )

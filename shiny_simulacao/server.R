@@ -225,12 +225,13 @@ server <- function(input, output) {
       
   })
   
-  output$dcsipc_optim <- renderPrint({
-    list(convergence = dcsipc()$otimizados$convergence,
+  output$dcsipc_optim <- renderTable({
+    
+    (data.frame(convergence = dcsipc()$otimizados$convergence,
          message = dcsipc()$otimizados$message,
          iterations = dcsipc()$otimizados$iterations,
          loglik = dcsipc()$otimizados$objective
-         )
+         ))
   })
     
 }
