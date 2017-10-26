@@ -11,12 +11,11 @@ plot(ipc)
 
 turistas <- log(ts(read.csv2("dados/turistas.csv")[,2], start = c(2000,1), freq = 12))
 plot(turistas)
-saveRDS(turistas, "shiny_simulacao/data/turistas.rds")
-# modelos -----------
+#saveRDS(turistas, "shiny_simulacao/data/turistas.rds")
 
-# replicar 
+# replicar artigo ------------------------------------------------- 
 bsm <- dcs_fk_estimation(turistas, type = "BSM_artigo")
-saveRDS(bsm, "shiny_simulacao/data/out_turistas.rds")
+#saveRDS(bsm, "shiny_simulacao/data/out_turistas.rds")
 
 par(mfrow = c(2,2), mar = c(3,3,2,3))
 ts.plot(turistas,bsm$out[,"mu"], col = 1, lwd = c(1,2), main = "Y e Tendência", ylab = "")
@@ -30,14 +29,40 @@ acf(bsm$out[,c("epsilonstd")], 20, drop.lag.0 = T, main = "Epsilon padr.")
 acf(bsm$out[,c("scorestd")], 20, drop.lag.0 = T, main = "Score padr.")
 
 
-# modelo BSM
-bsm <- dcs_fk_estimation(ipc, initial = c(0.2,0.2,0.2,5), type = "BSM")
+# BSM para IPC ----------------------------------------------------
+# BSM1: mu, beta, gamma, variância constante
+bsm1 <- dcs_fk_estimation(ipc, initial = c(0.9,0.03,0.05,7), type = "BSM1")
+bsm2 <- dcs_fk_estimation(ipc, initial = c(0.1,0.3,3,11), type = "BSM2")
 
-ts.plot(ipc,bsm$out[,"mu"], col = 1:2, lwd = c(1,2), main = "IPC e Tendência")
-ts.plot(ipc,bsm$out[,"beta"], col = 1:2, lwd = c(1,2), main = "IPC e Beta")
-ts.plot(ipc,bsm$out[,"gamma"], col = 1:2, lwd = c(1,2), main = "IPC e Sazonalidade")
-ts.plot(ipc,bsm$out[,"sigma"], col = 1:2, lwd = c(1,2), main = "IPC e Sigma")
+bsm1 <- dcs_fk_estimation(window(ipc,start = c(2003,1),freq = 12), initial = c(0.5,0.5,0.5,7), type = "BSM1")
+bsm2 <- dcs_fk_estimation(window(ipc,start = c(2003,1),freq = 12), initial = c(0.1,0.3,3,11), type = "BSM2")
 
+
+bsm1$otimizados$par
+bsm2$otimizados$par
+
+ts.plot(ipc,bsm1$out[,"mu"], col = 1:2, lwd = c(1,2), main = "IPC e Tendência")
+ts.plot(ipc,bsm1$out[,"beta"], col = 1:2, lwd = c(1,2), main = "IPC e Beta")
+ts.plot(ipc,bsm1$out[,"gamma"], col = 1:2, lwd = c(1,2), main = "IPC e Sazonalidade")
+ts.plot(ipc,bsm1$out[,"sigma"], col = 1:2, lwd = c(1,2), main = "IPC e Sigma")
+ts.plot(bsm1$out[,c("epsilon")], col = 1:2, lwd = c(1,2), main = "epsilon")
+ts.plot(bsm1$out[,c("score")], col = 1:2, lwd = c(1,2), main = "score")
+ts.plot(bsm1$out[,c("score","epsilon")], col = 1, lty = c(1,3), main = "Score e Epsilon", ylab = "")
+legend("top", legend = c("score","epsilon"), lty = c(1,3), col = 1, bty = "n", cex = 0.8)
+
+ts.plot(ipc,bsm2$out[,"mu"], col = 1:2, lwd = c(1,2), main = "IPC e Tendência")
+ts.plot(ipc,bsm2$out[,"gamma"], col = 1:2, lwd = c(1,2), main = "IPC e Sazonalidade")
+ts.plot(ipc,bsm2$out[,"sigma"], col = 1:2, lwd = c(1,2), main = "IPC e Sigma")
+ts.plot(bsm2$out[,c("epsilon")], col = 1:2, lwd = c(1,2), main = "epsilon")
+ts.plot(bsm2$out[,c("score")], col = 1:2, lwd = c(1,2), main = "score")
+ts.plot(bsm2$out[,c("score","epsilon")], col = 1, lty = c(1,3), main = "Score e Epsilon", ylab = "")
+legend("top", legend = c("score","epsilon"), lty = c(1,3), col = 1, bty = "n", cex = 0.8)
+
+ts.plot(bsm1$out[,"mu"], bsm2$out[,"mu"], col = 1,  lty = c(1,3),  main = "Tendência 1 e Tendência 2")
+legend("top", legend = c("BMS1 - c/ beta","BSM2 - s/ beta"), lty = c(1,3), col = 1, bty = "n", cex = 0.8)
+
+
+1
 
 
 
