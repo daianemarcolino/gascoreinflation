@@ -1,6 +1,37 @@
 shinyUI(
   navbarPage(theme = shinytheme("lumen"), shinyjs::useShinyjs(),
              
+             
+             # PAINEL DCS IPC --------------------------------------
+             tabPanel("DCS - IPC",
+                      
+                      fluidRow(
+                        column(offset = 1, width = 10,
+                               
+                               fluidRow(
+                                 column(2,
+                                        div("Valores Iniciais", style = "font-weight:bold; text-align: center"),
+                                        br(),
+                                        selectInput("dcsipc_type", "Modelo:", choices = c("BSM1","BSM2")),
+                                        numericInput("dcsipc_k1", "k1:", value = 0.5, step = 0.1, min = 0, max = 1),
+                                        numericInput("dcsipc_ks", "ks:", value = 0.5, step = 0.1),
+                                        numericInput("dcsipc_f2", "f2 = ln(sigma):", value = 0.5),
+                                        numericInput("dcsipc_df", "Graus de liberdade:", value = 5, min = 4)
+                                 ),
+                                 column(10,
+                                        div("Resultados", style = "font-weight:bold; text-align: center"),
+                                        fluidRow(
+                                          column(width = 2,tableOutput("dcsipc_param")),
+                                          column(offset=1,width = 9,verbatimTextOutput("dcsipc_optim"))),
+                                        br(),
+                                        plotOutput("dcsipc_plot", height = 900)
+                                        )
+                               )
+                        )
+                      )
+             ),
+             
+             
              # PAINEL Turistas --------------------------------------
              tabPanel("Artigo Caivano, Harvey & Luati",
                       div(style = "text-align:center", a(href = "artigo_robust.pdf", "Caivano, Harvey & Luati (2016) - Robust time series models with trend and seasonal components", target = "_blank")),

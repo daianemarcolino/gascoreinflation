@@ -181,5 +181,56 @@ server <- function(input, output) {
                         Estimados = bsm$otimizados$par[1:4],
                         Artigo =  c(0.4906, 1.0068,-3.2573,6.006))
   })
+ 
   
+  # DCS IPC -------------------------------------------------------------------------
+  
+  
+  dcsipc <- reactive({
+    
+    dcs_fk_estimation(ipc, initial = c(input$dcsipc_k1,input$dcsipc_ks,input$dcsipc_f2,input$dcsipc_df), type = input$dcsipc_type)
+    
+  })
+  
+  output$dcsipc_param <- renderTable({
+    
+    data.frame(parametros = c("k1","ks","f2","df"),
+               estimativa = dcsipc()$otimizados$par)
+    
+  })
+  
+  output$dcsipc_plot <- renderPlot({
+    
+    if(input$dcsipc_type == "BSM1"){
+      par(mfrow = c(4,2))
+      ts.plot(ipc,dcsipc()$out[,"mu"], col = 1:2, lwd = c(1,2), main = "IPC e Tendência")
+      ts.plot(ipc,dcsipc()$out[,"beta"], col = 1:2, lwd = c(1,2), main = "IPC e Beta")
+      ts.plot(ipc,dcsipc()$out[,"gamma"], col = 1:2, lwd = c(1,2), main = "IPC e Sazonalidade")
+      ts.plot(ipc,dcsipc()$out[,"sigma"], col = 1:2, lwd = c(1,2), main = "IPC e Sigma")
+      ts.plot(dcsipc()$out[,c("epsilon")], col = 1:2, lwd = c(1,2), main = "epsilon")
+      ts.plot(dcsipc()$out[,c("score")], col = 1:2, lwd = c(1,2), main = "score")
+      ts.plot(dcsipc()$out[,c("score","epsilon")], col = 1, lty = c(1,3), main = "Score e Epsilon", ylab = "")
+      legend("top", legend = c("score","epsilon"), lty = c(1,3), col = 1, bty = "n", cex = 0.8)
+    }else{
+      par(mfrow = c(3,2))
+      ts.plot(ipc,dcsipc()$out[,"mu"], col = 1:2, lwd = c(1,2), main = "IPC e Tendência")
+      ts.plot(ipc,dcsipc()$out[,"gamma"], col = 1:2, lwd = c(1,2), main = "IPC e Sazonalidade")
+      ts.plot(ipc,dcsipc()$out[,"sigma"], col = 1:2, lwd = c(1,2), main = "IPC e Sigma")
+      ts.plot(dcsipc()$out[,c("epsilon")], col = 1:2, lwd = c(1,2), main = "epsilon")
+      ts.plot(dcsipc()$out[,c("score")], col = 1:2, lwd = c(1,2), main = "score")
+      ts.plot(dcsipc()$out[,c("score","epsilon")], col = 1, lty = c(1,3), main = "Score e Epsilon", ylab = "")
+      legend("top", legend = c("score","epsilon"), lty = c(1,3), col = 1, bty = "n", cex = 0.8)
+    }
+      
+      
+  })
+  
+  output$dcsipc_optim <- renderPrint({
+    list(convergence = dcsipc()$otimizados$convergence,
+         message = dcsipc()$otimizados$message,
+         iterations = dcsipc()$otimizados$iterations,
+         loglik = dcsipc()$otimizados$objective
+         )
+  })
+    
 }
