@@ -1,4 +1,4 @@
-dcs_fk_estimation <- function(y, initial = NULL, type = "BSM", dummy = NULL, initial.optim = T){
+dcs_fk_estimation <- function(y, initial = NULL, type = "BSM", initial.optim = T){
   
   # BSM1: mu, beta, gamma, variancia constante
   # BSM2: mu, gamma, variancia constante
@@ -105,7 +105,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM", dummy = NULL, ini
     
     # output
     print(otimizados)
-    invisible(list(out = out, otimizados = otimizados, loglik = -loglik))
+    #invisible(list(out = out, otimizados = otimizados, loglik = -loglik))
     
   }else if(type == "BSM2"){ 
     
@@ -281,6 +281,13 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM", dummy = NULL, ini
     invisible(list(out = out, otimizados = otimizados, loglik = -loglik))
     
   }
+  
+  # # smoothing 
+  # pseudo.y <- out[,"mu"] + out[,"gamma"] + out[,"score"]
+  # 
+  # 
+  # fk <- StructTS(pseudo.y, type = "BSM")
+  # ts.plot(pseudo.y,fk$fitted[,"slope"])
   
 }
 

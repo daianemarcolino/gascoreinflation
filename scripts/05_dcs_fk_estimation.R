@@ -4,6 +4,7 @@ library(BETS)
 library(TSA)
 source("functions/dcs_fk_estimation.R")
 source("functions/ERRO.R")
+source("functions/bsm.R")
 
 # leitura -----------
 ipc <- ts(read.csv2("dados/VARIAÇÃO IPC-DI.csv")[,2], start = c(1999,1), freq = 12)
@@ -14,28 +15,38 @@ plot(turistas)
 #saveRDS(turistas, "shiny_simulacao/data/turistas.rds")
 
 # replicar artigo ------------------------------------------------- 
-bsm <- dcs_fk_estimation(turistas, type = "BSM_artigo")
+bsm0 <- dcs_fk_estimation(turistas, type = "BSM_artigo")
 #saveRDS(bsm, "shiny_simulacao/data/out_turistas.rds")
+saveRDS(bsm0, "bsm0.rds")
 
 par(mfrow = c(2,2), mar = c(3,3,2,3))
-ts.plot(turistas,bsm$out[,"mu"], col = 1, lwd = c(1,2), main = "Y e Tendência", ylab = "")
-ts.plot(bsm$out[,"mu"], col = 1, lwd = c(1), main = "Tendência", ylab = "")
-ts.plot(bsm$out[,"gamma"], col = 1, lwd = c(1,2), main = "Sazonalidade", ylab = "")
-ts.plot(bsm$out[,c("scorestd","epsilonstd")], col = 1, lty = c(1,3), main = "Score e Epsilon padr.", ylab = "")
+ts.plot(turistas,bsm0$out[,"mu"], col = 1, lwd = c(1,2), main = "Y e Tendência", ylab = "")
+ts.plot(bsm0$out[,"mu"], col = 1, lwd = c(1), main = "Tendência", ylab = "")
+ts.plot(bsm0$out[,"gamma"], col = 1, lwd = c(1,2), main = "Sazonalidade", ylab = "")
+ts.plot(bsm0$out[,c("scorestd","epsilonstd")], col = 1, lty = c(1,3), main = "Score e Epsilon padr.", ylab = "")
 
-ts.plot(bsm$out[,c("epsilonstd")], col = 1, lty = c(1,3), main = "Epsilon padr.", ylab = "", ylim = c(-3,3))
-ts.plot(bsm$out[,c("scorestd")], col = 1, lty = c(1,3), main = "Score padr.", ylab = "", ylim = c(-3,3))
-acf(bsm$out[,c("epsilonstd")], 20, drop.lag.0 = T, main = "Epsilon padr.")
-acf(bsm$out[,c("scorestd")], 20, drop.lag.0 = T, main = "Score padr.")
+ts.plot(bsm0$out[,c("epsilonstd")], col = 1, lty = c(1,3), main = "Epsilon padr.", ylab = "", ylim = c(-3,3))
+ts.plot(bsm0$out[,c("scorestd")], col = 1, lty = c(1,3), main = "Score padr.", ylab = "", ylim = c(-3,3))
+acf(bsm0$out[,c("epsilonstd")], 20, drop.lag.0 = T, main = "Epsilon padr.")
+acf(bsm0$out[,c("scorestd")], 20, drop.lag.0 = T, main = "Score padr.")
 
-hist(bsm$out[,"score"], main = "score")
-betasuposto <- rbeta(length(bsm$out[,"score"]), 0.5, bsm$otimizados$par[4]/2)
-q1 <- quantile(bsm$out[,"score"], probs = seq(0,1,length.out = length(turistas)))
+hist(bsm0$out[,"score"], main = "score")
+betasuposto <- rbeta(length(bsm0$out[,"score"]), 0.5, bsm0$otimizados$par[4]/2)
+q1 <- quantile(bsm0$out[,"score"], probs = seq(0,1,length.out = length(turistas)))
 q2 <- quantile(betasuposto, probs = seq(0,1,length.out = length(turistas)))
 plot(q1,q2, xlab = "quantis score", ylab = "quantis beta(1/2,v/2)")
-qqline(data.frame(q1,q2), distribution =  function(p) qbeta(p, 0.5, bsm$otimizados$par[4]/2 ))
-qqplot(bsm2$out[,"score"],betasuposto, xlim = c(-0.4,0.4), ylim = c(0,0.5))
-qqline(data.frame(bsm2$out[,"score"],betasuposto))
+qqline(data.frame(q1,q2), distribution =  function(p) qbeta(p, 0.5, bsm0$otimizados$par[4]/2 ))
+
+pseudo.y <- bsm0$out[,"mu"] + bsm0$out[,"gamma"] + bsm0$out[,"score"]
+ts.plot(turistas, pseudo.y, col = 1:2)
+
+fk <- bsm(pseudo.y)
+
+
+dygraph(cbind(bsm0$out[,"mu"], fk$filter[,"mu"]))
+dygraph(cbind(fk$filter[,"mu"],fk$smooth[,"mu"]))
+dygraph(cbind(bsm0$out[,"mu"],fk$smooth[,"mu"]))
+dygraph(cbind(turistas,fk$filter[,"mu"],fk$smooth[,"mu"]))
 
 # BSM para IPC ----------------------------------------------------
 
@@ -91,7 +102,7 @@ parametros4 <- list(
 )
 
 bsm2 <- dcs_fk_estimation(ipc, initial = parametros4, type = "BSM2")
-
+#saveRDS(bsm2, "bsm2.rds")
 data.frame(bsm1 = bsm1$otimizados$par,
            bsm2 = c(bsm2$otimizados$par[1:4],NA,bsm2$otimizados$par[5:16]))
 
@@ -118,21 +129,20 @@ plot(q1,q2, xlim = c(-0.4,0.4), ylim = c(0,0.4), xlab = "quantis score", ylab = 
 qqline(data.frame(q1,q2))
 qqplot(bsm2$out[,"score"],betasuposto, xlim = c(-0.4,0.4), ylim = c(0,0.5))
 qqline(data.frame(bsm2$out[,"score"],betasuposto))
-1
+
+pseudo.y <- bsm2$out[,"mu"] + bsm2$out[,"gamma"] + bsm2$out[,"score"]
+ts.plot(ipc, pseudo.y, col = 1:2)
+fk <- bsm(pseudo.y)
 
 
+dygraph(cbind(bsm2$out[,"mu"], fk$filter[,"mu"]))
+dygraph(cbind(fk$filter[,"mu"],fk$smooth[,"mu"]))
+dygraph(cbind(ipc,fk$filter[,"mu"],fk$smooth[,"mu"]))
+dygraph(cbind(ipc,fk$smooth[,"mu"]))
 
-
-
-
-
-
-
-
-
-
-
-
+dados <- cbind(ipc,fk$smooth[,"mu"])
+colnames(dados) <- c("ipc","core")
+dygraph(((dados/100+1)^12-1)*100)
 
 # # USGDP
 # 
