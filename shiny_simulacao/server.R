@@ -234,4 +234,59 @@ server <- function(input, output) {
          ))
   })
     
+  # DCS IPC 2 -------------------------------------------------------------------------
+  
+  output$graph_dcs1 <- renderDygraph({
+    dygraph(smooth[,c("ipc","mu")]) %>%
+      dySeries("ipc", strokePattern = "dotted", color = "black") %>%
+      dySeries("mu", strokeWidth = 2, color = "orangered")%>%
+      dyRangeSelector()
+  })
+  output$graph_dcs2 <- renderDygraph({
+    dygraph(smooth[,c("mu")]) %>%
+      dySeries("V1", label = "mu", strokeWidth = 2, color = "orangered")%>%
+      dyRangeSelector()
+  })
+  
+  output$graph_dcs3 <- renderDygraph({
+    dygraph(smooth[,c("ipc","mu_smooth")]) %>%
+      dySeries("ipc", strokePattern = "dotted", color = "black") %>%
+      dySeries("mu_smooth", strokeWidth = 2, color = "orangered")%>%
+      dyRangeSelector()
+  })
+  output$graph_dcs4 <- renderDygraph({
+    dygraph(smooth[,c("mu_smooth")]) %>%
+      dySeries("V1", label = "mu_smooth", strokeWidth = 2, color = "orangered")%>%
+      dyRangeSelector()
+  })
+  
+  output$graph_dcs5 <- renderDygraph({
+    dygraph(smooth[,c("mu","mu_smooth")]) %>%
+      dySeries("mu", color = "#800000", strokePattern = "dashed") %>%
+      dySeries("mu_smooth", strokeWidth = 2, color = "orangered") %>%
+      dyRangeSelector()
+  })
+  
+  output$graph_dcs6 <- renderDygraph({
+    dygraph(smooth[,c("gamma","gamma_smooth")]) %>%
+      dySeries("gamma", strokePattern = "dotted", color = "red") %>%
+      dySeries("gamma_smooth",  color = "black")%>%
+      dyRangeSelector()
+  })
+  
+  output$graph_dcs7 <- renderDygraph({
+    dygraph(smooth[,c("epsilon","score")]) %>%
+      dySeries("epsilon", strokeWidth = 1, color = "#F64D54") %>%
+      dySeries("score", strokeWidth = 2, color = "#91219E")%>%
+      dyRangeSelector()
+  })
+  
+  output$graph_dcs8 <- renderPlot({
+    par(mfrow = c(1,2))
+    hist(smooth[,"epsilon"], border = "#F64D54", col = "#FFC0CB", breaks = seq(min(smooth[,"epsilon"]), max(smooth[,"epsilon"]), length.out = 12), xlim = c(-5,13), main = "epsilon")
+    hist(smooth[,"score"], border = "#91219E", col = "#DCA2CD", breaks = seq(min(smooth[,"score"]), max(smooth[,"score"]), length.out = 12), xlim = c(-0.4,0.4), main = "score")
+  })
+  
+   
+  
 }

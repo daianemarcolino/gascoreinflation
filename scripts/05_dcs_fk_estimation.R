@@ -119,9 +119,13 @@ legend("top", legend = c("score","epsilon"), lty = c(1,3), col = 1, bty = "n", c
 ts.plot(bsm1$out[,"mu"], bsm2$out[,"mu"], col = 1,  lty = c(1,3),  main = "Tendência 1 e Tendência 2")
 legend("top", legend = c("BMS1 - c/ beta","BSM2 - s/ beta"), lty = c(1,3), col = 1, bty = "n", cex = 0.8)
 
-saveRDS(list(bsm1 = bsm1, bsm2 = bsm2), "dcsipc_novosresultados.rds")
+#saveRDS(list(bsm1 = bsm1, bsm2 = bsm2), "dcsipc_novosresultados.rds")
+
+bsm1 <- readRDS("dcsipc_novosresultados.rds")$bsm1
+bsm2 <- readRDS("dcsipc_novosresultados.rds")$bsm2
 
 hist(bsm2$out[,"score"], main = "score")
+
 betasuposto <- rbeta(length(bsm2$out[,"score"]), 0.5, bsm2$otimizados$par[4]/2)
 q1 <- quantile(bsm2$out[,"score"], probs = seq(0,1,length.out = length(ipc)))
 q2 <- quantile(betasuposto, probs = seq(0,1,length.out = length(ipc)))
@@ -140,8 +144,12 @@ dygraph(cbind(fk$filter[,"mu"],fk$smooth[,"mu"]))
 dygraph(cbind(ipc,fk$filter[,"mu"],fk$smooth[,"mu"]))
 dygraph(cbind(ipc,fk$smooth[,"mu"]))
 
-dados <- cbind(ipc,fk$smooth[,"mu"])
-colnames(dados) <- c("ipc","core")
+dados <- cbind(ipc, bsm2$out, fk$smooth)
+colnames(dados) <- c("ipc",colnames(bsm2$out),"mu_smooth","gamma_smooth")
+
+dados_save <- data.frame(data = zoo::as.Date(dados), dados)
+write.csv2(dados_save, "ultimos_resultados.csv", row.names = F)
+saveRDS(dados_save, "ultimos_resultados.rds")
 dygraph(((dados/100+1)^12-1)*100)
 
 # # USGDP

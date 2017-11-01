@@ -1,6 +1,40 @@
 shinyUI(
   navbarPage(theme = shinytheme("lumen"), shinyjs::useShinyjs(),
              
+             # PAINEL DCS IPC --------------------------------------
+             tabPanel("NOVO DCS - IPC",
+                      
+                      fluidRow(
+                        column(offset = 1, width = 10,
+                               hr(),
+                               a(href = "ultimos_resultados.csv", "Baixar dados"),
+                               hr(),
+                               
+                               fluidRow(
+                                 column(6, dygraphOutput("graph_dcs1", height = "320px")),
+                                 column(6, dygraphOutput("graph_dcs2", height = "320px")) 
+                               ), hr(),
+                               fluidRow(
+                                 column(6, dygraphOutput("graph_dcs3", height = "320px")),
+                                 column(6, dygraphOutput("graph_dcs4", height = "320px")) 
+                               ), hr(),
+                               fluidRow(
+                                 column(12, dygraphOutput("graph_dcs5", height = "320px"))
+                               ),hr(),
+                               fluidRow(
+                                 column(12, dygraphOutput("graph_dcs6", height = "320px"))
+                               ),hr(),
+                               fluidRow(
+                                 column(12, dygraphOutput("graph_dcs7", height = "320px"))
+                               ),hr(),
+                               fluidRow(
+                                 column(12, plotOutput("graph_dcs8", height = "320px"))
+                               )
+                        )
+                      )
+                      
+                    
+             ),
              
              # PAINEL DCS IPC --------------------------------------
              tabPanel("DCS - IPC",
