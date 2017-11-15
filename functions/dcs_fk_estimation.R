@@ -1,11 +1,11 @@
-dcs_fk_estimation <- function(y, initial = NULL, type = "BSM", initial.optim = T){
+dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", initial.optim = T){
   
   # BSM1: mu, beta, gamma, variancia constante
   # BSM2: mu, gamma, variancia constante
   # BSM_artigo: personalizado - Caivano, Harvey e Luati (2016)
   
   if(type == "BSM1"){ 
-    
+    # BSM COM BETA -----
     # modelo:
     # y[t] = mu[t] + gamma[t] + exp(f2)*epsilon[t], epsilon[t] ~ t(v)
     # mu[t+1] = mu[t] + beta[t] + a1*u1[t] 
@@ -100,18 +100,21 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM", initial.optim = T
     u1 <- ts(u1, end = end(y), freq = frequency(y))
     loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma)^2/(df*exp(2*f2))))
     epsilon <- (y - mu - gamma)/exp(f2)
-    out <- cbind(mu, beta, gamma, f2, exp(f2), epsilon, u1)
-    colnames(out) <- c("mu","beta","gamma","f2","sigma","epsilon", "score")
+    nu <- (y - mu - gamma)
+    score <- (df + 1)/(df*exp(2*f2))*u1
+    out <- cbind(mu, beta, gamma, f2, exp(f2), epsilon, nu, score, u1)
+    colnames(out) <- c("mu","beta","gamma","f2","sigma","epsilon","nu","score","u")
     
     # output
     print(otimizados)
-    #invisible(list(out = out, otimizados = otimizados, loglik = -loglik))
+    invisible(list(out = out, otimizados = otimizados, loglik = -loglik))
     
   }else if(type == "BSM2"){ 
+    # BSM SEM BETA -----
     
     # modelo:
     # y[t] = mu[t] + gamma[t] + exp(f2)*epsilon[t], epsilon[t] ~ t(v)
-    # mu[t+1] = mu[t] + a1*u1[t]
+    # mu[t+1] = mu[t] + k1*u1[t]
     # gamma[t+1] = gamma[t] + k*u[t] 
     # > estimação via ML para densidade condicional de y t-student com média constante e variância constante no tempo
     
@@ -194,15 +197,17 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM", initial.optim = T
     u1 <- ts(u1, end = end(y), freq = frequency(y))
     loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma)^2/(df*exp(2*f2))))
     epsilon <- (y - mu - gamma)/exp(f2)
-    out <- cbind(mu, gamma, f2, exp(f2), epsilon, u1)
-    colnames(out) <- c("mu","gamma","f2","sigma","epsilon","score")
+    nu <- (y - mu - gamma)
+    score <- ((df + 1)/(df*exp(2*f2)))*u1
+    out <- cbind(mu, gamma, f2, exp(f2), epsilon, nu, score, u1)
+    colnames(out) <- c("mu","gamma","f2","sigma","epsilon", "nu", "score","u")
     
     # output
     print(otimizados)
     invisible(list(out = out, otimizados = otimizados, loglik = -loglik))
     
   }else if(type == "BSM_artigo"){ 
-    
+    # ARTIGO -----  
     otimizar <- function(y, par){
       
       N <- length(y)
@@ -238,7 +243,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM", initial.optim = T
     
     initial <- data.frame(param = c("k1","ks","f2","df","mu"   ,"g1"   ,"g2"   ,"g3"   ,"g4"  ,"g5"  ,"g6"  ,"g7"  ,"g8"  ,"g9"  ,"g10" ,"g11"),
                           value = c(0.5 ,0.5     ,0.5 ,3   ,15.1018,-0.5795,-0.4761,-0.1780,0.1733,0.1475,0.2648,0.5791,0.4566,0.3157,0.1167,-0.3862),
-                          lower = c(0,-Inf,-Inf,4  ,-Inf, rep(-Inf,11)),
+                          lower = c(0,-Inf,-Inf,2  ,-Inf, rep(-Inf,11)),
                           upper = c(1, Inf, Inf,Inf, Inf, rep(Inf,11)))
     
     
@@ -272,9 +277,11 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM", initial.optim = T
     gamma <- ts(gamma, end = end(y), freq = frequency(y))
     loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma)^2/(df*exp(2*f2))))
     epsilon <- (y - mu - gamma)/exp(f2)
+    nu <- (y - mu - gamma)
     u1 <- ts(u1, end = end(y), freq = frequency(y))
-    out <- cbind(mu, gamma, f2, exp(f2), epsilon, (epsilon-mean(epsilon))/sd(epsilon), u1, (u1-mean(u1))/sd(u1))
-    colnames(out) <- c("mu","gamma","f2","sigma","epsilon","epsilonstd", "score","scorestd")
+    score <- (df + 1)/(df*exp(2*f2))*u1
+    out <- cbind(mu, gamma, f2, exp(f2), epsilon, nu, score, u1)
+    colnames(out) <- c("mu","gamma","f2","sigma","epsilon","nu","score","u")
     
     # output
     print(otimizados)
