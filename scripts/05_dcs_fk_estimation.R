@@ -2,9 +2,11 @@
 library(dygraphs)
 library(BETS)
 library(TSA)
+library(MARSS)
 source("functions/dcs_fk_estimation.R")
 source("functions/ERRO.R")
 source("functions/bsm.R")
+source("functions/diag.dcs.R", encoding = "utf8")
 
 # leitura -----------
 ipc <- ts(read.csv2("dados/VARIAÇÃO IPC-DI.csv")[,2], start = c(1999,1), freq = 12)
@@ -16,97 +18,98 @@ plot(turistas)
 
 # replicar artigo ------------------------------------------------- 
 bsm0 <- dcs_fk_estimation(turistas, type = "BSM_artigo")
-#saveRDS(bsm, "shiny_simulacao/data/out_turistas.rds")
-saveRDS(bsm0, "bsm0.rds")
 
+pseudo.y <- bsm0$out[,"mu"] + bsm0$out[,"gamma"] + bsm0$out[,"u"]
+ts.plot(turistas, pseudo.y, col = 1:2)
+# mu smooth
+fk1 <- bsm(pseudo.y, beta = T, iter = 10000)
+
+# fig 6
 par(mfrow = c(2,2), mar = c(3,3,2,3))
 ts.plot(turistas,bsm0$out[,"mu"], col = 1, lwd = c(1,2), main = "Y e Tendência", ylab = "")
 ts.plot(bsm0$out[,"mu"], col = 1, lwd = c(1), main = "Tendência", ylab = "")
 ts.plot(bsm0$out[,"gamma"], col = 1, lwd = c(1,2), main = "Sazonalidade", ylab = "")
-ts.plot(bsm0$out[,c("scorestd","epsilonstd")], col = 1, lty = c(1,3), main = "Score e Epsilon padr.", ylab = "")
+abline(h=0, lty = 3, col = 2)
+ts.plot(bsm0$out[,c("u")],bsm0$out[,c("nu")], col = 1, lty = c(1,3), main = "u e nu = exp(f2)*epsilon.", ylab = "")
 
-ts.plot(bsm0$out[,c("epsilonstd")], col = 1, lty = c(1,3), main = "Epsilon padr.", ylab = "", ylim = c(-3,3))
-ts.plot(bsm0$out[,c("scorestd")], col = 1, lty = c(1,3), main = "Score padr.", ylab = "", ylim = c(-3,3))
-acf(bsm0$out[,c("epsilonstd")], 20, drop.lag.0 = T, main = "Epsilon padr.")
-acf(bsm0$out[,c("scorestd")], 20, drop.lag.0 = T, main = "Score padr.")
+# fig 7
+par(mfrow = c(2,2), mar = c(3,3,2,3))
+ts.plot(bsm0$out[,c("nu")], col = 1, lty = c(1,3), main = "nu = exp(f2)*epsilon.", ylab = "", ylim = c(-0.2,0.2))
+ts.plot(bsm0$out[,c("u")], col = 1, lty = c(1,3), main = "u", ylab = "", ylim = c(-0.2,0.2))
+acf(bsm0$out[,c("nu")], 20, drop.lag.0 = T, main = "acf nu")
+acf(bsm0$out[,c("u")], 20, drop.lag.0 = T, main = "acf u")
 
-hist(bsm0$out[,"score"], main = "score")
-betasuposto <- rbeta(length(bsm0$out[,"score"]), 0.5, bsm0$otimizados$par[4]/2)
-q1 <- quantile(bsm0$out[,"score"], probs = seq(0,1,length.out = length(turistas)))
-q2 <- quantile(betasuposto, probs = seq(0,1,length.out = length(turistas)))
-plot(q1,q2, xlab = "quantis score", ylab = "quantis beta(1/2,v/2)")
-qqline(data.frame(q1,q2), distribution =  function(p) qbeta(p, 0.5, bsm0$otimizados$par[4]/2 ))
+# fig 8
+ts.plot(fk1[,"mu"],bsm0$out[,"mu"], col = 1, lty = c(1,3))
 
-pseudo.y <- bsm0$out[,"mu"] + bsm0$out[,"gamma"] + bsm0$out[,"score"]
-ts.plot(turistas, pseudo.y, col = 1:2)
+# diagnóstico
+diag <- diag.dcs(y = bsm0$out[,"epsilon"], df = bsm0$otimizados$par[4])
+diag$resid.q
+diag$stats
+plot(rq,bsm0$out[,"epsilon"])
 
-fk <- bsm(pseudo.y)
-
-
-dygraph(cbind(bsm0$out[,"mu"], fk$filter[,"mu"]))
-dygraph(cbind(fk$filter[,"mu"],fk$smooth[,"mu"]))
-dygraph(cbind(bsm0$out[,"mu"],fk$smooth[,"mu"]))
-dygraph(cbind(turistas,fk$filter[,"mu"],fk$smooth[,"mu"]))
+# saveRDS(bsm0, "shiny_simulacao/data/bsm_turistas.rds")
+# saveRDS(pseudo.y, "shiny_simulacao/data/pseudoy_turistas.rds")
+# saveRDS(fk1, "shiny_simulacao/data/smooth_turistas.rds")
+# saveRDS(diag, "shiny_simulacao/data/diag_turistas.rds")
 
 # BSM para IPC ----------------------------------------------------
 
-ipc0 <- window(ipc, start = c(2010,1), freq = 12)
+
+ipc0 <- window(ipc,start = c(2005,1),freq = 12)
+initial_mu <- mean(ipc0)
+gammas <- data.frame(ipc0, cycle(ipc0))
+initial_gamma <- tapply(gammas[,1],gammas[,2], FUN = mean)
+
 parametros <- list(
-  par = data.frame(value = c(0.2,0.5,-0.3,11),
-                   lower = c(0,-Inf,-Inf,4),
-                   upper = c(1,Inf,Inf,Inf)
-  ),
-  mu = mean(ipc), beta = mean(ipc0),
-  gamma = c(tapply(ipc0, list(cycle(ipc0)), mean))[1:11]
-)
-
-
-parametros2 <- list(
-  par = data.frame(value = c(0.2,0.5,-0.3,11,mean(ipc0), mean(ipc), c(tapply(ipc0, list(cycle(ipc0)), mean))[1:11]),
-                   lower = c(0,-Inf,-Inf,4, rep(-Inf,13)),
-                   upper = c(1,Inf,Inf,Inf, rep(Inf,13))
+  par = data.frame(
+    name = c("k1","ks","f2","df","mu[0]",paste0("gamma",1:11)),
+    value = c(0.4016,-1.1053,-1.6886,10,mean(ipc),initial_gamma[1:11]),
+    lower = c(0,-Inf,-Inf,2, rep(-Inf,12)),
+    upper = c(1,Inf,Inf,Inf, rep(Inf,12))
   )
 )
+parametros
+bsm2 <- dcs_fk_estimation(ipc, initial = parametros, type = "BSM2", initial.optim = T)
+#bsm2 <- readRDS("bsm2.rds")
+saveRDS(bsm2, "dados/bsm_ipc.rds")
+
+comparar <- cbind(parametros$par, bsm2$otimizados$par)
+comparar
+
+pseudo.y <- bsm2$out[,"mu"] + bsm2$out[,"gamma"] + bsm2$out[,"u"]
+ts.plot(ipc, pseudo.y, col = 1:2)
+# mu smooth
+fk2 <- bsm(pseudo.y, beta = T, iter = 10000)
+
+# fig 6
+par(mfrow = c(2,2), mar = c(3,3,2,3))
+ts.plot(ipc,bsm2$out[,"mu"], col = 1, lwd = c(1,2), main = "Y e Tendência", ylab = "")
+ts.plot(bsm2$out[,"mu"], col = 1, lwd = c(1), main = "Tendência", ylab = "")
+ts.plot(bsm2$out[,"gamma"], col = 1, lwd = c(1,2), main = "Sazonalidade", ylab = "")
+abline(h=0, lty = 3, col = 2)
+ts.plot(bsm2$out[,c("u")],bsm2$out[,c("nu")], col = 1, lty = c(1,3), main = "u e nu = exp(f2)*epsilon.", ylab = "")
+
+# fig 7
+par(mfrow = c(2,2), mar = c(3,3,2,3))
+ts.plot(bsm2$out[,c("nu")], col = 1, lty = c(1,3), main = "nu = exp(f2)*epsilon.", ylab = "", ylim = c(-1,2.1))
+ts.plot(bsm2$out[,c("u")], col = 1, lty = c(1,3), main = "u", ylab = "", ylim = c(-1,2.1))
+acf(bsm2$out[,c("nu")], 48, drop.lag.0 = T, main = "acf nu")
+acf(bsm2$out[,c("u")], 48, drop.lag.0 = T, main = "acf u")
+
+# fig 8
+ts.plot(fk2[,"mu"],bsm2$out[,"mu"], col = 1, lty = c(1,3))
+ts.plot(fk2[,"mu"],ipc, col = 1, lty = c(1,3))
+ts.plot(bsm2$out[,"mu"],ipc, col = 1, lty = c(1,3))
+
+# diagnóstico
+diag <- diag.dcs(y = bsm2$out[,"epsilon"], df = bsm2$otimizados$par[4])
+hist(diag$resid.q)
+diag$stats
+plot(rq,bsm2$out[,"epsilon"])
 
 
-# BSM1: mu, beta, gamma, variância constante
-bsm1 <- dcs_fk_estimation(ipc, initial = parametros, type = "BSM1")
-bsm1 <- dcs_fk_estimation(ipc, initial = parametros2, type = "BSM1")
-
-ts.plot(ipc,bsm1$out[,"mu"], col = 1:2, lwd = c(1,2), main = "IPC e Tendência")
-ts.plot(ipc,bsm1$out[,"beta"], col = 1:2, lwd = c(1,2), main = "IPC e Beta")
-ts.plot(ipc,bsm1$out[,"gamma"], col = 1:2, lwd = c(1,2), main = "IPC e Sazonalidade")
-ts.plot(ipc,bsm1$out[,"sigma"], col = 1:2, lwd = c(1,2), main = "IPC e Sigma")
-ts.plot(bsm1$out[,c("epsilon")], col = 1:2, lwd = c(1,2), main = "epsilon")
-ts.plot(bsm1$out[,c("score")], col = 1:2, lwd = c(1,2), main = "score")
-ts.plot(bsm1$out[,c("score","epsilon")], col = 1, lty = c(1,3), main = "Score e Epsilon", ylab = "")
-legend("top", legend = c("score","epsilon"), lty = c(1,3), col = 1, bty = "n", cex = 0.8)
-
-
-hist(bsm1$out[,c("epsilon")])
-acf(bsm1$out[,c("epsilon")],96)
-
-parametros3 <- list(
-  par = data.frame(value = c(0.2,0.5,-0.3,11, mean(ipc), c(tapply(ipc0, list(cycle(ipc0)), mean))[1:11]),
-                   lower = c(0,-Inf,-Inf,4, rep(-Inf,12)),
-                   upper = c(1,Inf,Inf,Inf, rep(Inf,12))
-  )
-)
-
-
-parametros4 <- list(
-  par = data.frame(value = c(0.4016,-1.1053,-1.6886,15.4189,0.9659,0.0276,0.0982,-0.0009,-0.2146,-0.3855,-0.1354,0.6730,-0.0223,-0.4130,0.0676,0.2686),
-                   lower = c(0,-Inf,-Inf,4, rep(-Inf,12)),
-                   upper = c(1,Inf,Inf,Inf, rep(Inf,12))
-  )
-)
-
-bsm2 <- dcs_fk_estimation(ipc, initial = parametros4, type = "BSM2")
-#saveRDS(bsm2, "bsm2.rds")
-data.frame(bsm1 = bsm1$otimizados$par,
-           bsm2 = c(bsm2$otimizados$par[1:4],NA,bsm2$otimizados$par[5:16]))
-
-par(mfrow = c(2,2))
+#par(mfrow = c(2,2))
 ts.plot(ipc,bsm2$out[,"mu"], col = 1:2, lwd = c(1,2), main = "IPC e Tendência")
 ts.plot(bsm2$out[,"mu"], col = 1:2, lwd = c(1,2), main = "Tendência")
 ts.plot(ipc,bsm2$out[,"gamma"], col = 1:2, lwd = c(1,2), main = "IPC e Sazonalidade")
@@ -115,9 +118,6 @@ ts.plot(ipc,bsm2$out[,"gamma"], col = 1:2, lwd = c(1,2), main = "IPC e Sazonalid
 #ts.plot(bsm2$out[,c("score")], col = 1:2, lwd = c(1,2), main = "score")
 ts.plot(bsm2$out[,c("score","epsilon")], col = 1, lty = c(1,3), main = "Score e Epsilon", ylab = "")
 legend("top", legend = c("score","epsilon"), lty = c(1,3), col = 1, bty = "n", cex = 1)
-
-ts.plot(bsm1$out[,"mu"], bsm2$out[,"mu"], col = 1,  lty = c(1,3),  main = "Tendência 1 e Tendência 2")
-legend("top", legend = c("BMS1 - c/ beta","BSM2 - s/ beta"), lty = c(1,3), col = 1, bty = "n", cex = 0.8)
 
 #saveRDS(list(bsm1 = bsm1, bsm2 = bsm2), "dcsipc_novosresultados.rds")
 
