@@ -57,6 +57,7 @@ ipc0 <- window(ipc,start = c(2004,1),freq = 12)
 initial_mu <- median(ipc)
 gammas <- data.frame((ipc0 - mean(ipc0))/sd(ipc0), cycle(ipc0))
 gammas <- data.frame((ipc - mean(ipc))/sd(ipc), cycle(ipc))
+<<<<<<< HEAD
 gammas <- data.frame(ipc0, cycle(ipc0))
 initial_gamma <- tapply(gammas[,1],gammas[,2], FUN = median)
 
@@ -90,6 +91,36 @@ parametros <- list(
 parametros
 bsm2 <- dcs_fk_estimation(ipc, initial = parametros, type = "BSM2", initial.optim = F)
 # bsm2 <- readRDS("dados/bsm_ipc.rds")
+=======
+
+initial_gamma <- tapply(gammas[,1],gammas[,2], FUN = median)
+
+parametros <- list(
+  par = data.frame(
+    name = c("k1","ks","f2","df","mu[0]",paste0("gamma",1:11)),
+    value = c(0.8,-1.1,-1.6,6,mean(ipc),initial_gamma[1:11]),
+    lower = c(0,-Inf,-Inf,2, rep(-Inf,12)),
+    upper = c(1,Inf,Inf,Inf, rep(Inf,12))
+  ),
+  mu = initial_mu,
+  gamma = as.vector(initial_gamma[1:11])
+)
+
+parametros <- list(
+  par = data.frame(
+    name = c("k1","ks","f2","df","mu[0]",paste0("gamma",1:11)),
+    value = c(0.5,-1,-1.22,11,mean(ipc0),c(0.63634560, -0.11379156, 0.08584090, 0.04461767, 0.27043329, -0.11460482, -0.09033392, -0.07185322, -0.51438998, -0.29311867, -0.02459362)),
+    lower = c(0,-Inf,-Inf,2, rep(-Inf,12)),
+    upper = c(1,Inf,Inf,Inf, rep(Inf,12))
+  ),
+  mu = 0.92148341, 
+  gamma = c(0.04130164, 0.10012847, 0.01462955,-0.20743980,-0.39845356,-0.15230706, 0.67272960,-0.02919001,-0.41970979, 0.06692283, 0.27037323)
+)
+
+parametros
+bsm2 <- dcs_fk_estimation(ipc, initial = parametros, type = "BSM2", initial.optim = F)
+bsm2 <- readRDS("dados/bsm_ipc.rds")
+>>>>>>> 7d46086a833e34d74fd4f77f5dd30d283576951f
 # saveRDS(bsm2, "dados/bsm_ipc.rds")
 
 comparar <- cbind(parametros$par, bsm2$otimizados$par)
@@ -99,7 +130,11 @@ pseudo.y <- bsm2$out[,"mu"] + bsm2$out[,"gamma"] + bsm2$out[,"u"]
 # mu smooth
 fk2 <- bsm(pseudo.y, beta = T, iter = 10000)
 psd <- list(pseudo.y = pseudo.y, fk2 = fk2)
+<<<<<<< HEAD
 #saveRDS(psd, "dados/bsm_ipc_pseudo.rds")
+=======
+saveRDS(psd, "dados/bsm_ipc_pseudo.rds")
+>>>>>>> 7d46086a833e34d74fd4f77f5dd30d283576951f
 
 # fig 6
 par(mfrow = c(2,2), mar = c(3,3,2,3))
@@ -133,6 +168,7 @@ saveRDS(bsm2, "shiny_simulacao/data/bsm_ipc.rds")
 saveRDS(pseudo.y, "shiny_simulacao/data/pseudoy_ipc.rds")
 saveRDS(fk2, "shiny_simulacao/data/smooth_ipc.rds")
 saveRDS(diag, "shiny_simulacao/data/diag_ipc.rds")
+<<<<<<< HEAD
 saveRDS(psd, "shiny_simulacao/data/smooth_ipc_psd.rds")
 
 # 
@@ -140,6 +176,8 @@ library(zoo)
 exportar <- data.frame(data = as.Date(cbind(bsm2$out, fk2)),cbind(bsm2$out, fk2))
 colnames(exportar) <- c("data", colnames(bsm2$out), paste0(colnames(fk2),"_smoother"))
 write.csv2(exportar,"shiny_simulacao/www/ultimos_resultados.csv", row.names = F)
+=======
+>>>>>>> 7d46086a833e34d74fd4f77f5dd30d283576951f
 
 # # USGDP
 # 

@@ -182,6 +182,7 @@ server <- function(input, output) {
     par(mar = c(4,4,4,4))
     ts.plot(smooth_turistas[,"mu"],bsm$out[,"mu"], col = 1, lty = c(1,3))
     legend("topleft", legend = c("mu","smooth_mu"), col = 1, lty = c(3,1), bty = "n")
+<<<<<<< HEAD
     
   })
   
@@ -193,6 +194,19 @@ server <- function(input, output) {
     
   })
   
+=======
+    
+  })
+  
+  output$turistas_plot4 <- renderPlot({
+    
+    par(mar = c(4,4,4,4))
+    ts.plot(smooth_turistas[,"mu"],bsm$out[,"mu"], turistas, col = c(1,2,1), lty = c(1,1,3))
+    legend("topleft", legend = c("y","mu","smooth_mu"), col = c(1,2,1), lty = c(3,1,1), bty = "n")
+    
+  })
+  
+>>>>>>> 7d46086a833e34d74fd4f77f5dd30d283576951f
   output$turistas_plot5 <- renderPlot({
     ep <- bsm$out[,"epsilon"]
     rq <- diag_turistas$resid.q
@@ -275,13 +289,20 @@ server <- function(input, output) {
   # DCS IPC 2 -------------------------------------------------------------------------
   
   output$graph_dcs1 <- renderDygraph({
+<<<<<<< HEAD
     k <- cbind(ipc, bsm2$out[,"mu"])
     colnames(k) <- c("ipc","mu")
+=======
+    k <- cbind(ipc, bsm2$out[,"mu"], psd$fk2[,"mu"])
+    colnames(k) <- c("ipc","mu","mu_smoother")
+>>>>>>> 7d46086a833e34d74fd4f77f5dd30d283576951f
     dygraph(k) %>%
       dySeries("ipc", strokePattern = "dotted", color = "black") %>%
       dySeries("mu", strokeWidth = 2, color = "orangered")%>%
+      dySeries("mu_smoother", strokeWidth = 2, color = "steelblue")%>%
       dyRangeSelector()
   })
+<<<<<<< HEAD
   
   output$graph_dcs2 <- renderDygraph({
     k <- cbind(ipc, psd$fk2[,"mu"])
@@ -302,6 +323,18 @@ server <- function(input, output) {
   })
   
   output$graph_dcs4 <- renderDygraph({
+=======
+  output$graph_dcs2 <- renderDygraph({
+    k <- cbind(bsm2$out[,"mu"], psd$fk2[,"mu"])
+    colnames(k) <- c("mu","mu_smoother")
+    dygraph(k) %>%
+      dySeries("mu", strokeWidth = 2, color = "orangered")%>%
+      dySeries("mu_smoother", strokeWidth = 2, color = "steelblue")%>%
+      dyRangeSelector()
+  })
+  
+  output$graph_dcs3 <- renderDygraph({
+>>>>>>> 7d46086a833e34d74fd4f77f5dd30d283576951f
     k <- cbind(bsm2$out[,"gamma"], psd$fk2[,"gamma"])
     colnames(k) <- c("gamma","gamma_smoother")
     dygraph(k) %>%
@@ -310,20 +343,32 @@ server <- function(input, output) {
       dyRangeSelector()
   })
   
+<<<<<<< HEAD
   output$graph_dcs5 <- renderDygraph({
+=======
+  output$graph_dcs4 <- renderDygraph({
+>>>>>>> 7d46086a833e34d74fd4f77f5dd30d283576951f
     dygraph(bsm2$out[,c("u","nu")]) %>%
       dySeries("nu", strokeWidth = 1, strokePattern = "dotted", color = "black") %>%
       dySeries("u", strokeWidth = 1, color = "black")%>%
       dyRangeSelector()
   })
   
+<<<<<<< HEAD
   output$graph_dcs6 <- renderPlot({
+=======
+  output$graph_dcs5 <- renderPlot({
+>>>>>>> 7d46086a833e34d74fd4f77f5dd30d283576951f
     par(mfrow = c(1,2))
     acf(bsm2$out[,c("nu")], 48, drop.lag.0 = T, main = "acf nu")
     acf(bsm2$out[,c("u")], 48, drop.lag.0 = T, main = "acf u")
     })
   
+<<<<<<< HEAD
   output$graph_dcs7 <- renderPlot({
+=======
+  output$graph_dcs6 <- renderPlot({
+>>>>>>> 7d46086a833e34d74fd4f77f5dd30d283576951f
     ep <- bsm2$out[,"epsilon"]
     rq <- diag_ipc$resid.q
     set.seed(11112017)

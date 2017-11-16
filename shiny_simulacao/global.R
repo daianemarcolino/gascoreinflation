@@ -20,5 +20,9 @@ diag_turistas <-  readRDS("data/diag_turistas.rds")
 bsm2 <- readRDS("data/bsm_ipc.rds")
 ipc <- readRDS("data/ipc.rds")
 smooth_ipc <- readRDS("data/smooth_ipc.rds")
+<<<<<<< HEAD
 diag_ipc <-  readRDS("data/diag_ipc.rds")
 psd <- readRDS("data/smooth_ipc_psd.rds")
+=======
+diag_ipc <-  readRDS("data/diag_ipc.rds")
+>>>>>>> 7d46086a833e34d74fd4f77f5dd30d283576951f

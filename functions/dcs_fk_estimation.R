@@ -132,7 +132,11 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", initial.optim = 
         alpha <- matrix(NA, ncol = 12, nrow = N)
         alpha[1,] <- c(par[6:16], - sum(par[6:16]))
       }else{
+<<<<<<< HEAD
         #mu <- c(initial_mu)
+=======
+        mu <- c(initial_mu)
+>>>>>>> 7d46086a833e34d74fd4f77f5dd30d283576951f
         alpha <- matrix(NA, ncol = 12, nrow = N)
         alpha[1,] <- c(initial_gamma, - sum(initial_gamma))  
       }

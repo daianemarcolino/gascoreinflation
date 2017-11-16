@@ -17,6 +17,7 @@ shinyUI(
                                  column(12, dygraphOutput("graph_dcs2", height = "320px"))
                                ), hr(),
                                fluidRow(
+<<<<<<< HEAD
                                  column(12, dygraphOutput("graph_dcs3", height = "320px")) 
                                ), hr(),
                                fluidRow(
@@ -29,6 +30,12 @@ shinyUI(
                                ),hr(),
                                fluidRow(
                                  column(12, plotOutput("graph_dcs7", height = "320px"))
+=======
+                                 column(12, plotOutput("graph_dcs5", height = "320px"))
+                               ), hr(),
+                               fluidRow(
+                                 column(12, plotOutput("graph_dcs6", height = "320px"))
+>>>>>>> 7d46086a833e34d74fd4f77f5dd30d283576951f
                                ),hr(),
                                fluidRow(
                                  column(12,  tableOutput("ipc_diag"), hr())
