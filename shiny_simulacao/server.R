@@ -161,25 +161,63 @@ server <- function(input, output) {
     ts.plot(turistas,bsm$out[,"mu"], col = 1, lwd = c(1,2), main = "Y e Tendência", ylab = "")
     ts.plot(bsm$out[,"mu"], col = 1, lwd = c(1), main = "Tendência", ylab = "")
     ts.plot(bsm$out[,"gamma"], col = 1, lwd = c(1,2), main = "Sazonalidade", ylab = "")
-    ts.plot(bsm$out[,c("scorestd","epsilonstd")], col = 1, lty = c(1,3), main = "Score e Epsilon padr.", ylab = "")
+    abline(h=0, lty = 3, col = 2)
+    ts.plot(bsm$out[,c("u")],bsm$out[,c("nu")], col = 1, lty = c(1,3), main = "u e nu = exp(f2)*epsilon.", ylab = "")
     
   })
   
   output$turistas_plot2 <- renderPlot({
     
     par(mfrow = c(2,2), mar = c(3,3,2,3))
-    ts.plot(bsm$out[,c("epsilonstd")], col = 1, lty = c(1,3), main = "Epsilon padr.", ylab = "", ylim = c(-3,3))
-    ts.plot(bsm$out[,c("scorestd")], col = 1, lty = c(1,3), main = "Score padr.", ylab = "", ylim = c(-3,3))
-    acf(bsm$out[,c("epsilonstd")], 20, drop.lag.0 = T, main = "Epsilon padr.")
-    acf(bsm$out[,c("scorestd")], 20, drop.lag.0 = T, main = "Score padr.")
+    ts.plot(bsm$out[,c("nu")], col = 1, lty = c(1,3), main = "nu = exp(f2)*epsilon.", ylab = "", ylim = c(-0.2,0.2))
+    ts.plot(bsm$out[,c("u")], col = 1, lty = c(1,3), main = "u", ylab = "", ylim = c(-0.2,0.2))
+    acf(bsm$out[,c("nu")], 20, drop.lag.0 = T, main = "acf nu")
+    acf(bsm$out[,c("u")], 20, drop.lag.0 = T, main = "acf u")
+    
     
   })
+  
+  output$turistas_plot3 <- renderPlot({
+    
+    par(mar = c(4,4,4,4))
+    ts.plot(smooth_turistas[,"mu"],bsm$out[,"mu"], col = 1, lty = c(1,3))
+    legend("topleft", legend = c("mu","smooth_mu"), col = 1, lty = c(3,1), bty = "n")
+    
+  })
+  
+  output$turistas_plot4 <- renderPlot({
+    
+    par(mar = c(4,4,4,4))
+    ts.plot(smooth_turistas[,"mu"],bsm$out[,"mu"], turistas, col = c(1,2,1), lty = c(1,1,3))
+    legend("topleft", legend = c("y","mu","smooth_mu"), col = c(1,2,1), lty = c(3,1,1), bty = "n")
+    
+  })
+  
+  output$turistas_plot5 <- renderPlot({
+    ep <- bsm$out[,"epsilon"]
+    rq <- diag_turistas$resid.q
+    set.seed(11112017)
+    r1 <- rt(n = length(ep), df = bsm$otimizados$par[4])
+    r2 <- rnorm(n = length(rq))
+    par(mfrow = c(1,2))
+    qqplot(ep,r1, main = "Resíduo de Person")#, xlim = c(-4.5,4.5), ylim = c(-4.5,4.5))
+    qqline(r1)
+    qqplot(rq,r2, main = "Resíduo quantílico", xlim = c(-3,3), ylim = c(-3,3))
+    qqline(r2)
+  })
+  
   
   output$turistas_tabela <- renderTable({
     
     data.frame(Parâmetros = c("k1","ks","f2","df"),
                         Estimados = bsm$otimizados$par[1:4],
                         Artigo =  c(0.4906, 1.0068,-3.2573,6.006))
+  })
+  
+  output$turistas_diag <- renderTable({
+    
+    cbind(y = c("Resid. Pearson","Resid. Quant."), diag_turistas$stats)
+    
   })
  
   
@@ -237,56 +275,71 @@ server <- function(input, output) {
   # DCS IPC 2 -------------------------------------------------------------------------
   
   output$graph_dcs1 <- renderDygraph({
-    dygraph(smooth[,c("ipc","mu")]) %>%
+    k <- cbind(ipc, bsm2$out[,"mu"])
+    colnames(k) <- c("ipc","mu")
+    dygraph(k) %>%
       dySeries("ipc", strokePattern = "dotted", color = "black") %>%
       dySeries("mu", strokeWidth = 2, color = "orangered")%>%
       dyRangeSelector()
   })
+  
   output$graph_dcs2 <- renderDygraph({
-    dygraph(smooth[,c("mu")]) %>%
-      dySeries("V1", label = "mu", strokeWidth = 2, color = "orangered")%>%
+    k <- cbind(ipc, psd$fk2[,"mu"])
+    colnames(k) <- c("ipc","mu_smoother")
+    dygraph(k) %>%
+      dySeries("ipc", strokePattern = "dotted", color = "black") %>%
+      dySeries("mu_smoother", strokeWidth = 2, color = "steelblue")%>%
       dyRangeSelector()
   })
   
   output$graph_dcs3 <- renderDygraph({
-    dygraph(smooth[,c("ipc","mu_smooth")]) %>%
-      dySeries("ipc", strokePattern = "dotted", color = "black") %>%
-      dySeries("mu_smooth", strokeWidth = 2, color = "orangered")%>%
+    k <- cbind(bsm2$out[,"mu"], psd$fk2[,"mu"])
+    colnames(k) <- c("mu","mu_smoother")
+    dygraph(k) %>%
+      dySeries("mu", strokeWidth = 2, color = "orangered")%>%
+      dySeries("mu_smoother", strokeWidth = 2, color = "steelblue")%>%
       dyRangeSelector()
   })
+  
   output$graph_dcs4 <- renderDygraph({
-    dygraph(smooth[,c("mu_smooth")]) %>%
-      dySeries("V1", label = "mu_smooth", strokeWidth = 2, color = "orangered")%>%
+    k <- cbind(bsm2$out[,"gamma"], psd$fk2[,"gamma"])
+    colnames(k) <- c("gamma","gamma_smoother")
+    dygraph(k) %>%
+      dySeries("gamma", strokePattern = "dotted", color = "red") %>%
+      dySeries("gamma_smoother",  color = "black")%>%
       dyRangeSelector()
   })
   
   output$graph_dcs5 <- renderDygraph({
-    dygraph(smooth[,c("mu","mu_smooth")]) %>%
-      dySeries("mu", color = "#800000", strokePattern = "dashed") %>%
-      dySeries("mu_smooth", strokeWidth = 2, color = "orangered") %>%
+    dygraph(bsm2$out[,c("u","nu")]) %>%
+      dySeries("nu", strokeWidth = 1, strokePattern = "dotted", color = "black") %>%
+      dySeries("u", strokeWidth = 1, color = "black")%>%
       dyRangeSelector()
   })
   
-  output$graph_dcs6 <- renderDygraph({
-    dygraph(smooth[,c("gamma","gamma_smooth")]) %>%
-      dySeries("gamma", strokePattern = "dotted", color = "red") %>%
-      dySeries("gamma_smooth",  color = "black")%>%
-      dyRangeSelector()
-  })
-  
-  output$graph_dcs7 <- renderDygraph({
-    dygraph(smooth[,c("epsilon","score")]) %>%
-      dySeries("epsilon", strokeWidth = 1, color = "#F64D54") %>%
-      dySeries("score", strokeWidth = 2, color = "#91219E")%>%
-      dyRangeSelector()
-  })
-  
-  output$graph_dcs8 <- renderPlot({
+  output$graph_dcs6 <- renderPlot({
     par(mfrow = c(1,2))
-    hist(smooth[,"epsilon"], border = "#F64D54", col = "#FFC0CB", breaks = seq(min(smooth[,"epsilon"]), max(smooth[,"epsilon"]), length.out = 12), xlim = c(-5,13), main = "epsilon")
-    hist(smooth[,"score"], border = "#91219E", col = "#DCA2CD", breaks = seq(min(smooth[,"score"]), max(smooth[,"score"]), length.out = 12), xlim = c(-0.4,0.4), main = "score")
+    acf(bsm2$out[,c("nu")], 48, drop.lag.0 = T, main = "acf nu")
+    acf(bsm2$out[,c("u")], 48, drop.lag.0 = T, main = "acf u")
+    })
+  
+  output$graph_dcs7 <- renderPlot({
+    ep <- bsm2$out[,"epsilon"]
+    rq <- diag_ipc$resid.q
+    set.seed(11112017)
+    r1 <- rt(n = length(ep), df = bsm2$otimizados$par[4])
+    r2 <- rnorm(n = length(rq))
+    par(mfrow = c(1,2))
+    qqplot(ep,r1, main = "Resíduo de Person")#, xlim = c(-4.5,4.5), ylim = c(-4.5,4.5))
+    qqline(r1)
+    qqplot(rq,r2, main = "Resíduo quantílico")#, xlim = c(-3,6), ylim = c(-4,4))
+    qqline(r2)
   })
   
-   
+  output$ipc_diag <- renderTable({
+    
+    cbind(y = c("Resid. Pearson","Resid. Quant."), diag_ipc$stats)
+    
+  })
   
 }

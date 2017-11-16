@@ -62,13 +62,13 @@ bsm <- function(y, beta = T, iter = 1){
   dfa.model <- list(Z = Z, A = A, R = R, B = B, U = U, Q = Q, x0 = x0, V0 = V0)
   cntl.list <- list(maxit = iter)
   
-  model <- MARSS(dat, model = dfa.model, control = cntl.list, method = "BFGS")
+  model <- MARSS(dat, model = dfa.model, control = cntl.list, method = "BFGS", fun.kf = "MARSSkfss")
   
   if(beta){
-    estados <- ts(t(print(model, what = "xtT")), start = start(y), freq = 12)[,1:3]
+    estados <- ts(t(print(model, what = "xtT", silent = T)), start = start(y), freq = 12)[,1:3]
     colnames(estados) <- c("mu","beta","gamma")
   }else{
-    estados <- ts(t(print(model, what = "xtT")), start = start(y), freq = 12)[,1:2]
+    estados <- ts(t(print(model, what = "xtT", silent = T)), start = start(y), freq = 12)[,1:2]
     colnames(estados) <- c("mu","gamma")
   }
   
