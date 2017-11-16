@@ -7,7 +7,16 @@ source("data/dcs_fk_estimation.R")
 graphs <- readRDS("data/dygraphs_nasdaq.rds")
 resul <- readRDS("data/resultados_betategarch_estimation.rds")
 resul_novo <- readRDS("data/novos_modelos.rds")
-ipc <- readRDS("data/ipc.rds")
-bsm <- readRDS("data/out_turistas.rds")
+
+
+# turistas
+bsm <- readRDS("data/bsm_turistas.rds")
 turistas <- readRDS("data/turistas.rds")
-smooth <- ts(readRDS("data/ultimos_resultados.rds")[,-1], start = c(1999,1), freq = 12)
+smooth_turistas <- readRDS("data/smooth_turistas.rds")
+diag_turistas <-  readRDS("data/diag_turistas.rds")
+
+# ipc
+bsm2 <- readRDS("data/bsm_ipc.rds")
+ipc <- readRDS("data/ipc.rds")
+smooth_ipc <- readRDS("data/smooth_ipc.rds")
+diag_ipc <-  readRDS("data/diag_ipc.rds")

@@ -22,7 +22,7 @@ bsm0 <- dcs_fk_estimation(turistas, type = "BSM_artigo")
 pseudo.y <- bsm0$out[,"mu"] + bsm0$out[,"gamma"] + bsm0$out[,"u"]
 ts.plot(turistas, pseudo.y, col = 1:2)
 # mu smooth
-fk1 <- bsm(pseudo.y, beta = T, iter = 10000)
+fk1 <- bsm(pseudo.y, beta = T, iter = 9)
 
 # fig 6
 par(mfrow = c(2,2), mar = c(3,3,2,3))
@@ -44,43 +44,57 @@ ts.plot(fk1[,"mu"],bsm0$out[,"mu"], col = 1, lty = c(1,3))
 
 # diagnóstico
 diag <- diag.dcs(y = bsm0$out[,"epsilon"], df = bsm0$otimizados$par[4])
-diag$resid.q
-diag$stats
-plot(rq,bsm0$out[,"epsilon"])
 
-# saveRDS(bsm0, "shiny_simulacao/data/bsm_turistas.rds")
-# saveRDS(pseudo.y, "shiny_simulacao/data/pseudoy_turistas.rds")
-# saveRDS(fk1, "shiny_simulacao/data/smooth_turistas.rds")
-# saveRDS(diag, "shiny_simulacao/data/diag_turistas.rds")
+saveRDS(bsm0, "shiny_simulacao/data/bsm_turistas.rds")
+saveRDS(pseudo.y, "shiny_simulacao/data/pseudoy_turistas.rds")
+saveRDS(fk1, "shiny_simulacao/data/smooth_turistas.rds")
+saveRDS(diag, "shiny_simulacao/data/diag_turistas.rds")
 
 # BSM para IPC ----------------------------------------------------
 
 
-ipc0 <- window(ipc,start = c(2005,1),freq = 12)
-initial_mu <- mean(ipc0)
-gammas <- data.frame(ipc0, cycle(ipc0))
-initial_gamma <- tapply(gammas[,1],gammas[,2], FUN = mean)
+ipc0 <- window(ipc,start = c(2004,1),freq = 12)
+initial_mu <- median(ipc)
+gammas <- data.frame((ipc0 - mean(ipc0))/sd(ipc0), cycle(ipc0))
+gammas <- data.frame((ipc - mean(ipc))/sd(ipc), cycle(ipc))
+
+initial_gamma <- tapply(gammas[,1],gammas[,2], FUN = median)
 
 parametros <- list(
   par = data.frame(
     name = c("k1","ks","f2","df","mu[0]",paste0("gamma",1:11)),
-    value = c(0.4016,-1.1053,-1.6886,10,mean(ipc),initial_gamma[1:11]),
+    value = c(0.8,-1.1,-1.6,6,mean(ipc),initial_gamma[1:11]),
     lower = c(0,-Inf,-Inf,2, rep(-Inf,12)),
     upper = c(1,Inf,Inf,Inf, rep(Inf,12))
-  )
+  ),
+  mu = initial_mu,
+  gamma = as.vector(initial_gamma[1:11])
 )
+
+parametros <- list(
+  par = data.frame(
+    name = c("k1","ks","f2","df","mu[0]",paste0("gamma",1:11)),
+    value = c(0.5,-1,-1.22,11,mean(ipc0),c(0.63634560, -0.11379156, 0.08584090, 0.04461767, 0.27043329, -0.11460482, -0.09033392, -0.07185322, -0.51438998, -0.29311867, -0.02459362)),
+    lower = c(0,-Inf,-Inf,2, rep(-Inf,12)),
+    upper = c(1,Inf,Inf,Inf, rep(Inf,12))
+  ),
+  mu = 0.92148341, 
+  gamma = c(0.04130164, 0.10012847, 0.01462955,-0.20743980,-0.39845356,-0.15230706, 0.67272960,-0.02919001,-0.41970979, 0.06692283, 0.27037323)
+)
+
 parametros
-bsm2 <- dcs_fk_estimation(ipc, initial = parametros, type = "BSM2", initial.optim = T)
-#bsm2 <- readRDS("bsm2.rds")
-saveRDS(bsm2, "dados/bsm_ipc.rds")
+bsm2 <- dcs_fk_estimation(ipc, initial = parametros, type = "BSM2", initial.optim = F)
+bsm2 <- readRDS("dados/bsm_ipc.rds")
+# saveRDS(bsm2, "dados/bsm_ipc.rds")
 
 comparar <- cbind(parametros$par, bsm2$otimizados$par)
 comparar
-
+#saveRDS(comparar, "dados/bsm_ipc0_parametros.rds")
 pseudo.y <- bsm2$out[,"mu"] + bsm2$out[,"gamma"] + bsm2$out[,"u"]
-ts.plot(ipc, pseudo.y, col = 1:2)
 # mu smooth
 fk2 <- bsm(pseudo.y, beta = T, iter = 10000)
+psd <- list(pseudo.y = pseudo.y, fk2 = fk2)
+saveRDS(psd, "dados/bsm_ipc_pseudo.rds")
 
 # fig 6
 par(mfrow = c(2,2), mar = c(3,3,2,3))
@@ -101,56 +115,19 @@ acf(bsm2$out[,c("u")], 48, drop.lag.0 = T, main = "acf u")
 ts.plot(fk2[,"mu"],bsm2$out[,"mu"], col = 1, lty = c(1,3))
 ts.plot(fk2[,"mu"],ipc, col = 1, lty = c(1,3))
 ts.plot(bsm2$out[,"mu"],ipc, col = 1, lty = c(1,3))
+plot(fk2[,"mu"])
+plot(bsm2$out[,"mu"])
 
 # diagnóstico
 diag <- diag.dcs(y = bsm2$out[,"epsilon"], df = bsm2$otimizados$par[4])
 hist(diag$resid.q)
 diag$stats
-plot(rq,bsm2$out[,"epsilon"])
+plot(diag$resid.q,bsm2$out[,"epsilon"])
 
-
-#par(mfrow = c(2,2))
-ts.plot(ipc,bsm2$out[,"mu"], col = 1:2, lwd = c(1,2), main = "IPC e Tendência")
-ts.plot(bsm2$out[,"mu"], col = 1:2, lwd = c(1,2), main = "Tendência")
-ts.plot(ipc,bsm2$out[,"gamma"], col = 1:2, lwd = c(1,2), main = "IPC e Sazonalidade")
-#ts.plot(ipc,bsm2$out[,"sigma"], col = 1:2, lwd = c(1,2), main = "IPC e Sigma")
-#ts.plot(bsm2$out[,c("epsilon")], col = 1:2, lwd = c(1,2), main = "epsilon")
-#ts.plot(bsm2$out[,c("score")], col = 1:2, lwd = c(1,2), main = "score")
-ts.plot(bsm2$out[,c("score","epsilon")], col = 1, lty = c(1,3), main = "Score e Epsilon", ylab = "")
-legend("top", legend = c("score","epsilon"), lty = c(1,3), col = 1, bty = "n", cex = 1)
-
-#saveRDS(list(bsm1 = bsm1, bsm2 = bsm2), "dcsipc_novosresultados.rds")
-
-bsm1 <- readRDS("dcsipc_novosresultados.rds")$bsm1
-bsm2 <- readRDS("dcsipc_novosresultados.rds")$bsm2
-
-hist(bsm2$out[,"score"], main = "score")
-
-betasuposto <- rbeta(length(bsm2$out[,"score"]), 0.5, bsm2$otimizados$par[4]/2)
-q1 <- quantile(bsm2$out[,"score"], probs = seq(0,1,length.out = length(ipc)))
-q2 <- quantile(betasuposto, probs = seq(0,1,length.out = length(ipc)))
-plot(q1,q2, xlim = c(-0.4,0.4), ylim = c(0,0.4), xlab = "quantis score", ylab = "quantis beta(1/2,v/2)")
-qqline(data.frame(q1,q2))
-qqplot(bsm2$out[,"score"],betasuposto, xlim = c(-0.4,0.4), ylim = c(0,0.5))
-qqline(data.frame(bsm2$out[,"score"],betasuposto))
-
-pseudo.y <- bsm2$out[,"mu"] + bsm2$out[,"gamma"] + bsm2$out[,"score"]
-ts.plot(ipc, pseudo.y, col = 1:2)
-fk <- bsm(pseudo.y)
-
-
-dygraph(cbind(bsm2$out[,"mu"], fk$filter[,"mu"]))
-dygraph(cbind(fk$filter[,"mu"],fk$smooth[,"mu"]))
-dygraph(cbind(ipc,fk$filter[,"mu"],fk$smooth[,"mu"]))
-dygraph(cbind(ipc,fk$smooth[,"mu"]))
-
-dados <- cbind(ipc, bsm2$out, fk$smooth)
-colnames(dados) <- c("ipc",colnames(bsm2$out),"mu_smooth","gamma_smooth")
-
-dados_save <- data.frame(data = zoo::as.Date(dados), dados)
-write.csv2(dados_save, "ultimos_resultados.csv", row.names = F)
-saveRDS(dados_save, "ultimos_resultados.rds")
-dygraph(((dados/100+1)^12-1)*100)
+saveRDS(bsm2, "shiny_simulacao/data/bsm_ipc.rds")
+saveRDS(pseudo.y, "shiny_simulacao/data/pseudoy_ipc.rds")
+saveRDS(fk2, "shiny_simulacao/data/smooth_ipc.rds")
+saveRDS(diag, "shiny_simulacao/data/diag_ipc.rds")
 
 # # USGDP
 # 

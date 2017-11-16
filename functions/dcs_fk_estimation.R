@@ -131,7 +131,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", initial.optim = 
         alpha <- matrix(NA, ncol = 12, nrow = N)
         alpha[1,] <- c(par[6:16], - sum(par[6:16]))
       }else{
-        mu <- initial_mu
+        mu <- c(initial_mu)
         alpha <- matrix(NA, ncol = 12, nrow = N)
         alpha[1,] <- c(initial_gamma, - sum(initial_gamma))  
       }
@@ -162,7 +162,6 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", initial.optim = 
                          initial_mu = initial$mu, initial_gamma = initial$gamma, 
                          lower = initial$par$lower, upper = initial$par$upper, control = list(eval.max = 10000, iter.max = 10000))
     
-    
     N <- length(y)
     k1 <- otimizados$par[1]
     ks <- otimizados$par[2]
@@ -175,7 +174,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", initial.optim = 
     }else{
       mu <- initial$mu
       alpha <- matrix(NA, ncol = 12, nrow = N)
-      alpha[1,] <- c(initial$gamma, - sum(initial$gamma))
+      alpha[1,] <- c(initial$gamma, - sum(initial$gamma))  
     }
     j <- cycle(y)
     gamma <- alpha[1,j[1]]
@@ -208,16 +207,16 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", initial.optim = 
     
   }else if(type == "BSM_artigo"){ 
     # ARTIGO -----  
-    otimizar <- function(y, par){
+    otimizar <- function(y, par, par2){
       
       N <- length(y)
       k1 <- par[1]
       ks <- par[2]
       f2 <- par[3]
       df <- par[4]
-      mu <- par[5]
+      mu <- par2[1]
       alpha <- matrix(NA, ncol = 12, nrow = N)
-      alpha[1,] <- c(par[6:16], - sum(par[6:16]))
+      alpha[1,] <- c(par2[2:12], - sum(par2[2:12]))
       j <- cycle(y)
       gamma <- alpha[1,j[1]]
       u1 <- NULL
@@ -247,17 +246,17 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", initial.optim = 
                           upper = c(1, Inf, Inf,Inf, Inf, rep(Inf,11)))
     
     
-    otimizados <- nlminb(start = initial$value, objective = otimizar, y = y,
-                         lower = initial$lower, upper = initial$upper, control = list(eval.max = 10000, iter.max = 10000))
+    otimizados <- nlminb(start = initial$value[1:4], objective = otimizar, y = y, par2 = initial$value[-c(1:4)],
+                         lower = initial$lower[1:4], upper = initial$upper[1:4], control = list(eval.max = 10000, iter.max = 10000))
     
     N <- length(y)
     k1 <- otimizados$par[1]
     ks <- otimizados$par[2]
     f2 <- otimizados$par[3]
     df <- otimizados$par[4]
-    mu <- otimizados$par[5]
+    mu <- initial$value[5]
     alpha <- matrix(NA, ncol = 12, nrow = N)
-    alpha[1,] <- c(otimizados$par[6:16], - sum(otimizados$par[6:16]))
+    alpha[1,] <- c(initial$value[6:16], - sum(initial$value[6:16]))
     j <- cycle(y)
     gamma <- alpha[1,j[1]]
     u1 <- NULL

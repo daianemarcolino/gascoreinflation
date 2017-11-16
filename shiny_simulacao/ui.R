@@ -1,7 +1,7 @@
 shinyUI(
   navbarPage(theme = shinytheme("lumen"), shinyjs::useShinyjs(),
              
-             # PAINEL DCS IPC --------------------------------------
+             # PAINEL novoDCS IPC --------------------------------------
              tabPanel("NOVO DCS - IPC",
                       
                       fluidRow(
@@ -19,21 +19,19 @@ shinyUI(
                                  column(6, dygraphOutput("graph_dcs4", height = "320px")) 
                                ), hr(),
                                fluidRow(
-                                 column(12, dygraphOutput("graph_dcs5", height = "320px"))
+                                 column(12, plotOutput("graph_dcs5", height = "320px"))
+                               ), hr(),
+                               fluidRow(
+                                 column(12, plotOutput("graph_dcs6", height = "320px"))
                                ),hr(),
                                fluidRow(
-                                 column(12, dygraphOutput("graph_dcs6", height = "320px"))
-                               ),hr(),
-                               fluidRow(
-                                 column(12, dygraphOutput("graph_dcs7", height = "320px"))
-                               ),hr(),
-                               fluidRow(
-                                 column(12, plotOutput("graph_dcs8", height = "320px"))
-                               )
+                                 column(12,  tableOutput("ipc_diag"), hr())
+                               ),hr()
+                               
                         )
                       )
                       
-                    
+                      
              ),
              
              # PAINEL DCS IPC --------------------------------------
@@ -60,7 +58,7 @@ shinyUI(
                                           column(offset=1,width = 8,tableOutput("dcsipc_optim"))),
                                         br(),
                                         plotOutput("dcsipc_plot", height = 900)
-                                        )
+                                 )
                                )
                         )
                       )
@@ -75,8 +73,13 @@ shinyUI(
                         column(offset = 1, width = 10,
                                fluidRow(column(offset = 4, width = 4, 
                                                tableOutput("turistas_tabela"))),
-                               plotOutput("turistas_plot1"),
-                               plotOutput("turistas_plot2")
+                               plotOutput("turistas_plot1"), hr(),
+                               plotOutput("turistas_plot2"), hr(),
+                               plotOutput("turistas_plot3"), 
+                               plotOutput("turistas_plot4"), hr(),
+                               plotOutput("turistas_plot5"),
+                               tableOutput("turistas_diag"), hr()
+                               
                         )
                       )
              ),
