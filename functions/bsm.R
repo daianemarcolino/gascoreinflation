@@ -1,4 +1,4 @@
-bsm <- function(y, beta = T, iter = 1){
+bsm <- function(y, type = "BSM2", iter = 1){
   # Kalman Filter - Basic Structural Model
   # y[t] = mu[t] + gamma[t] + epsilon[t]
   # mu[t+1] = mu[t] + beta[t] + erro1[t] 
@@ -14,7 +14,7 @@ bsm <- function(y, beta = T, iter = 1){
   n <- dim(dat)[1]
   TT <- dim(dat)[2]
   
-  if(beta){
+  if(type == "BSM1"){ #BSM COMPLETO
     m <- 13
     Z <- matrix(c(1,0,1,rep(0,10)), nrow = n, ncol = m, byrow = TRUE)
     B <- matrix(c(1,1,rep(0,11),
@@ -36,7 +36,8 @@ bsm <- function(y, beta = T, iter = 1){
     R <- matrix("r_y", nrow = n, ncol = n, byrow = TRUE)
     V0 <- diag(10^7,m)
     x0 = A = U <- "zero"
-  }else{
+    
+  }else if(type == "BSM2"){ # BSM sem beta
     m <- 12
     Z <- matrix(c(1,1,rep(0,10)), nrow = n, ncol = m, byrow = TRUE)
     B <- matrix(c(1,rep(0,11),
@@ -57,6 +58,29 @@ bsm <- function(y, beta = T, iter = 1){
     R <- matrix("r", nrow = n, ncol = n, byrow = TRUE)
     V0 <- diag(10^7,m)
     x0 = A = U <- "zero"
+    
+  }else if(type == "BSM2_beta"){ # BSM com beta estático
+    m <- 12
+    Z <- matrix(c(1,1,rep(0,10)), nrow = n, ncol = m, byrow = TRUE)
+    B <- matrix(c(1,rep(0,11),
+                  0,rep(-1,11),
+                  0,1,rep(0,10),
+                  0,0,1,rep(0,9),
+                  0,0,0,1,rep(0,8),
+                  0,0,0,0,1,rep(0,7),
+                  0,0,0,0,0,1,rep(0,6),
+                  0,0,0,0,0,0,1,rep(0,5),
+                  0,0,0,0,0,0,0,1,rep(0,4),
+                  0,0,0,0,0,0,0,0,1,rep(0,3),
+                  0,0,0,0,0,0,0,0,0,1,rep(0,2),
+                  0,0,0,0,0,0,0,0,0,0,1,rep(0,1)),
+                nrow = m, ncol = m, byrow = TRUE)
+    Q <- matrix(list(0), nrow = m, ncol = m, byrow = TRUE)
+    diag(Q) <- c("q_trend", rep("q_season",11))
+    R <- matrix("r", nrow = n, ncol = n, byrow = TRUE)
+    V0 <- diag(10^7,m)
+    x0 = A <- "zero"
+    U <- matrix(list("u",0,0,0,0,0,0,0,0,0,0,0), nrow = m, ncol = 1)
   }
   
   dfa.model <- list(Z = Z, A = A, R = R, B = B, U = U, Q = Q, x0 = x0, V0 = V0)
@@ -64,7 +88,7 @@ bsm <- function(y, beta = T, iter = 1){
   
   model <- MARSS(dat, model = dfa.model, control = cntl.list, method = "BFGS", fun.kf = "MARSSkfss")
   
-  if(beta){
+  if(type == "BSM1"){
     estados <- ts(t(print(model, what = "xtT", silent = T)), start = start(y), freq = 12)[,1:3]
     colnames(estados) <- c("mu","beta","gamma")
   }else{
