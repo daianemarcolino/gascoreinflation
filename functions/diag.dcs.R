@@ -26,7 +26,7 @@ diag.dcs <- function(y, df){
   r1 <- rt(n = length(y), df = df)
   r2 <- rnorm(n = length(rq))
   par(mfrow = c(1,2))
-  qqplot(y,r1, main = "Resíduo de Person")#, xlim = c(-4.5,4.5), ylim = c(-4.5,4.5))
+  qqplot(y,r1, main = "Resíduo de Pearson")#, xlim = c(-4.5,4.5), ylim = c(-4.5,4.5))
   qqline(r1)
   qqplot(rq,r2, main = "Resíduo quantílico")#, xlim = c(-3,3), ylim = c(-3,3))
   qqline(r2)
