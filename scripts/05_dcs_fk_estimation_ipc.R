@@ -13,7 +13,14 @@ source("functions/diag.dcs.R", encoding = "utf8")
 
 # leitura -----------
 ipc <- ts(read.csv2("dados/VARIAÇÃO IPC-DI.csv")[,2], start = c(1999,1), freq = 12)
-plot(ipc)
+ipc_ma1 <- readRDS("dados/ipc_medias_aparadas.rds")
+ipc_ma2 <- readRDS("dados/ipc_medias_aparadas_sa.rds")
+ipc_ma3 <- readRDS("dados/ipc_medias_aparadas_sa_mm3.rds")
+
+ts.plot(ipc)
+ts.plot(ipc, ipc_ma1, col = 1:2)
+ts.plot(ipc, ipc_ma2, col = 1:2)
+ts.plot(ipc, ipc_ma3, col = 1:2)
 
 # filtro ipc
 ipc0 <- window(ipc,start = c(2004,1),freq = 12)
@@ -50,10 +57,9 @@ initial_gamma <- c(0.5193,-0.0469, 0.1511, 0.0878,-0.0606,-0.2625,-0.1520,-0.196
 initial_gamma <- c(0.48070729,-0.05859547, 0.15370156, 0.10032539,-0.03874261,-0.26932386,-0.12546543,-0.18050091,-0.20419881,-0.07149072, 0.06560687)
 
 
-# BSM NOVO --------------------------------------------------------
+# BSM com psi --------------------------------------------------------
 
-# RESTRITO
-parametros <- list(
+parametros_beta_psi <- list(
   par = data.frame(
     name = c("k1","ks","f2","df","mu[0]","beta","psi","phi","k3", paste0("gamma",1:11)),
     value = c(0.1,0.1,-1,12, 0.5,-0.1,0.1,0.1,0.1, as.vector(initial_gamma)[1:11]),
@@ -62,11 +68,32 @@ parametros <- list(
   ),
   gamma = NA
 )
-parametros
-dcs_res <- dcs_fk_estimation(ipc, initial = parametros, type = "BSM2_beta_psi")
-ts.plot(ipc,dcs_res$out[,"mu"], col = 1:2)
-ts.plot(dcs_res$out[,"mu"], col = 1:2)
-ts.plot(dcs_res$out[,"gamma"], col = 1:2)
+
+parametros_beta <- list(
+  par = data.frame(
+    name = c("k1","ks","f2","df","mu[0]","beta",paste0("gamma",1:11)),
+    value = c(0.11,0.1,-1,12, 0.5,-0.1, as.vector(initial_gamma)[1:11]),
+    lower = c(0,0,-Inf,4,-Inf,-Inf, rep(-Inf,11)),
+    upper = c(0.11,Inf,Inf,Inf,Inf,Inf,rep(Inf,11))
+  ),
+  gamma = NA
+)
+dcs_betapsi <- dcs_fk_estimation(ipc, initial = parametros_beta_psi, type = "BSM2_beta_psi")
+dcs_beta <- dcs_fk_estimation(ipc, initial = parametros_beta, type = "BSM2_beta")
+dcs_betapsi_ma <- dcs_fk_estimation(ipc_ma1, initial = parametros_beta_psi, type = "BSM2_beta_psi")
+dcs_beta_ma <- dcs_fk_estimation(ipc_ma1, initial = parametros_beta, type = "BSM2_beta")
+
+ts.plot(ipc,dcs_betapsi$out[,"mu"], col = 1:2)
+ts.plot(ipc,dcs_betapsi$out[,"psi_mu"], col = 1:2)
+ts.plot(ipc,dcs_betapsi$out[,"psi"], col = 1:2)
+
+ts.plot(dcs_betapsi$out[,"mu"], dcs_beta$out[,"mu"], col = 1:2)
+ts.plot(dcs_betapsi_ma$out[,"mu"], dcs_beta_ma$out[,"mu"], col = 1:2)
+ts.plot(dcs_betapsi$out[,"mu"], dcs_beta$out[,"mu"], dcs_beta_ma$out[,"mu"], col = 1:2)
+ts.plot(dcs_beta_ma$out[,"mu"], ipc_ma3, col = 1:2)
+ts.plot(ipc, dcs_beta_ma$out[,"mu"], ipc_ma3, col = c(1,2,4))
+
+ts.plot(ipc,dcs_beta$out[,"mu"], col = 1:2)
 pseudo.y <- (1 - dcs_res$out[,"b"])*ipc + dcs_res$out[,"b"]*(dcs_res$out[,"mu"] + dcs_res$out[,"gamma"])
 
 x <- data.frame(parametros$par, otimo = round(dcs_res$otimizados$par,4))

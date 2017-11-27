@@ -110,7 +110,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1"){
       
       N <- length(y)
       k1 <- par[1]
-      ks <- 0.1
+      ks <- par[2]
       f2 <- par[3]
       df <- par[4]
       mu <- par[5]
@@ -148,7 +148,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1"){
     
     N <- length(y)
     k1 <- otimizados$par[1]
-    ks <- 0.1
+    ks <- otimizados$par[2]
     f2 <- otimizados$par[3]
     df <- otimizados$par[4]
     mu <- otimizados$par[5]
@@ -280,8 +280,8 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1"){
     nu <- (y - mu - gamma - psi)
     score <- ((df + 1)/(df*exp(2*f2)))*u1
     b <- ((y - mu - gamma)^2/(df*exp(2*f2)))/(1 + (y - mu - gamma)^2/(df*exp(2*f2)))
-    out <- cbind(mu, gamma, psi, f2, exp(f2), epsilon, nu, score, u1, b)
-    colnames(out) <- c("mu","gamma","psi", "f2","sigma","epsilon", "nu", "score","u", "b")
+    out <- cbind(mu, gamma, psi, psi + mu, f2, exp(f2), epsilon, nu, score, u1, b)
+    colnames(out) <- c("mu","gamma","psi", "psi_mu", "f2","sigma","epsilon", "nu", "score","u", "b")
     
     # output
     print(otimizados)
