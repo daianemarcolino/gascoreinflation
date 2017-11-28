@@ -1,13 +1,23 @@
-diag.dcs <- function(y, out, psi = F){
+diag.dcs <- function(y, out, psi = F, dummy = F){
   
   # y: serie y
   # out: saida da fç dcs_fk_estimation
   df <- out$otimizados$par[4]
   if(psi){
-    ncp <- ts(rowSums(out$out[,c("mu","gamma","psi")]), start = start(out$out), freq = 12)
+    if(dummy){
+      ncp <- ts(rowSums(out$out[,c("mu","gamma","psi","dummy")]), start = start(out$out), freq = 12)
+    }else{
+      ncp <- ts(rowSums(out$out[,c("mu","gamma","psi")]), start = start(out$out), freq = 12)
+    }
   }else{
-    ncp <- ts(rowSums(out$out[,c("mu","gamma")]), start = start(out$out), freq = 12)
+    if(dummy){
+      ncp <- ts(rowSums(out$out[,c("mu","gamma","dummy")]), start = start(out$out), freq = 12)
+    }else{
+      ncp <- ts(rowSums(out$out[,c("mu","gamma")]), start = start(out$out), freq = 12)
+    }
+   
   }
+  
   
   ep <- out$out[,"epsilon"]
   
