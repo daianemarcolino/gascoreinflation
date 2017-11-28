@@ -25,7 +25,7 @@ ts.plot(turistas, pseudo.y, col = 1:2)
 fk1 <- bsm(pseudo.y,type = "BSM2", iter = 9)
 
 # fig 6
-par(mfrow = c(2,2), mar = c(3,3,2,3))
+par(mfrow = c(2,2))
 ts.plot(turistas,bsm0$out[,"mu"], col = 1, lwd = c(1,2), main = "Y e Tendência", ylab = "")
 ts.plot(bsm0$out[,"mu"], col = 1, lwd = c(1), main = "Tendência", ylab = "")
 ts.plot(bsm0$out[,"gamma"], col = 1, lwd = c(1,2), main = "Sazonalidade", ylab = "")
@@ -33,7 +33,7 @@ abline(h=0, lty = 3, col = 2)
 ts.plot(bsm0$out[,c("u")],bsm0$out[,c("nu")], col = 1, lty = c(1,3), main = "u e nu = exp(f2)*epsilon.", ylab = "")
 
 # fig 7
-par(mfrow = c(2,2), mar = c(3,3,2,3))
+par(mfrow = c(2,2))
 ts.plot(bsm0$out[,c("nu")], col = 1, lty = c(1,3), main = "nu = exp(f2)*epsilon.", ylab = "", ylim = c(-0.2,0.2))
 ts.plot(bsm0$out[,c("u")], col = 1, lty = c(1,3), main = "u", ylab = "", ylim = c(-0.2,0.2))
 acf(bsm0$out[,c("nu")], 20, drop.lag.0 = T, main = "acf nu")
@@ -43,7 +43,7 @@ acf(bsm0$out[,c("u")], 20, drop.lag.0 = T, main = "acf u")
 ts.plot(fk1[,"mu"],bsm0$out[,"mu"], col = 1, lty = c(1,3))
 
 # diagnóstico
-diag <- diag.dcs(y = bsm0$out[,"epsilon"], df = bsm0$otimizados$par[4])
+diag <- diag.dcs(y = turistas, out = bsm0)
 
 saveRDS(bsm0, "shiny_simulacao/data/bsm_turistas.rds")
 saveRDS(pseudo.y, "shiny_simulacao/data/pseudoy_turistas.rds")
