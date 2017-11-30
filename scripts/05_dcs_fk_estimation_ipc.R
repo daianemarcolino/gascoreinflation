@@ -13,7 +13,7 @@ source("functions/diag.dcs.R", encoding = "utf8")
 
 # leitura -----------
 ipc <- ts(read.csv2("dados/VARIAÇÃO IPC-DI.csv")[,2], start = c(1999,1), freq = 12)
-ipc_ma1 <- readRDS("dados/ipc_medias_aparadas.rds")
+ipc_ma1 <- window(readRDS("dados/ipc_medias_aparadas.rds"), start = start(ipc), end = end(ipc), freq = 12)
 ipc_ma2 <- readRDS("dados/ipc_medias_aparadas_sa.rds")
 ipc_ma3 <- readRDS("dados/ipc_medias_aparadas_sa_mm3.rds")
 
@@ -22,137 +22,480 @@ ts.plot(ipc, ipc_ma1, col = 1:2)
 ts.plot(ipc, ipc_ma2, col = 1:2)
 ts.plot(ipc, ipc_ma3, col = 1:2)
 
-# filtro ipc
-ipc0 <- window(ipc,start = c(2004,1),freq = 12)
-# initial_mu <- median(ipc)
-# gammas <- data.frame((ipc0 - mean(ipc0))/sd(ipc0), cycle(ipc0))
-# gammas <- data.frame((ipc - mean(ipc))/sd(ipc), cycle(ipc))
-# gammas <- data.frame(ipc0, cycle(ipc0))
-# initial_gamma <- tapply(gammas[,1],gammas[,2], FUN = mean)
-# 
-# y = ipc0
-# dummy <- cbind(BETS::BETS.dummy(start = start(y), end = end(y), month = 1),
-#                BETS::BETS.dummy(start = start(y), end = end(y), month = 2),
-#                BETS::BETS.dummy(start = start(y), end = end(y), month = 3),
-#                BETS::BETS.dummy(start = start(y), end = end(y), month = 4),
-#                BETS::BETS.dummy(start = start(y), end = end(y), month = 5),
-#                BETS::BETS.dummy(start = start(y), end = end(y), month = 6),
-#                BETS::BETS.dummy(start = start(y), end = end(y), month = 7),
-#                BETS::BETS.dummy(start = start(y), end = end(y), month = 8),
-#                BETS::BETS.dummy(start = start(y), end = end(y), month = 9),
-#                BETS::BETS.dummy(start = start(y), end = end(y), month = 10),
-#                BETS::BETS.dummy(start = start(y), end = end(y), month = 11),
-#                BETS::BETS.dummy(start = start(y), end = end(y), month = 12)
-# )
-# dados <- cbind(y, dummy)
-# colnames(dados) <- c("y",paste0("D",1:12))
-# md <- lm(y ~ ., data = dados)
-# data.frame(as.vector(md$coefficients)[2:12])
-#initial_gamma <- c(0.37195906,-0.20488304,-0.02277778,-0.09172515,-0.22804094,-0.45383041,-0.21172515,-0.37804094,-0.39611111,-0.25611111, 0.01666667)
-#initial_gamma <- c(0.50767857,-0.13357143, 0.07642857,-0.09607143,-0.19357143,-0.54357143,-0.54107143,-0.46982143,-0.29142857,-0.20142857,-0.04857143)
-initial_gamma <- c(0.05516970,0.09563170,0.05699505,-0.18377041,-0.43230580,-0.17613783,0.69144612,-0.04360480,-0.44064156,0.07471822,0.27193868)
-initial_gamma <- c(0.153357232, 0.017716173, 0.132833222,-0.139159857,-0.404060430,-0.145550980, 0.660517961,-0.048933837,-0.449613456, 0.022034873, 0.223473635)
-#initial_gamma <- c(0.512692417,-0.041189734, 0.144115903, 0.088499102,-0.060261330,-0.266698219,-0.138449064,-0.195460536,-0.221822482,-0.069103134, 0.092489454)
-initial_gamma <- c(0.5193,-0.0469, 0.1511, 0.0878,-0.0606,-0.2625,-0.1520,-0.1967,-0.2275,-0.0687, 0.0995)
+# initial gamma (só para inicializar o filtro, obtido via regressão linear)
 initial_gamma <- c(0.48070729,-0.05859547, 0.15370156, 0.10032539,-0.03874261,-0.26932386,-0.12546543,-0.18050091,-0.20419881,-0.07149072, 0.06560687)
 
-# BSM com psi e dummy --------------------------------------------------------
+# BSM padrão (sem dummy sem psi) -------------------------------------------
 
-dummy <- cbind(BETS.dummy(start = start(ipc), end =  end(ipc), date = c(2002,11), freq = 12),
-               BETS.dummy(start = start(ipc), end =  end(ipc), date = c(2000,7), freq = 12))
-
-parametros_beta_psi <- list(
+parametros <- list(
   par = data.frame(
-    name = c("k1","ks","f2","df","mu[0]","beta","psi","phi","k3", paste0("gamma",1:11), "d1","d2"),
-    value = c(0.1,0.1,-1,12, 0.5,-0.1,0.1,0.1,0.1, as.vector(initial_gamma)[1:11], 2,2),
-    lower = c(0,0,-Inf,4,-Inf,-Inf,-Inf,-1,0, rep(-Inf,11), -Inf,-Inf),
-    upper = c(1,Inf,Inf,Inf,Inf,Inf,Inf,1,Inf,rep(Inf,11), Inf,Inf)
+    name = c("k1","ks","f2","df","mu[0]","beta", paste0("gamma",1:11)),
+    value = c(0.1,0.1,-1,12, 0.5,0.1,as.vector(initial_gamma)[1:11]),
+    lower = c(0,0,-Inf,4,-Inf,-Inf, rep(-Inf,11)),
+    upper = c(1,Inf,Inf,Inf,Inf,Inf,rep(Inf,11))
   ),
   gamma = NA,
-  Dummy = dummy
+  Dummy = NA
 )
 
-parametros_beta_psi <- list(
+dcs_padrao <- dcs_fk_estimation(ipc, initial = parametros, type = "BSM2_beta", outlier = F)
+dcs_padrao_ma <- dcs_fk_estimation(ipc_ma1, initial = parametros, type = "BSM2_beta", outlier = F)
+
+ts.plot(ipc,dcs_padrao$out[,"mu"], col = 1:2)
+ts.plot(ipc,dcs_padrao_ma$out[,"mu"], col = 1:2)
+
+ts.plot(dcs_padrao$out[,"epsilon"], col = 1)
+round(dcs_padrao$out[,"epsilon"],2)
+# dois resíduos mt grandes: julho de 2000 e novembro de 2002
+
+ts.plot(dcs_padrao_ma$out[,"epsilon"], col = 1)
+round(dcs_padrao_ma$out[,"epsilon"],2)
+# dois resíduos mt grandes: fev de 1999 e novembro de 2002
+
+diag_dcs_padrao <- diag.dcs(y = ipc, out = dcs_padrao, psi = F, dummy = F)
+diag_dcs_padrao_ma <- diag.dcs(y = ipc_ma1, out = dcs_padrao_ma, psi = F, dummy = F)
+
+# BSM padrão (com dummy sem psi) -------------------------------------------
+
+parametros_dummy1 <- list(
   par = data.frame(
-    name = c("k1","ks","f2","df","mu[0]","beta","psi","phi","k3", paste0("gamma",1:11), "d1"),
-    value = c(0.1,0.1,-1,12, 0.5,-0.1,0.1,0.1,0.1, as.vector(initial_gamma)[1:11], 2),
-    lower = c(0,0,-Inf,4,-Inf,-Inf,-Inf,-1,0, rep(-Inf,11), -Inf),
-    upper = c(1,Inf,Inf,Inf,Inf,Inf,Inf,1,Inf,rep(Inf,11), Inf)
+    name = c("k1","ks","f2","df","mu[0]","beta", paste0("gamma",1:11), "d1", "d2"),
+    value = c(0.1,0.1,-1,12, 0.5,-0.1, as.vector(initial_gamma)[1:11], 1,1),
+    lower = c(0,0,-Inf,4,-Inf,-Inf, rep(-Inf,11), -Inf, -Inf),
+    upper = c(1,Inf,Inf,Inf,Inf,Inf,rep(Inf,11), Inf, Inf)
   ),
   gamma = NA,
-  Dummy = dummy[,1]
+  Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2000,7)),
+                d2 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11)))
 )
 
+parametros_dummy2 <- list(
+  par = data.frame(
+    name = c("k1","ks","f2","df","mu[0]","beta", paste0("gamma",1:11), "d1", "d2"),
+    value = c(0.1,0.1,-1,12, 0.5,-0.1, as.vector(initial_gamma)[1:11], 1,1),
+    lower = c(0,0,-Inf,4,-Inf,-Inf, rep(-Inf,11), -Inf, -Inf),
+    upper = c(1,Inf,Inf,Inf,Inf,Inf, rep(Inf,11), Inf, Inf)
+  ),
+  gamma = NA,
+  Dummy = cbind(d1 = BETS.dummy(start = start(ipc_ma1), end = end(ipc_ma1), freq = 12, date = c(1999,2)),
+                d2 = BETS.dummy(start = start(ipc_ma1), end = end(ipc_ma1), freq = 12, date = c(2002,11)))
+)
 
-dcs_betapsidummy <- dcs_fk_estimation(ipc, initial = parametros_beta_psi, type = "BSM2_beta_psi", outlier = T)
+dcs_padrao_dummy <- dcs_fk_estimation(ipc, initial = parametros_dummy1, type = "BSM2_beta", outlier = T)
+dcs_padrao_dummy_ma <- dcs_fk_estimation(ipc_ma1, initial = parametros_dummy2, type = "BSM2_beta", outlier = T)
 
-ts.plot(ipc,dcs_betapsidummy$out[,"mu"], col = 1:2)
-ts.plot(ipc,dcs_betapsidummy$out[,"psi_mu"], col = 1:2)
-ts.plot(ipc,dcs_betapsidummy$out[,"psi"], col = 1:2)
+ts.plot(ipc,dcs_padrao_dummy$out[,"mu"], col = 1:2)
+ts.plot(ipc,dcs_padrao_dummy_ma$out[,"mu"], col = 1:2)
 
-# fig 6
-par(mfrow = c(2,2))
-ts.plot(ipc,dcs_betapsidummy$out[,"mu"], col = 1, lwd = c(1,2), main = "Y e Tendência", ylab = "")
-ts.plot(dcs_betapsidummy$out[,"mu"], col = 1, lwd = c(1), main = "Tendência", ylab = "")
-ts.plot(dcs_betapsidummy$out[,"gamma"], col = 1, lwd = c(1,2), main = "Sazonalidade", ylab = "")
-abline(h=0, lty = 3, col = 2)
-ts.plot(dcs_betapsidummy$out[,c("u")],dcs_betapsidummy$out[,c("nu")], col = 1, lty = c(1,3), main = "u e nu = exp(f2)*epsilon.", ylab = "")
+ts.plot(dcs_padrao_dummy$out[,"epsilon"], col = 1)
+round(dcs_padrao_dummy$out[,"epsilon"],2)
 
-# fig 7
-par(mfrow = c(2,2))
-ts.plot(dcs_betapsidummy$out[,c("nu")], col = 1, lty = c(1,3), main = "nu = exp(f2)*epsilon.", ylab = "", ylim = c(-1,2.1))
-ts.plot(dcs_betapsidummy$out[,c("u")], col = 1, lty = c(1,3), main = "u", ylab = "", ylim = c(-1,2.1))
-acf(dcs_betapsidummy$out[,c("nu")], 48, drop.lag.0 = T, main = "acf nu")
-acf(dcs_betapsidummy$out[,c("u")], 48, drop.lag.0 = T, main = "acf u")
+ts.plot(dcs_padrao_dummy_ma$out[,"epsilon"], col = 1)
+round(dcs_padrao_dummy_ma$out[,"epsilon"],2)
 
-write.csv2(data.frame(data = as.Date(dcs_betapsidummy$out[,"mu"]), round(((dcs_betapsidummy$out[,"mu"]/100+1)^12-1)*100,2)), "tendencia_betapsi_dummy2.csv", row.names = F)
+diag_dcs_padrao_dummy <- diag.dcs(y = ipc, out = dcs_padrao_dummy, psi = F, dummy = T)
+diag_dcs_padrao_dummy_ma <- diag.dcs(y = ipc_ma1, out = dcs_padrao_dummy_ma, psi = F, dummy = T)
 
-# diagnóstico
-diag <- diag.dcs(y = ipc, out = dcs_betapsidummy, psi = T, dummy = T)
-diag$stats
+# BSM padrão (sem dummy com psi) -------------------------------------------
 
-hist(diag$resid.q, main = "residuo quantilico")
-hist(dcs_betapsidummy$out[,"epsilon"], main = "epsilon")
-
-
-# BSM com psi --------------------------------------------------------
-
-parametros_beta_psi <- list(
+parametros_psi <- list(
   par = data.frame(
     name = c("k1","ks","f2","df","mu[0]","beta","psi","phi","k3", paste0("gamma",1:11)),
     value = c(0.1,0.1,-1,12, 0.5,-0.1,0.1,0.1,0.1, as.vector(initial_gamma)[1:11]),
     lower = c(0,0,-Inf,4,-Inf,-Inf,-Inf,-1,0, rep(-Inf,11)),
     upper = c(1,Inf,Inf,Inf,Inf,Inf,Inf,1,Inf,rep(Inf,11))
   ),
-  gamma = NA
+  gamma = NA,
+  Dummy = NA
 )
 
-parametros_beta <- list(
+dcs_padrao_psi <- dcs_fk_estimation(ipc, initial = parametros_psi, type = "BSM2_beta_psi", outlier = F)
+dcs_padrao_psi_ma <- dcs_fk_estimation(ipc_ma1, initial = parametros_psi, type = "BSM2_beta_psi", outlier = F)
+
+ts.plot(ipc,dcs_padrao_psi$out[,"mu"], col = 1:2)
+ts.plot(ipc,dcs_padrao_psi_ma$out[,"mu"], col = 1:2)
+
+ts.plot(dcs_padrao_psi$out[,"epsilon"], col = 1)
+round(dcs_padrao_psi$out[,"epsilon"],2)
+# dois resíduos mt grandes: julho de 2000 e novembro de 2002
+
+ts.plot(dcs_padrao_psi_ma$out[,"epsilon"], col = 1)
+round(dcs_padrao_psi_ma$out[,"epsilon"],2)
+# só um resíduo mt grande: novembro de 2002
+
+diag_dcs_padrao_psi <- diag.dcs(y = ipc, out = dcs_padrao_psi, psi = T, dummy = F)
+diag_dcs_padrao_psi_ma <- diag.dcs(y = ipc_ma1, out = dcs_padrao_psi_ma, psi = T, dummy = F)
+
+# BSM padrão (com dummy com psi) -------------------------------------------
+
+parametros_psi_dummy1 <- list(
   par = data.frame(
-    name = c("k1","ks","f2","df","mu[0]","beta",paste0("gamma",1:11)),
-    value = c(0.11,0.1,-1,12, 0.5,-0.1, as.vector(initial_gamma)[1:11]),
-    lower = c(0,0,-Inf,4,-Inf,-Inf, rep(-Inf,11)),
-    upper = c(0.11,Inf,Inf,Inf,Inf,Inf,rep(Inf,11))
+    name = c("k1","ks","f2","df","mu[0]","beta","psi","phi","k3", paste0("gamma",1:11), "d1", "d2"),
+    value = c(0.1,0.1,-1,12, 0.5,-0.1,0.1,0.1,0.1, as.vector(initial_gamma)[1:11], 1,1),
+    lower = c(0,0,-Inf,4,-Inf,-Inf,-Inf,-1,0, rep(-Inf,11), -Inf, -Inf),
+    upper = c(1,Inf,Inf,Inf,Inf,Inf,Inf,1,Inf,rep(Inf,11), Inf, Inf)
   ),
-  gamma = NA
+  gamma = NA,
+  Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2000,7)),
+                d2 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11)))
 )
-dcs_betapsi <- dcs_fk_estimation(ipc, initial = parametros_beta_psi, type = "BSM2_beta_psi")
-dcs_beta <- dcs_fk_estimation(ipc, initial = parametros_beta, type = "BSM2_beta")
-dcs_betapsi_ma <- dcs_fk_estimation(ipc_ma1, initial = parametros_beta_psi, type = "BSM2_beta_psi")
-dcs_beta_ma <- dcs_fk_estimation(ipc_ma1, initial = parametros_beta, type = "BSM2_beta")
 
-ts.plot(ipc,dcs_betapsi$out[,"mu"], col = 1:2)
-ts.plot(ipc,dcs_betapsi$out[,"psi_mu"], col = 1:2)
-ts.plot(ipc,dcs_betapsi$out[,"psi"], col = 1:2)
+parametros_psi_dummy2 <- list(
+  par = data.frame(
+    name = c("k1","ks","f2","df","mu[0]","beta","psi","phi","k3", paste0("gamma",1:11), "d1"),
+    value = c(0.1,0.1,-1,12, 0.5,-0.1,0.1,0.1,0.1, as.vector(initial_gamma)[1:11], 1),
+    lower = c(0,0,-Inf,4,-Inf,-Inf,-Inf,-1,0, rep(-Inf,11), -Inf),
+    upper = c(1,Inf,Inf,Inf,Inf,Inf,Inf,1,Inf,rep(Inf,11), Inf)
+  ),
+  gamma = NA,
+  Dummy = cbind(d1 = BETS.dummy(start = start(ipc_ma1), end = end(ipc_ma1), freq = 12, date = c(2002,11)))
+)
 
-ts.plot(dcs_betapsi$out[,"mu"], dcs_beta$out[,"mu"], col = 1:2)
-ts.plot(dcs_betapsi_ma$out[,"mu"], dcs_beta_ma$out[,"mu"], col = 1:2)
-ts.plot(dcs_betapsi$out[,"mu"], dcs_beta$out[,"mu"], dcs_beta_ma$out[,"mu"], col = 1:2)
-ts.plot(dcs_beta_ma$out[,"mu"], ipc_ma3, col = 1:2)
-ts.plot(ipc, dcs_beta_ma$out[,"mu"], ipc_ma3, col = c(1,2,4))
+dcs_padrao_psi_dummy <- dcs_fk_estimation(ipc, initial = parametros_psi_dummy1, type = "BSM2_beta_psi", outlier = T)
+dcs_padrao_psi_dummy_ma <- dcs_fk_estimation(ipc_ma1, initial = parametros_psi_dummy2, type = "BSM2_beta_psi", outlier = T)
 
-ts.plot(ipc,dcs_beta$out[,"mu"], col = 1:2)
+ts.plot(ipc,dcs_padrao_psi_dummy$out[,"mu"], col = 1:2)
+ts.plot(ipc,dcs_padrao_psi_dummy_ma$out[,"mu"], col = 1:2)
+
+ts.plot(dcs_padrao_psi_dummy$out[,"epsilon"], col = 1)
+round(dcs_padrao_psi_dummy$out[,"epsilon"],2)
+
+ts.plot(dcs_padrao_psi_dummy_ma$out[,"epsilon"], col = 1)
+round(dcs_padrao_psi_dummy_ma$out[,"epsilon"],2)
+
+diag_dcs_padrao_psi_dummy <- diag.dcs(y = ipc, out = dcs_padrao_psi_dummy, psi = T, dummy = T)
+diag_dcs_padrao_psi_dummy_ma <- diag.dcs(y = ipc_ma1, out = dcs_padrao_psi_dummy_ma, psi = T, dummy = T)
+
+# IMAGENS (do artigo) ---------------------------
+
+# BSM PADRAO (sem psi sem dummy)
+
+# fig 6
+par(mfrow = c(2,2))
+ts.plot(ipc,dcs_padrao$out[,"mu"], col = 1, lwd = c(1,2), main = "Y e Tendência", ylab = "")
+ts.plot(dcs_padrao$out[,"mu"], col = 1, lwd = c(1), main = "Tendência", ylab = "")
+ts.plot(dcs_padrao$out[,"gamma"], col = 1, lwd = c(1,2), main = "Sazonalidade", ylab = "")
+abline(h=0, lty = 3, col = 2)
+ts.plot(dcs_padrao$out[,c("u")],dcs_padrao$out[,c("nu")], col = 1, lty = c(1,3), main = "u e nu = exp(f2)*epsilon.", ylab = "")
+
+# fig 7
+par(mfrow = c(2,2))
+ts.plot(dcs_padrao$out[,c("nu")], col = 1, lty = c(1,3), main = "nu = exp(f2)*epsilon.", ylab = "", ylim = c(-1,2.1))
+ts.plot(dcs_padrao$out[,c("u")], col = 1, lty = c(1,3), main = "u", ylab = "", ylim = c(-1,2.1))
+acf(dcs_padrao$out[,c("nu")], 48, drop.lag.0 = T, main = "acf nu")
+acf(dcs_padrao$out[,c("u")], 48, drop.lag.0 = T, main = "acf u")
+
+# BSM PADRAO (sem psi com dummy)
+
+# fig 6
+par(mfrow = c(2,2))
+ts.plot(ipc,dcs_padrao_dummy$out[,"mu"], col = 1, lwd = c(1,2), main = "Y e Tendência", ylab = "")
+ts.plot(dcs_padrao_dummy$out[,"mu"], col = 1, lwd = c(1), main = "Tendência", ylab = "")
+ts.plot(dcs_padrao_dummy$out[,"gamma"], col = 1, lwd = c(1,2), main = "Sazonalidade", ylab = "")
+abline(h=0, lty = 3, col = 2)
+ts.plot(dcs_padrao_dummy$out[,c("u")],dcs_padrao_dummy$out[,c("nu")], col = 1, lty = c(1,3), main = "u e nu = exp(f2)*epsilon.", ylab = "")
+
+# fig 7
+par(mfrow = c(2,2))
+ts.plot(dcs_padrao_dummy$out[,c("nu")], col = 1, lty = c(1,3), main = "nu = exp(f2)*epsilon.", ylab = "", ylim = c(-1,2.1))
+ts.plot(dcs_padrao_dummy$out[,c("u")], col = 1, lty = c(1,3), main = "u", ylab = "", ylim = c(-1,2.1))
+acf(dcs_padrao_dummy$out[,c("nu")], 48, drop.lag.0 = T, main = "acf nu")
+acf(dcs_padrao_dummy$out[,c("u")], 48, drop.lag.0 = T, main = "acf u")
+
+
+# BSM PADRAO (com psi sem dummy)
+
+# fig 6
+par(mfrow = c(2,2))
+ts.plot(ipc,dcs_padrao_psi$out[,"mu"], col = 1, lwd = c(1,2), main = "Y e Tendência", ylab = "")
+ts.plot(dcs_padrao_psi$out[,"mu"], col = 1, lwd = c(1), main = "Tendência", ylab = "")
+ts.plot(dcs_padrao_psi$out[,"gamma"], col = 1, lwd = c(1,2), main = "Sazonalidade", ylab = "")
+abline(h=0, lty = 3, col = 2)
+ts.plot(dcs_padrao_psi$out[,c("u")],dcs_padrao_psi$out[,c("nu")], col = 1, lty = c(1,3), main = "u e nu = exp(f2)*epsilon.", ylab = "")
+
+# fig 7
+par(mfrow = c(2,2))
+ts.plot(dcs_padrao_psi$out[,c("nu")], col = 1, lty = c(1,3), main = "nu = exp(f2)*epsilon.", ylab = "", ylim = c(-1,2.1))
+ts.plot(dcs_padrao_psi$out[,c("u")], col = 1, lty = c(1,3), main = "u", ylab = "", ylim = c(-1,2.1))
+acf(dcs_padrao_psi$out[,c("nu")], 48, drop.lag.0 = T, main = "acf nu")
+acf(dcs_padrao_psi$out[,c("u")], 48, drop.lag.0 = T, main = "acf u")
+
+
+# BSM PADRAO (com psi com dummy)
+
+# fig 6
+par(mfrow = c(2,2))
+ts.plot(ipc,dcs_padrao_psi_dummy$out[,"mu"], col = 1, lwd = c(1,2), main = "Y e Tendência", ylab = "")
+ts.plot(dcs_padrao_psi_dummy$out[,"mu"], col = 1, lwd = c(1), main = "Tendência", ylab = "")
+ts.plot(dcs_padrao_psi_dummy$out[,"gamma"], col = 1, lwd = c(1,2), main = "Sazonalidade", ylab = "")
+abline(h=0, lty = 3, col = 2)
+ts.plot(dcs_padrao_psi_dummy$out[,c("u")],dcs_padrao_psi_dummy$out[,c("nu")], col = 1, lty = c(1,3), main = "u e nu = exp(f2)*epsilon.", ylab = "")
+
+# fig 7
+par(mfrow = c(2,2))
+ts.plot(dcs_padrao_psi_dummy$out[,c("nu")], col = 1, lty = c(1,3), main = "nu = exp(f2)*epsilon.", ylab = "", ylim = c(-1,2.1))
+ts.plot(dcs_padrao_psi_dummy$out[,c("u")], col = 1, lty = c(1,3), main = "u", ylab = "", ylim = c(-1,2.1))
+acf(dcs_padrao_psi_dummy$out[,c("nu")], 48, drop.lag.0 = T, main = "acf nu")
+acf(dcs_padrao_psi_dummy$out[,c("u")], 48, drop.lag.0 = T, main = "acf u")
+
+
+# EXPORTAR -------------------------------------------
+
+todos_dcs <- list(
+  ipc = list(
+    dcs_padrao = dcs_padrao,
+    dcs_padrao_dummy = dcs_padrao_dummy,
+    dcs_padrao_psi = dcs_padrao_psi,
+    dcs_padrao_psi_dummy = dcs_padrao_psi_dummy
+  ),
+  ma = list(
+    dcs_padrao = dcs_padrao_ma,
+    dcs_padrao_dummy = dcs_padrao_dummy_ma,
+    dcs_padrao_psi = dcs_padrao_psi_ma,
+    dcs_padrao_psi_dummy = dcs_padrao_psi_dummy_ma
+  )
+)
+saveRDS(todos_dcs, "shiny_simulacao/data/todos_dcs.rds")
+saveRDS(todos_dcs, "dados/todos_dcs.rds")
+
+todos_diags <- list(
+  ipc = list(
+    diag_dcs_padrao = diag_dcs_padrao,
+    diag_dcs_padrao_dummy = diag_dcs_padrao_dummy,
+    diag_dcs_padrao_psi = diag_dcs_padrao_psi,
+    diag_dcs_padrao_psi_dummy = diag_dcs_padrao_psi_dummy
+  ),
+  ma = list(
+    diag_dcs_padrao = diag_dcs_padrao_ma,
+    diag_dcs_padrao_dummy = diag_dcs_padrao_dummy_ma,
+    diag_dcs_padrao_psi = diag_dcs_padrao_psi_ma,
+    diag_dcs_padrao_psi_dummy = diag_dcs_padrao_psi_dummy_ma
+  )
+)
+saveRDS(todos_diags, "shiny_simulacao/data/todos_diags.rds")
+saveRDS(todos_diags, "dados/todos_diags.rds")
+
+
+tendencias <- cbind(dcs_padrao = dcs_padrao$out[,"mu"],
+                         dcs_padrao_dummy = dcs_padrao_dummy$out[,"mu"],
+                         dcs_padrao_psi = dcs_padrao_psi$out[,"mu"],
+                         dcs_padrao_psi_dummy = dcs_padrao_psi_dummy$out[,"mu"],
+                         dcs_padrao_ma = dcs_padrao_ma$out[,"mu"],
+                         dcs_padrao_dummy_ma = dcs_padrao_dummy_ma$out[,"mu"],
+                         dcs_padrao_psi_ma = dcs_padrao_psi_ma$out[,"mu"],
+                         dcs_padrao_psi_dummy_ma = dcs_padrao_psi_dummy_ma$out[,"mu"]
+)
+saveRDS(tendencias, "shiny_simulacao/data/tendencias.rds")
+saveRDS(tendencias, "dados/tendencias.rds")
+write.csv2(data.frame(data = as.Date(tendencias), round(((tendencias/100+1)^12-1)*100,2)), "ultimas_tendencias.csv", row.names = F)
+
+
+# # BSM com psi e dummy --------------------------------------------------------
+# 
+# dummy <- cbind(BETS.dummy(start = start(ipc), end =  end(ipc), date = c(2002,11), freq = 12),
+#                BETS.dummy(start = start(ipc), end =  end(ipc), date = c(2000,7), freq = 12))
+# 
+# parametros_beta_psi <- list(
+#   par = data.frame(
+#     name = c("k1","ks","f2","df","mu[0]","beta","psi","phi","k3", paste0("gamma",1:11), "d1","d2"),
+#     value = c(0.1,0.1,-1,12, 0.5,-0.1,0.1,0.1,0.1, as.vector(initial_gamma)[1:11], 2,2),
+#     lower = c(0,0,-Inf,4,-Inf,-Inf,-Inf,-1,0, rep(-Inf,11), -Inf,-Inf),
+#     upper = c(1,Inf,Inf,Inf,Inf,Inf,Inf,1,Inf,rep(Inf,11), Inf,Inf)
+#   ),
+#   gamma = NA,
+#   Dummy = dummy
+# )
+# 
+# parametros_beta_psi <- list(
+#   par = data.frame(
+#     name = c("k1","ks","f2","df","mu[0]","beta","psi","phi","k3", paste0("gamma",1:11), "d1"),
+#     value = c(0.1,0.1,-1,12, 0.5,-0.1,0.1,0.1,0.1, as.vector(initial_gamma)[1:11], 2),
+#     lower = c(0,0,-Inf,4,-Inf,-Inf,-Inf,-1,0, rep(-Inf,11), -Inf),
+#     upper = c(1,Inf,Inf,Inf,Inf,Inf,Inf,1,Inf,rep(Inf,11), Inf)
+#   ),
+#   gamma = NA,
+#   Dummy = dummy[,1]
+# )
+# 
+# 
+# dcs_betapsidummy <- dcs_fk_estimation(ipc, initial = parametros_beta_psi, type = "BSM2_beta_psi", outlier = T)
+# 
+# ts.plot(ipc,dcs_betapsidummy$out[,"mu"], col = 1:2)
+# ts.plot(ipc,dcs_betapsidummy$out[,"psi_mu"], col = 1:2)
+# ts.plot(ipc,dcs_betapsidummy$out[,"psi"], col = 1:2)
+# 
+# # fig 6
+# par(mfrow = c(2,2))
+# ts.plot(ipc,dcs_betapsidummy$out[,"mu"], col = 1, lwd = c(1,2), main = "Y e Tendência", ylab = "")
+# ts.plot(dcs_betapsidummy$out[,"mu"], col = 1, lwd = c(1), main = "Tendência", ylab = "")
+# ts.plot(dcs_betapsidummy$out[,"gamma"], col = 1, lwd = c(1,2), main = "Sazonalidade", ylab = "")
+# abline(h=0, lty = 3, col = 2)
+# ts.plot(dcs_betapsidummy$out[,c("u")],dcs_betapsidummy$out[,c("nu")], col = 1, lty = c(1,3), main = "u e nu = exp(f2)*epsilon.", ylab = "")
+# 
+# # fig 7
+# par(mfrow = c(2,2))
+# ts.plot(dcs_betapsidummy$out[,c("nu")], col = 1, lty = c(1,3), main = "nu = exp(f2)*epsilon.", ylab = "", ylim = c(-1,2.1))
+# ts.plot(dcs_betapsidummy$out[,c("u")], col = 1, lty = c(1,3), main = "u", ylab = "", ylim = c(-1,2.1))
+# acf(dcs_betapsidummy$out[,c("nu")], 48, drop.lag.0 = T, main = "acf nu")
+# acf(dcs_betapsidummy$out[,c("u")], 48, drop.lag.0 = T, main = "acf u")
+# 
+# write.csv2(data.frame(data = as.Date(dcs_betapsidummy$out[,"mu"]), round(((dcs_betapsidummy$out[,"mu"]/100+1)^12-1)*100,2)), "tendencia_betapsi_dummy2.csv", row.names = F)
+# 
+# # diagnóstico
+# diag <- diag.dcs(y = ipc, out = dcs_betapsidummy, psi = T, dummy = T)
+# diag$stats
+# 
+# hist(diag$resid.q, main = "residuo quantilico")
+# hist(dcs_betapsidummy$out[,"epsilon"], main = "epsilon")
+# 
+# 
+# # BSM com psi --------------------------------------------------------
+# 
+# parametros_beta_psi <- list(
+#   par = data.frame(
+#     name = c("k1","ks","f2","df","mu[0]","beta","psi","phi","k3", paste0("gamma",1:11)),
+#     value = c(0.1,0.1,-1,12, 0.5,-0.1,0.1,0.1,0.1, as.vector(initial_gamma)[1:11]),
+#     lower = c(0,0,-Inf,4,-Inf,-Inf,-Inf,-1,0, rep(-Inf,11)),
+#     upper = c(1,Inf,Inf,Inf,Inf,Inf,Inf,1,Inf,rep(Inf,11))
+#   ),
+#   gamma = NA
+# )
+# 
+# parametros_beta <- list(
+#   par = data.frame(
+#     name = c("k1","ks","f2","df","mu[0]","beta",paste0("gamma",1:11)),
+#     value = c(0.11,0.1,-1,12, 0.5,-0.1, as.vector(initial_gamma)[1:11]),
+#     lower = c(0,0,-Inf,4,-Inf,-Inf, rep(-Inf,11)),
+#     upper = c(0.11,Inf,Inf,Inf,Inf,Inf,rep(Inf,11))
+#   ),
+#   gamma = NA
+# )
+# dcs_betapsi <- dcs_fk_estimation(ipc, initial = parametros_beta_psi, type = "BSM2_beta_psi")
+# dcs_beta <- dcs_fk_estimation(ipc, initial = parametros_beta, type = "BSM2_beta")
+# dcs_betapsi_ma <- dcs_fk_estimation(ipc_ma1, initial = parametros_beta_psi, type = "BSM2_beta_psi")
+# dcs_beta_ma <- dcs_fk_estimation(ipc_ma1, initial = parametros_beta, type = "BSM2_beta")
+# 
+# ts.plot(ipc,dcs_betapsi$out[,"mu"], col = 1:2)
+# ts.plot(ipc,dcs_betapsi$out[,"psi_mu"], col = 1:2)
+# ts.plot(ipc,dcs_betapsi$out[,"psi"], col = 1:2)
+# 
+# ts.plot(dcs_betapsi$out[,"mu"], dcs_beta$out[,"mu"], col = 1:2)
+# ts.plot(dcs_betapsi_ma$out[,"mu"], dcs_beta_ma$out[,"mu"], col = 1:2)
+# ts.plot(dcs_betapsi$out[,"mu"], dcs_beta$out[,"mu"], dcs_beta_ma$out[,"mu"], col = 1:2)
+# ts.plot(dcs_beta_ma$out[,"mu"], ipc_ma3, col = 1:2)
+# ts.plot(ipc, dcs_beta_ma$out[,"mu"], ipc_ma3, col = c(1,2,4))
+# 
+# ts.plot(ipc,dcs_beta$out[,"mu"], col = 1:2)
+# # pseudo.y <- (1 - dcs_res$out[,"b"])*ipc + dcs_res$out[,"b"]*(dcs_res$out[,"mu"] + dcs_res$out[,"gamma"])
+# # # mu smooth
+# # bsm_res <- bsm(pseudo.y, type = "BSM2_beta", iter = 10000)
+# # ts.plot(bsm_res[,"mu"],ipc, col = 2:1)
+# # 
+# # ts.plot(bsm_res[,"mu"], dcs_res$out[,"mu"], col = 2:1)
+# # 
+# # saveRDS(list(core_res = dcs_res$out[,"mu"], core_ress = bsm_res[,"mu"]), "./dados/nucleo.rds")
+# 
+# 
+# # fig 6
+# par(mfrow = c(2,2))
+# ts.plot(ipc,dcs_betapsi$out[,"mu"], col = 1, lwd = c(1,2), main = "Y e Tendência", ylab = "")
+# ts.plot(dcs_betapsi$out[,"mu"], col = 1, lwd = c(1), main = "Tendência", ylab = "")
+# ts.plot(dcs_betapsi$out[,"gamma"], col = 1, lwd = c(1,2), main = "Sazonalidade", ylab = "")
+# abline(h=0, lty = 3, col = 2)
+# ts.plot(dcs_betapsi$out[,c("u")],dcs_betapsi$out[,c("nu")], col = 1, lty = c(1,3), main = "u e nu = exp(f2)*epsilon.", ylab = "")
+# 
+# # fig 7
+# par(mfrow = c(2,2))
+# ts.plot(dcs_betapsi$out[,c("nu")], col = 1, lty = c(1,3), main = "nu = exp(f2)*epsilon.", ylab = "", ylim = c(-1,2.1))
+# ts.plot(dcs_betapsi$out[,c("u")], col = 1, lty = c(1,3), main = "u", ylab = "", ylim = c(-1,2.1))
+# acf(dcs_betapsi$out[,c("nu")], 48, drop.lag.0 = T, main = "acf nu")
+# acf(dcs_betapsi$out[,c("u")], 48, drop.lag.0 = T, main = "acf u")
+# 
+# 
+# # fig 6
+# par(mfrow = c(2,2))
+# ts.plot(ipc,dcs_beta$out[,"mu"], col = 1, lwd = c(1,2), main = "Y e Tendência", ylab = "")
+# ts.plot(dcs_beta$out[,"mu"], col = 1, lwd = c(1), main = "Tendência", ylab = "")
+# ts.plot(dcs_beta$out[,"gamma"], col = 1, lwd = c(1,2), main = "Sazonalidade", ylab = "")
+# abline(h=0, lty = 3, col = 2)
+# ts.plot(dcs_beta$out[,c("u")],dcs_beta$out[,c("nu")], col = 1, lty = c(1,3), main = "u e nu = exp(f2)*epsilon.", ylab = "")
+# 
+# # fig 7
+# par(mfrow = c(2,2))
+# ts.plot(dcs_beta$out[,c("nu")], col = 1, lty = c(1,3), main = "nu = exp(f2)*epsilon.", ylab = "", ylim = c(-1,2.1))
+# ts.plot(dcs_beta$out[,c("u")], col = 1, lty = c(1,3), main = "u", ylab = "", ylim = c(-1,2.1))
+# acf(dcs_beta$out[,c("nu")], 48, drop.lag.0 = T, main = "acf nu")
+# acf(dcs_beta$out[,c("u")], 48, drop.lag.0 = T, main = "acf u")
+# 
+# 
+# # fig 8
+# # ts.plot(fk2[,"mu"],bsm2$out[,"mu"], col = 1, lty = c(1,3))
+# # ts.plot(fk2_beta[,"mu"],bsm2_beta$out[,"mu"], col = 1, lty = c(1,3))
+# # ts.plot(fk2[,"mu"],fk2_beta[,"mu"], col = 1, lty = c(1,3))
+# # ts.plot(fk2[,"mu"],ipc, col = 1, lty = c(1,3))
+# # ts.plot(fk2_beta[,"mu"],ipc, col = 1, lty = c(1,3), lwd = c(2,1))
+# 
+# write.csv2(data.frame(data = as.Date(dcs_betapsi$out[,"mu"]), round(((dcs_betapsi$out[,"mu"]/100+1)^12-1)*100,2)), "tendencia_betapsi.csv", row.names = F)
+# 
+# # diagnóstico
+# diag <- diag.dcs(y = ipc, out = dcs_betapsi, psi = T)
+# 
+# hist(diag$resid.q, main = "residuo quantilico")
+# hist(dcs_res$out[,"epsilon"], main = "residuo de pearson")
+# 
+# # BSM para IPC ----------------------------------------------------
+# # valores iniciais
+# parametros <- list(
+#   par = data.frame(
+#     name = c("k1","ks","f2","df","mu[0]","beta"),
+#     value = c(0.02,0.5,0.5,10, 0.49,-0.01),
+#     lower = c(0,0.001,-Inf,4,-Inf,-Inf),
+#     upper = c(1,Inf,Inf,Inf,Inf,Inf)
+#   ),
+#   gamma = as.vector(initial_gamma)[1:11]
+# )
+# 
+# # IRRESTRITO
+# parametros <- list(
+#   par = data.frame(
+#     name = c("k1","ks","f2","df","mu[0]","beta", paste0("gamma",1:11)),
+#     value = c(0.1,0.1,-1,12, 0.5,-0.1, as.vector(initial_gamma)[1:11]),
+#     lower = c(0,0,-Inf,4,-Inf,-Inf, rep(-Inf,11)),
+#     upper = c(1,Inf,Inf,Inf,Inf,Inf,rep(Inf,11))
+#   ),
+#   gamma = NA
+# )
+# parametros
+# dcs_full <- dcs_fk_estimation(ipc, initial = parametros, type = "BSM2_beta")
+# ts.plot(ipc,dcs_full$out[,"mu"], col = 1:2)
+# 
+# pseudo.y <- (1 - dcs_full$out[,"b"])*ipc + dcs_full$out[,"b"]*(dcs_full$out[,"mu"] + dcs_full$out[,"gamma"])
+# 
+# # mu smooth
+# bsm_full <- bsm(pseudo.y, type = "BSM2_beta", iter = 10000)
+# ts.plot(bsm_full[,"mu"],ipc, col = 2:1)
+# 
+# ts.plot(bsm_full[,"mu"], dcs_full$out[,"mu"], col = 2:1)
+# 
+# # RESTRITO
+# parametros <- list(
+#   par = data.frame(
+#     name = c("k1","ks","f2","df","mu[0]","beta", paste0("gamma",1:11)),
+#     value = c(0.1,0.1,-1,12, 0.5,-0.1, as.vector(initial_gamma)[1:11]),
+#     lower = c(0,0,-Inf,4,-Inf,-Inf, rep(-Inf,11)),
+#     upper = c(0.1,Inf,Inf,Inf,Inf,Inf,rep(Inf,11))
+#   ),
+#   gamma = NA
+# )
+# parametros
+# dcs_res <- dcs_fk_estimation(ipc, initial = parametros, type = "BSM2_beta")
+# ts.plot(ipc,dcs_res$out[,"mu"], col = 1:2)
+# ts.plot(dcs_res$out[,"gamma"], col = 1:2)
 # pseudo.y <- (1 - dcs_res$out[,"b"])*ipc + dcs_res$out[,"b"]*(dcs_res$out[,"mu"] + dcs_res$out[,"gamma"])
+# 
+# x <- data.frame(parametros$par, otimo = round(dcs_res$otimizados$par,4))
+# x[2,3:5] <- NA 
+# x
 # # mu smooth
 # bsm_res <- bsm(pseudo.y, type = "BSM2_beta", iter = 10000)
 # ts.plot(bsm_res[,"mu"],ipc, col = 2:1)
@@ -160,181 +503,75 @@ ts.plot(ipc,dcs_beta$out[,"mu"], col = 1:2)
 # ts.plot(bsm_res[,"mu"], dcs_res$out[,"mu"], col = 2:1)
 # 
 # saveRDS(list(core_res = dcs_res$out[,"mu"], core_ress = bsm_res[,"mu"]), "./dados/nucleo.rds")
+# 
+# 
+# # fig 6
+# par(mfrow = c(2,2), mar = c(3,3,2,3))
+# ts.plot(ipc,dcs_res$out[,"mu"], col = 1, lwd = c(1,2), main = "Y e Tendência", ylab = "")
+# ts.plot(dcs_res$out[,"mu"], col = 1, lwd = c(1), main = "Tendência", ylab = "")
+# ts.plot(dcs_res$out[,"gamma"], col = 1, lwd = c(1,2), main = "Sazonalidade", ylab = "")
+# abline(h=0, lty = 3, col = 2)
+# ts.plot(dcs_res$out[,c("u")],dcs_res$out[,c("nu")], col = 1, lty = c(1,3), main = "u e nu = exp(f2)*epsilon.", ylab = "")
+# 
+# # fig 7
+# par(mfrow = c(2,2), mar = c(3,3,2,3))
+# ts.plot(dcs_res$out[,c("nu")], col = 1, lty = c(1,3), main = "nu = exp(f2)*epsilon.", ylab = "", ylim = c(-1,2.1))
+# ts.plot(dcs_res$out[,c("u")], col = 1, lty = c(1,3), main = "u", ylab = "", ylim = c(-1,2.1))
+# acf(dcs_res$out[,c("nu")], 48, drop.lag.0 = T, main = "acf nu")
+# acf(dcs_res$out[,c("u")], 48, drop.lag.0 = T, main = "acf u")
+# 
+# # fig 8
+# # ts.plot(fk2[,"mu"],bsm2$out[,"mu"], col = 1, lty = c(1,3))
+# # ts.plot(fk2_beta[,"mu"],bsm2_beta$out[,"mu"], col = 1, lty = c(1,3))
+# # ts.plot(fk2[,"mu"],fk2_beta[,"mu"], col = 1, lty = c(1,3))
+# # ts.plot(fk2[,"mu"],ipc, col = 1, lty = c(1,3))
+# # ts.plot(fk2_beta[,"mu"],ipc, col = 1, lty = c(1,3), lwd = c(2,1))
+# 
+# write.csv2(data.frame(data = as.Date(bsm2_beta$out[,"mu"]), round(((bsm2_beta$out[,"mu"]/100+1)^12-1)*100,2)), "tendencia5.csv", row.names = F)
+# 
+# # diagnóstico
+# diag <- diag.dcs(y = dcs_res$out[,"epsilon"], df = dcs_res$otimizados$par[4])
+# 
+# hist(diag$resid.q, main = "modelo sem beta")
+# 
+# diag$stats
+# 
+# saveRDS(bsm2, "shiny_simulacao/data/bsm_ipc.rds")
+# saveRDS(pseudo.y, "shiny_simulacao/data/pseudoy_ipc.rds")
+# saveRDS(fk2, "shiny_simulacao/data/smooth_ipc.rds")
+# saveRDS(diag, "shiny_simulacao/data/diag_ipc.rds")
+# #saveRDS(psd, "shiny_simulacao/data/smooth_ipc_psd.rds")
+# 
+# # nucleo final
+# nucleo <- bsm2$out[,"mu"]
+# nucleo <- fk2[,"mu"]
+# # exercício
+# 
+# out <- NULL
+# vero <- NULL
+# k1 <- NULL
+# ks <- seq(0,1,by = 0.01)
+# mu <- NULL
+# beta <- NULL
+# dfs <- 4:30
+# for(i in 1:length(ks)){
+#   #out[[i]] <- dcs_fk_estimation_exercise(ipc, initial = parametros, type = "BSM2_beta", k1 = k1[i])
+#   #out[[i]] <- dcs_fk_estimation_exercise(ipc, initial = parametros, type = "BSM2_beta", df = dfs[i])
+#   out[[i]] <- dcs_fk_estimation_exercise(ipc, initial = parametros, type = "BSM2_beta", ks = ks[i])
+#   vero[i] <- out[[i]]$loglik
+#   
+# }
+# k <- cbind(ks = ks, loglik = -vero)
+# plot(k[,1:2], xlab = "graus de liberdade", ylab = "loglik")
+# round(k,3)
+# 
+# library(zoo)
+# exportar <- data.frame(data = as.Date(cbind(bsm2$out, fk2)),cbind(bsm2$out, fk2))
+# colnames(exportar) <- c("data", colnames(bsm2$out), paste0(colnames(fk2),"_smoother"))
+# write.csv2(exportar,"shiny_simulacao/www/ultimos_resultados.csv", row.names = F)
+# 
 
-
-# fig 6
-par(mfrow = c(2,2))
-ts.plot(ipc,dcs_betapsi$out[,"mu"], col = 1, lwd = c(1,2), main = "Y e Tendência", ylab = "")
-ts.plot(dcs_betapsi$out[,"mu"], col = 1, lwd = c(1), main = "Tendência", ylab = "")
-ts.plot(dcs_betapsi$out[,"gamma"], col = 1, lwd = c(1,2), main = "Sazonalidade", ylab = "")
-abline(h=0, lty = 3, col = 2)
-ts.plot(dcs_betapsi$out[,c("u")],dcs_betapsi$out[,c("nu")], col = 1, lty = c(1,3), main = "u e nu = exp(f2)*epsilon.", ylab = "")
-
-# fig 7
-par(mfrow = c(2,2))
-ts.plot(dcs_betapsi$out[,c("nu")], col = 1, lty = c(1,3), main = "nu = exp(f2)*epsilon.", ylab = "", ylim = c(-1,2.1))
-ts.plot(dcs_betapsi$out[,c("u")], col = 1, lty = c(1,3), main = "u", ylab = "", ylim = c(-1,2.1))
-acf(dcs_betapsi$out[,c("nu")], 48, drop.lag.0 = T, main = "acf nu")
-acf(dcs_betapsi$out[,c("u")], 48, drop.lag.0 = T, main = "acf u")
-
-
-# fig 6
-par(mfrow = c(2,2))
-ts.plot(ipc,dcs_beta$out[,"mu"], col = 1, lwd = c(1,2), main = "Y e Tendência", ylab = "")
-ts.plot(dcs_beta$out[,"mu"], col = 1, lwd = c(1), main = "Tendência", ylab = "")
-ts.plot(dcs_beta$out[,"gamma"], col = 1, lwd = c(1,2), main = "Sazonalidade", ylab = "")
-abline(h=0, lty = 3, col = 2)
-ts.plot(dcs_beta$out[,c("u")],dcs_beta$out[,c("nu")], col = 1, lty = c(1,3), main = "u e nu = exp(f2)*epsilon.", ylab = "")
-
-# fig 7
-par(mfrow = c(2,2))
-ts.plot(dcs_beta$out[,c("nu")], col = 1, lty = c(1,3), main = "nu = exp(f2)*epsilon.", ylab = "", ylim = c(-1,2.1))
-ts.plot(dcs_beta$out[,c("u")], col = 1, lty = c(1,3), main = "u", ylab = "", ylim = c(-1,2.1))
-acf(dcs_beta$out[,c("nu")], 48, drop.lag.0 = T, main = "acf nu")
-acf(dcs_beta$out[,c("u")], 48, drop.lag.0 = T, main = "acf u")
-
-
-# fig 8
-# ts.plot(fk2[,"mu"],bsm2$out[,"mu"], col = 1, lty = c(1,3))
-# ts.plot(fk2_beta[,"mu"],bsm2_beta$out[,"mu"], col = 1, lty = c(1,3))
-# ts.plot(fk2[,"mu"],fk2_beta[,"mu"], col = 1, lty = c(1,3))
-# ts.plot(fk2[,"mu"],ipc, col = 1, lty = c(1,3))
-# ts.plot(fk2_beta[,"mu"],ipc, col = 1, lty = c(1,3), lwd = c(2,1))
-
-write.csv2(data.frame(data = as.Date(dcs_betapsi$out[,"mu"]), round(((dcs_betapsi$out[,"mu"]/100+1)^12-1)*100,2)), "tendencia_betapsi.csv", row.names = F)
-
-# diagnóstico
-diag <- diag.dcs(y = ipc, out = dcs_betapsi, psi = T)
-
-hist(diag$resid.q, main = "residuo quantilico")
-hist(dcs_res$out[,"epsilon"], main = "residuo de pearson")
-
-# BSM para IPC ----------------------------------------------------
-# valores iniciais
-parametros <- list(
-  par = data.frame(
-    name = c("k1","ks","f2","df","mu[0]","beta"),
-    value = c(0.02,0.5,0.5,10, 0.49,-0.01),
-    lower = c(0,0.001,-Inf,4,-Inf,-Inf),
-    upper = c(1,Inf,Inf,Inf,Inf,Inf)
-  ),
-  gamma = as.vector(initial_gamma)[1:11]
-)
-
-# IRRESTRITO
-parametros <- list(
-  par = data.frame(
-    name = c("k1","ks","f2","df","mu[0]","beta", paste0("gamma",1:11)),
-    value = c(0.1,0.1,-1,12, 0.5,-0.1, as.vector(initial_gamma)[1:11]),
-    lower = c(0,0,-Inf,4,-Inf,-Inf, rep(-Inf,11)),
-    upper = c(1,Inf,Inf,Inf,Inf,Inf,rep(Inf,11))
-  ),
-  gamma = NA
-)
-parametros
-dcs_full <- dcs_fk_estimation(ipc, initial = parametros, type = "BSM2_beta")
-ts.plot(ipc,dcs_full$out[,"mu"], col = 1:2)
-
-pseudo.y <- (1 - dcs_full$out[,"b"])*ipc + dcs_full$out[,"b"]*(dcs_full$out[,"mu"] + dcs_full$out[,"gamma"])
-
-# mu smooth
-bsm_full <- bsm(pseudo.y, type = "BSM2_beta", iter = 10000)
-ts.plot(bsm_full[,"mu"],ipc, col = 2:1)
-
-ts.plot(bsm_full[,"mu"], dcs_full$out[,"mu"], col = 2:1)
-
-# RESTRITO
-parametros <- list(
-  par = data.frame(
-    name = c("k1","ks","f2","df","mu[0]","beta", paste0("gamma",1:11)),
-    value = c(0.1,0.1,-1,12, 0.5,-0.1, as.vector(initial_gamma)[1:11]),
-    lower = c(0,0,-Inf,4,-Inf,-Inf, rep(-Inf,11)),
-    upper = c(0.1,Inf,Inf,Inf,Inf,Inf,rep(Inf,11))
-  ),
-  gamma = NA
-)
-parametros
-dcs_res <- dcs_fk_estimation(ipc, initial = parametros, type = "BSM2_beta")
-ts.plot(ipc,dcs_res$out[,"mu"], col = 1:2)
-ts.plot(dcs_res$out[,"gamma"], col = 1:2)
-pseudo.y <- (1 - dcs_res$out[,"b"])*ipc + dcs_res$out[,"b"]*(dcs_res$out[,"mu"] + dcs_res$out[,"gamma"])
-
-x <- data.frame(parametros$par, otimo = round(dcs_res$otimizados$par,4))
-x[2,3:5] <- NA 
-x
-# mu smooth
-bsm_res <- bsm(pseudo.y, type = "BSM2_beta", iter = 10000)
-ts.plot(bsm_res[,"mu"],ipc, col = 2:1)
-
-ts.plot(bsm_res[,"mu"], dcs_res$out[,"mu"], col = 2:1)
-
-saveRDS(list(core_res = dcs_res$out[,"mu"], core_ress = bsm_res[,"mu"]), "./dados/nucleo.rds")
-
-
-# fig 6
-par(mfrow = c(2,2), mar = c(3,3,2,3))
-ts.plot(ipc,dcs_res$out[,"mu"], col = 1, lwd = c(1,2), main = "Y e Tendência", ylab = "")
-ts.plot(dcs_res$out[,"mu"], col = 1, lwd = c(1), main = "Tendência", ylab = "")
-ts.plot(dcs_res$out[,"gamma"], col = 1, lwd = c(1,2), main = "Sazonalidade", ylab = "")
-abline(h=0, lty = 3, col = 2)
-ts.plot(dcs_res$out[,c("u")],dcs_res$out[,c("nu")], col = 1, lty = c(1,3), main = "u e nu = exp(f2)*epsilon.", ylab = "")
-
-# fig 7
-par(mfrow = c(2,2), mar = c(3,3,2,3))
-ts.plot(dcs_res$out[,c("nu")], col = 1, lty = c(1,3), main = "nu = exp(f2)*epsilon.", ylab = "", ylim = c(-1,2.1))
-ts.plot(dcs_res$out[,c("u")], col = 1, lty = c(1,3), main = "u", ylab = "", ylim = c(-1,2.1))
-acf(dcs_res$out[,c("nu")], 48, drop.lag.0 = T, main = "acf nu")
-acf(dcs_res$out[,c("u")], 48, drop.lag.0 = T, main = "acf u")
-
-# fig 8
-# ts.plot(fk2[,"mu"],bsm2$out[,"mu"], col = 1, lty = c(1,3))
-# ts.plot(fk2_beta[,"mu"],bsm2_beta$out[,"mu"], col = 1, lty = c(1,3))
-# ts.plot(fk2[,"mu"],fk2_beta[,"mu"], col = 1, lty = c(1,3))
-# ts.plot(fk2[,"mu"],ipc, col = 1, lty = c(1,3))
-# ts.plot(fk2_beta[,"mu"],ipc, col = 1, lty = c(1,3), lwd = c(2,1))
-
-write.csv2(data.frame(data = as.Date(bsm2_beta$out[,"mu"]), round(((bsm2_beta$out[,"mu"]/100+1)^12-1)*100,2)), "tendencia5.csv", row.names = F)
-
-# diagnóstico
-diag <- diag.dcs(y = dcs_res$out[,"epsilon"], df = dcs_res$otimizados$par[4])
-
-hist(diag$resid.q, main = "modelo sem beta")
-
-diag$stats
-
-saveRDS(bsm2, "shiny_simulacao/data/bsm_ipc.rds")
-saveRDS(pseudo.y, "shiny_simulacao/data/pseudoy_ipc.rds")
-saveRDS(fk2, "shiny_simulacao/data/smooth_ipc.rds")
-saveRDS(diag, "shiny_simulacao/data/diag_ipc.rds")
-#saveRDS(psd, "shiny_simulacao/data/smooth_ipc_psd.rds")
-
-# nucleo final
-nucleo <- bsm2$out[,"mu"]
-nucleo <- fk2[,"mu"]
-# exercício
-
-out <- NULL
-vero <- NULL
-k1 <- NULL
-ks <- seq(0,1,by = 0.01)
-mu <- NULL
-beta <- NULL
-dfs <- 4:30
-for(i in 1:length(ks)){
-  #out[[i]] <- dcs_fk_estimation_exercise(ipc, initial = parametros, type = "BSM2_beta", k1 = k1[i])
-  #out[[i]] <- dcs_fk_estimation_exercise(ipc, initial = parametros, type = "BSM2_beta", df = dfs[i])
-  out[[i]] <- dcs_fk_estimation_exercise(ipc, initial = parametros, type = "BSM2_beta", ks = ks[i])
-  vero[i] <- out[[i]]$loglik
-  
-}
-k <- cbind(ks = ks, loglik = -vero)
-plot(k[,1:2], xlab = "graus de liberdade", ylab = "loglik")
-round(k,3)
-
-library(zoo)
-exportar <- data.frame(data = as.Date(cbind(bsm2$out, fk2)),cbind(bsm2$out, fk2))
-colnames(exportar) <- c("data", colnames(bsm2$out), paste0(colnames(fk2),"_smoother"))
-write.csv2(exportar,"shiny_simulacao/www/ultimos_resultados.csv", row.names = F)
+# lixo ------------------------------------------------------
 # parametros <- list(
 #   par = data.frame(
 #     name = c("k1","ks","f2","df","mu[0]",paste0("gamma",1:11)),
@@ -405,34 +642,34 @@ write.csv2(exportar,"shiny_simulacao/www/ultimos_resultados.csv", row.names = F)
 # 
 # # initial dummies
 # 
-y = ipc0
-dummy <- cbind(BETS::BETS.dummy(start = start(y), end = end(y), month = 1),
-               BETS::BETS.dummy(start = start(y), end = end(y), month = 2),
-               BETS::BETS.dummy(start = start(y), end = end(y), month = 3),
-               BETS::BETS.dummy(start = start(y), end = end(y), month = 4),
-               BETS::BETS.dummy(start = start(y), end = end(y), month = 5),
-               BETS::BETS.dummy(start = start(y), end = end(y), month = 6),
-               BETS::BETS.dummy(start = start(y), end = end(y), month = 7),
-               BETS::BETS.dummy(start = start(y), end = end(y), month = 8),
-               BETS::BETS.dummy(start = start(y), end = end(y), month = 9),
-               BETS::BETS.dummy(start = start(y), end = end(y), month = 10),
-               BETS::BETS.dummy(start = start(y), end = end(y), month = 11),
-               BETS::BETS.dummy(start = start(y), end = end(y), month = 12)
-)
+# y = ipc0
+# dummy <- cbind(BETS::BETS.dummy(start = start(y), end = end(y), month = 1),
+#                BETS::BETS.dummy(start = start(y), end = end(y), month = 2),
+#                BETS::BETS.dummy(start = start(y), end = end(y), month = 3),
+#                BETS::BETS.dummy(start = start(y), end = end(y), month = 4),
+#                BETS::BETS.dummy(start = start(y), end = end(y), month = 5),
+#                BETS::BETS.dummy(start = start(y), end = end(y), month = 6),
+#                BETS::BETS.dummy(start = start(y), end = end(y), month = 7),
+#                BETS::BETS.dummy(start = start(y), end = end(y), month = 8),
+#                BETS::BETS.dummy(start = start(y), end = end(y), month = 9),
+#                BETS::BETS.dummy(start = start(y), end = end(y), month = 10),
+#                BETS::BETS.dummy(start = start(y), end = end(y), month = 11),
+#                BETS::BETS.dummy(start = start(y), end = end(y), month = 12)
+# )
 # 
 # y_filter <- y[1:13]
 # dummy_filter <- dummy[1:13,]
 # t <- 1:13
 # dados <- data.frame(cbind(y_filter,t,dummy_filter))
-dados <- data.frame(window(cbind(ipc0,dummy),start = start(ipc0), freq = 12))
-colnames(dados) <- c("y",paste0("D",1:12))
-md <- lm(y ~ ., data = dados)
-data.frame(as.vector(md$coefficients)[2:12])
-c(0.37195906,-0.20488304,-0.02277778,-0.09172515,-0.22804094,-0.45383041,-0.21172515,-0.37804094,-0.39611111,-0.25611111,0.01666667)
-c(0.43032967,-0.20752747, 0.03032967,-0.06038462,-0.13109890,-0.41538462,-0.39324176,-0.39967033,-0.35461538,-0.25538462,-0.09615385)
-c(0.50767857,-0.13357143, 0.07642857,-0.09607143,-0.19357143,-0.54357143,-0.54107143,-0.46982143,-0.29142857,-0.20142857,-0.04857143)
-c(0.42891026,-0.19647436, 0.04583333,-0.04032051,-0.14724359,-0.45878205,-0.42032051,-0.44262821,-0.33250000,-0.23250000,-0.08250000)
-# 
+# dados <- data.frame(window(cbind(ipc0,dummy),start = start(ipc0), freq = 12))
+# colnames(dados) <- c("y",paste0("D",1:12))
+# md <- lm(y ~ ., data = dados)
+# data.frame(as.vector(md$coefficients)[2:12])
+# c(0.37195906,-0.20488304,-0.02277778,-0.09172515,-0.22804094,-0.45383041,-0.21172515,-0.37804094,-0.39611111,-0.25611111,0.01666667)
+# c(0.43032967,-0.20752747, 0.03032967,-0.06038462,-0.13109890,-0.41538462,-0.39324176,-0.39967033,-0.35461538,-0.25538462,-0.09615385)
+# c(0.50767857,-0.13357143, 0.07642857,-0.09607143,-0.19357143,-0.54357143,-0.54107143,-0.46982143,-0.29142857,-0.20142857,-0.04857143)
+# c(0.42891026,-0.19647436, 0.04583333,-0.04032051,-0.14724359,-0.45878205,-0.42032051,-0.44262821,-0.33250000,-0.23250000,-0.08250000)
+# # 
 # data <- data.frame(param = c(paste0("D",1:11),            "df","w1","w2","beta","a11","a12","a13","a2","b2","f1","f2"),
 #                    value = c(c(md$coefficients[-c(1,2,14)]), 3,   1,   1,  0.10,  0.5,  0.5,  0.5, 0.5, 0.9,   2, 0.5),
 #                    lower = c(rep(-Inf,11),                   2,-Inf,-Inf, -Inf,-Inf,-Inf,-Inf,-Inf,-1,  -Inf, -Inf),
@@ -468,3 +705,37 @@ c(0.42891026,-0.19647436, 0.04583333,-0.04032051,-0.14724359,-0.45878205,-0.4203
 # ts.plot(y,m$out[,"f2"], col = 1:2, lwd = c(1,2), main = "IPC e Sazonalidade")
 # ts.plot(y,m$out[,"sigma"], col = 1:2, lwd = c(1,2), main = "IPC e Sigma")
 # ts.plot(m[,c("f1","f2")], col = 1:2, lwd = c(1,2), main = "Tendência e Sazonalidade")
+# 
+# 
+# # initial_mu <- median(ipc)
+# # gammas <- data.frame((ipc0 - mean(ipc0))/sd(ipc0), cycle(ipc0))
+# # gammas <- data.frame((ipc - mean(ipc))/sd(ipc), cycle(ipc))
+# # gammas <- data.frame(ipc0, cycle(ipc0))
+# # initial_gamma <- tapply(gammas[,1],gammas[,2], FUN = mean)
+# # 
+# # y = ipc0
+# # dummy <- cbind(BETS::BETS.dummy(start = start(y), end = end(y), month = 1),
+# #                BETS::BETS.dummy(start = start(y), end = end(y), month = 2),
+# #                BETS::BETS.dummy(start = start(y), end = end(y), month = 3),
+# #                BETS::BETS.dummy(start = start(y), end = end(y), month = 4),
+# #                BETS::BETS.dummy(start = start(y), end = end(y), month = 5),
+# #                BETS::BETS.dummy(start = start(y), end = end(y), month = 6),
+# #                BETS::BETS.dummy(start = start(y), end = end(y), month = 7),
+# #                BETS::BETS.dummy(start = start(y), end = end(y), month = 8),
+# #                BETS::BETS.dummy(start = start(y), end = end(y), month = 9),
+# #                BETS::BETS.dummy(start = start(y), end = end(y), month = 10),
+# #                BETS::BETS.dummy(start = start(y), end = end(y), month = 11),
+# #                BETS::BETS.dummy(start = start(y), end = end(y), month = 12)
+# # )
+# # dados <- cbind(y, dummy)
+# # colnames(dados) <- c("y",paste0("D",1:12))
+# # md <- lm(y ~ ., data = dados)
+# # data.frame(as.vector(md$coefficients)[2:12])
+# #initial_gamma <- c(0.37195906,-0.20488304,-0.02277778,-0.09172515,-0.22804094,-0.45383041,-0.21172515,-0.37804094,-0.39611111,-0.25611111, 0.01666667)
+# #initial_gamma <- c(0.50767857,-0.13357143, 0.07642857,-0.09607143,-0.19357143,-0.54357143,-0.54107143,-0.46982143,-0.29142857,-0.20142857,-0.04857143)
+# initial_gamma <- c(0.05516970,0.09563170,0.05699505,-0.18377041,-0.43230580,-0.17613783,0.69144612,-0.04360480,-0.44064156,0.07471822,0.27193868)
+# initial_gamma <- c(0.153357232, 0.017716173, 0.132833222,-0.139159857,-0.404060430,-0.145550980, 0.660517961,-0.048933837,-0.449613456, 0.022034873, 0.223473635)
+# #initial_gamma <- c(0.512692417,-0.041189734, 0.144115903, 0.088499102,-0.060261330,-0.266698219,-0.138449064,-0.195460536,-0.221822482,-0.069103134, 0.092489454)
+# initial_gamma <- c(0.5193,-0.0469, 0.1511, 0.0878,-0.0606,-0.2625,-0.1520,-0.1967,-0.2275,-0.0687, 0.0995)
+# initial_gamma <- c(0.48070729,-0.05859547, 0.15370156, 0.10032539,-0.03874261,-0.26932386,-0.12546543,-0.18050091,-0.20419881,-0.07149072, 0.06560687)
+

@@ -43,6 +43,7 @@ acf(bsm0$out[,c("u")], 20, drop.lag.0 = T, main = "acf u")
 ts.plot(fk1[,"mu"],bsm0$out[,"mu"], col = 1, lty = c(1,3))
 
 # diagnóstico
+set.seed(30112017)
 diag <- diag.dcs(y = turistas, out = bsm0)
 
 saveRDS(bsm0, "shiny_simulacao/data/bsm_turistas.rds")
