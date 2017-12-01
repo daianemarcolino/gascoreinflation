@@ -103,18 +103,18 @@ core.diag <- function(y, core, par, conf = 0.95){
   core1 <- window(core, end = c(2008,5), freq = 12)
   
   # core completo e partes
-  adf20 <- urca::ur.df(core, lags = 12, type = "drift")
-  adf21 <- urca::ur.df(core0, lags = 10, type = "drift")
-  adf22 <- urca::ur.df(core1, lags = 12, type = "drift")
-
+  adf20 <- urca::ur.df(core, lags = 0, type = "drift")
+  adf21 <- urca::ur.df(core0, lags = 0, type = "drift")
+  adf22 <- urca::ur.df(core1, lags = 0, type = "drift")
+  
   msg_urdf20 <- ifelse(adf20@teststat[1] < -2.88, "stationary", "not stationary")
   msg_urdf21 <- ifelse(adf21@teststat[1] < -2.88, "stationary", "not stationary")
   msg_urdf22 <- ifelse(adf22@teststat[1] < -2.88, "stationary", "not stationary")
   
   # diff y completo e partes
-  adf200 <- urca::ur.df(diff(core), lags = 11, type = "none")
-  adf211 <- urca::ur.df(diff(core0), lags = 2, type = "none")
-  adf222 <- urca::ur.df(diff(core1), lags = 11, type = "none")
+  adf200 <- urca::ur.df(diff(core), lags = 0, type = "none")
+  adf211 <- urca::ur.df(diff(core0), lags = 0, type = "none")
+  adf222 <- urca::ur.df(diff(core1), lags = 0, type = "none")
 
   msg_urdf200 <- ifelse(adf200@teststat[1] < -1.95, "stationary", "not stationary")
   msg_urdf211 <- ifelse(adf211@teststat[1] < -1.95, "stationary", "not stationary")
@@ -132,45 +132,53 @@ core.diag <- function(y, core, par, conf = 0.95){
   
   # diag 5: atratividade ----
   #data <- window(data, start = c(2007,8), freq = 12)
-  reg <- lm(data[,1] ~ data[,2])
-  erro <- ts(resid(reg), end = end(data), freq = 12)
+  #reg <- lm(data[,1] ~ data[,2])
+  #erro <- ts(resid(reg), end = end(data), freq = 12)
+  erro <- ts(data[,1] - data[,2], end = end(data), freq = 12)
   
-  dum <- BETS::BETS.dummy(start = start(data), end = end(data), month = 12, year = 2002)
+  dum <- cbind(BETS::BETS.dummy(start = start(data), end = end(data), month = 11, year = 2002),
+               BETS::BETS.dummy(start = start(data), end = end(data), month = 7, year = 2000),
+               BETS::BETS.dummy(start = start(data), end = end(data), month = 12, year = 2002))
   
   difs <- na.omit(cbind(diff(y), diff(core), lag(erro, k = -1), dum))
-  colnames(difs) <- c("y","core","erro_1", "dummy")
+  colnames(difs) <- c("y","core","erro_1", "dummy1","dummy2","dummy3")
   
-  modelo_y <- dynlm(difs[,"y"] ~ difs[,"erro_1"] + L(difs[,"y"],1) +
-                         L(difs[,"y"],2) + 
-                         L(difs[,"y"],3) +
-                         L(difs[,"y"],4) + 
-                         L(difs[,"y"],5) +
-                         L(difs[,"y"],6) +
-                         #L(difs[,"y"],7) +
-                         #L(difs[,"y"],8) + 
-                         #L(difs[,"y"],9) + 
-                         #L(difs[,"y"],10) +
-                         L(difs[,"y"],11) + 
-                         L(difs[,"y"],12))
+  modelo_y <- dynlm(difs[,"y"] ~ difs[,"erro_1"] + difs[,"dummy1"] + difs[,"dummy2"] +
+                      L(difs[,"y"],1) +
+                      L(difs[,"y"],2) + 
+                      L(difs[,"y"],3) +
+                      L(difs[,"y"],4) + 
+                      L(difs[,"y"],5) +
+                      L(difs[,"y"],6) +
+                      #L(difs[,"y"],7) +
+                      #L(difs[,"y"],8) + 
+                      #L(difs[,"y"],9) + 
+                      #L(difs[,"y"],10) +
+                      #L(difs[,"y"],11) + 
+                      L(difs[,"y"],12))
   summary(modelo_y)
-  plot(modelo_y$residuals)
+  plot((modelo_y$residuals - mean(modelo_y$residuals))/sd(modelo_y$residuals))
+  abline(h = c(-3,3), lty = 2, col = 2)
+  round((modelo_y$residuals - mean(modelo_y$residuals))/sd(modelo_y$residuals),2)
   acf(modelo_y$residuals, lag.max = 36)
   
-  modelo_core <- dynlm(difs[,"core"] ~ difs[,"erro_1"] + difs[,"dummy"] +
-                         L(difs[,"core"],1) +
-                         L(difs[,"core"],2) + 
-                         L(difs[,"core"],3) +
-                          #L(difs[,"core"],4) + 
-                          #L(difs[,"core"],5) +
-                          L(difs[,"core"],6) +
-                          #L(difs[,"core"],7) +
-                          L(difs[,"core"],8) + 
-                          L(difs[,"core"],9) + 
-                          #L(difs[,"core"],10) +
-                          L(difs[,"core"],11) + 
-                          L(difs[,"core"],13))
+  modelo_core <- dynlm(L(difs[,"core"],2) ~ difs[,"erro_1"] + #difs[,"dummy3"] +
+                         L(difs[,"core"],3))# +
+                         # L(difs[,"core"],2) + 
+                         # L(difs[,"core"],3) +
+                         # L(difs[,"core"],4) + 
+                         # L(difs[,"core"],5) +
+                         # L(difs[,"core"],6) +
+                         # L(difs[,"core"],7) +
+                         # L(difs[,"core"],8) + 
+                         # L(difs[,"core"],9) + 
+                         # L(difs[,"core"],10) +
+                         # L(difs[,"core"],11) + 
+                         #L(difs[,"core"],12))
   summary(modelo_core)
-  plot(modelo_core$residuals)
+  plot((modelo_core$residuals - mean(modelo_core$residuals))/sd(modelo_core$residuals))
+  abline(h = c(-3,3), lty = 2, col = 2)
+  round((modelo_core$residuals - mean(modelo_core$residuals))/sd(modelo_core$residuals),2)
   acf(modelo_core$residuals, lag.max = 36)
   # lambda_h < 0 e lambda_c > 0 -> as séries se ajustam uma a outra       
   
