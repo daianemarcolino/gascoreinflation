@@ -25,10 +25,10 @@ diag.dcs <- function(out, type = "t"){
     rownames(x) <- c("epsilon","res_quantilico")
     
     x["res_quantilico",] <- c(TSA::skewness(rq), TSA::kurtosis(rq) + 3, mean(rq), median(rq), sd(rq),
-                              goftest::ad.test(rq, "pnorm")$statistic,  goftest::ad.test(rq, "pnorm")$p.value,
+                              nortest::ad.test(rq)$statistic,  nortest::ad.test(rq)$p.value,
                               tseries::jarque.bera.test(rq)$statistic, tseries::jarque.bera.test(rq)$p.value)
     x["epsilon",] <- c(TSA::skewness(ep), TSA::kurtosis(ep) + 3, mean(ep), median(ep), sd(ep), 
-                       goftest::ad.test(ep, "pnorm")$statistic, goftest::ad.test(ep, "pnorm")$p.value,
+                       nortest::ad.test(ep)$statistic, nortest::ad.test(ep)$p.value,
                        tseries::jarque.bera.test(ep)$statistic, tseries::jarque.bera.test(ep)$p.value)
     
     set.seed(123)

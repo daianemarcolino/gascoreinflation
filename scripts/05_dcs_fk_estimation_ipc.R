@@ -31,8 +31,8 @@ parametros <- list(
   par = data.frame(
     name = c("k1","ks","f2","df","mu[0]","beta", paste0("gamma",1:11)),
     value = c(0.1,0.1,-1,12, 0.5,0.1,as.vector(initial_gamma)[1:11]),
-    lower = c(0,0,-Inf,4,-Inf,-Inf, rep(-Inf,11)),
-    upper = c(1,Inf,Inf,Inf,Inf,Inf,rep(Inf,11))
+    lower = c(0.1,0,-Inf,5,-Inf,-Inf, rep(-Inf,11)),
+    upper = c(0.2,Inf,Inf,Inf,Inf,Inf,rep(Inf,11))
   ),
   gamma = NA,
   Dummy = NA
@@ -47,6 +47,7 @@ round(dcs_padrao$out[,"epsilon"],2)
 # dois resíduos mt grandes: julho de 2000 e novembro de 2002
 
 diag_dcs_padrao <- diag.dcs(out = dcs_padrao, type = "t")
+diag_dcs_padrao$stats
 
 # BSM padrão (com dummy sem psi) -------------------------------------------
 
@@ -76,8 +77,8 @@ diag_dcs_padrao_dummy <- diag.dcs(out = dcs_padrao_dummy, type = "t")
 parametros_psi <- list(
   par = data.frame(
     name = c("k1","ks","f2","df","mu[0]","beta","psi","phi","k3", paste0("gamma",1:11)),
-    value = c(0.1,0.1,-1,12, 0.5,-0.1,0.1,0.1,0.1, as.vector(initial_gamma)[1:11]),
-    lower = c(0,0,-Inf,4,-Inf,-Inf,-Inf,-1,0, rep(-Inf,11)),
+    value = c(0.3,0.1,-1,18, 0.5,-0.1,0.1,0.1,0.1, as.vector(initial_gamma)[1:11]),
+    lower = c(0.05,0,-Inf,5,-Inf,-Inf,-Inf,-1,0, rep(-Inf,11)),
     upper = c(1,Inf,Inf,Inf,Inf,Inf,Inf,1,Inf,rep(Inf,11))
   ),
   gamma = NA,
