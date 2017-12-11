@@ -1,4 +1,4 @@
-core.diag <- function(y, core, par, conf = 0.95){
+core.diag <- function(y, core, conf = 0.95){
   
   # conf: confidence level (0 < conf < 1)
   # lags: ur.df lag (numeric -> c(y, core, diff_y, diff_core))
@@ -162,18 +162,18 @@ core.diag <- function(y, core, par, conf = 0.95){
   round((modelo_y$residuals - mean(modelo_y$residuals))/sd(modelo_y$residuals),2)
   acf(modelo_y$residuals, lag.max = 36)
   
-  modelo_core <- dynlm(L(difs[,"core"],2) ~ difs[,"erro_1"] + #difs[,"dummy3"] +
-                         L(difs[,"core"],3))# +
-                         # L(difs[,"core"],2) + 
-                         # L(difs[,"core"],3) +
-                         # L(difs[,"core"],4) + 
-                         # L(difs[,"core"],5) +
-                         # L(difs[,"core"],6) +
-                         # L(difs[,"core"],7) +
-                         # L(difs[,"core"],8) + 
-                         # L(difs[,"core"],9) + 
-                         # L(difs[,"core"],10) +
-                         # L(difs[,"core"],11) + 
+  modelo_core <- dynlm(difs[,"core"] ~ difs[,"erro_1"] + difs[,"dummy3"] +
+                         L(difs[,"core"],1))# +
+                          #L(difs[,"core"],2) + 
+                          #L(difs[,"core"],3) +
+                          #L(difs[,"core"],4) + 
+                          #L(difs[,"core"],5) +
+                          #L(difs[,"core"],6) +
+                          #L(difs[,"core"],7) +
+                          #L(difs[,"core"],8) + 
+                          #L(difs[,"core"],9) + 
+                          #L(difs[,"core"],10) +
+                          #L(difs[,"core"],11) + 
                          #L(difs[,"core"],12))
   summary(modelo_core)
   plot((modelo_core$residuals - mean(modelo_core$residuals))/sd(modelo_core$residuals))
