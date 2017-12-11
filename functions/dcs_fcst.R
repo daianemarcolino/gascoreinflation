@@ -30,6 +30,7 @@ dcs_fcst <- function(y, start = c(2013,1), initial = NULL, type = "BSM2_beta_psi
       initial0$Dummy <- window(initial$Dummy, end = c(datas$ano[j+1],datas$mes[j+1]), freq = 12)
       out <- dcs_fk_estimation(novoy, initial = initial0, type = type, outlier = outlier, otimo = F)
     }
+    message("replication ",i)
   }
 
   # arrumar dados para exportar
