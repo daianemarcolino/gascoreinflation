@@ -83,7 +83,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
     colnames(out) <- c("mu","gamma","f2","sigma","epsilon","nu","score","u","b")
     
     # output
-    print(otimizados)
+    #print(otimizados)
     invisible(list(out = out, otimizados = otimizados, loglik = -loglik))
     
   }else if(type == "BSM1"){ 
@@ -180,7 +180,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
     colnames(out) <- c("mu","beta","gamma","f2","sigma","epsilon","nu","score","u","b")
     
     # output
-    print(otimizados)
+    #print(otimizados)
     invisible(list(out = out, otimizados = otimizados, loglik = -loglik))
     
   }else if(type == "BSM2_beta"){ 
@@ -333,7 +333,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
     }
     
     # output
-    print(otimizados)
+    #print(otimizados)
     invisible(list(out = out, otimizados = otimizados, loglik = -loglik))
     
   }else if(type == "BSM2"){ 
@@ -428,7 +428,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
     colnames(out) <- c("mu","gamma","f2","sigma","epsilon", "nu", "score","u", "b")
     
     # output
-    print(otimizados)
+    #print(otimizados)
     invisible(list(out = out, otimizados = otimizados, loglik = -loglik))
     
   }else if(type == "BSM2_beta_psi"){ 
@@ -594,7 +594,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
     }
     
     # output
-    print(otimizados)
+    #print(otimizados)
     invisible(list(out = out, otimizados = otimizados, loglik = -loglik))
     
   }else if(type == "BSM2_beta_norm"){ 
@@ -740,7 +740,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
     }
     
     # output
-    print(otimizados)
+    #print(otimizados)
     invisible(list(out = out, otimizados = otimizados, loglik = -loglik))
     
     
@@ -901,7 +901,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
     }
     
     # output
-    print(otimizados)
+    #print(otimizados)
     invisible(list(out = out, otimizados = otimizados, loglik = -loglik))
     
     
