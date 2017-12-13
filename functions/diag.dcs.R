@@ -31,8 +31,8 @@ diag.dcs <- function(out, type = "t"){
                        nortest::ad.test(ep)$statistic, nortest::ad.test(ep)$p.value,
                        tseries::jarque.bera.test(ep)$statistic, tseries::jarque.bera.test(ep)$p.value)
     
-    #set.seed(123)
-    r1 <- rt(length(ep), df = df)
+    set.seed(123)
+    r1 <- rt(length(ep), df = df, ncp = 0)
     r2 <- rnorm(length(rq))
     
     par(mfrow = c(1,2))

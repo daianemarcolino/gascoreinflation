@@ -30,24 +30,268 @@ initial_gamma <- c(0.48070729,-0.05859547, 0.15370156, 0.10032539,-0.03874261,-0
 parametros1 <- list(
   par = data.frame(
     name =  c("k1","k2","ks","f2","df","beta[1|0]","mu[1|0]",paste0("gamma",1:11)),
-    value = c(0.1 ,0.5 ,0.5 ,5   ,6   ,0          ,0        , as.vector(initial_gamma)[1:11]),
-    lower = c(0   ,0   ,0   ,-Inf,4   ,-Inf       ,-Inf     ,rep(-Inf,11)),
+    value = c(0.5 ,0.5 ,0.5 ,5   ,6   ,0          ,0        , as.vector(initial_gamma)[1:11]),
+    lower = c(0   ,0.05   ,0   ,-Inf,4   ,-Inf       ,-Inf     ,rep(-Inf,11)),
     upper = c(Inf ,Inf ,Inf ,Inf ,Inf ,Inf        ,Inf      ,rep(Inf,11))
   )
 )
 parametros1
 
-dcs1 <- dcs_fk_estimation(ipc, initial = parametros1, type = "BSM1", outlier = F)
-data.frame(name = parametros1$par$name, initial = round(parametros1$par$value,4), value = round(dcs1$otimizados$par,4))
+dcs1 <- dcs_fk_estimation(ipc, initial = parametros1, type = "BSM1", outlier = F, otimo = T)
+data.frame(name = parametros1$par$name, 
+           lower = parametros1$par$lower,
+           upper = parametros1$par$upper,
+           initial = round(parametros1$par$value,4), 
+           otimo = round(dcs1$otimizados$par,4))
 ts.plot(ipc,dcs1$out[,"mu"], col = 1:2)
 
 ts.plot(dcs1$out[,"epsilon"], col = 1)
 round(dcs1$out[,"epsilon"],2)
 dcs1$out[,"beta"]
-# dois resíduos mt grandes: julho de 2000 e novembro de 2002
 
 diag_dcs1 <- diag.dcs(out = dcs1, type = "t")
 diag_dcs1$stats
+
+# BSM padrão : mu (sem beta) + gamma ------------------------------------
+
+parametros2 <- list(
+  par = data.frame(
+    name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)),
+    value = c(0.1 ,0   ,0.5 ,5   ,4   ,0     ,0        ,as.vector(initial_gamma)[1:11]),
+    lower = c(0   ,0   ,0   ,-Inf,4   ,0     ,-Inf     ,rep(-Inf,11)),
+    upper = c(Inf ,0   ,Inf ,Inf ,Inf ,0     ,Inf      ,rep(Inf,11))
+  )
+)
+parametros2
+
+dcs2 <- dcs_fk_estimation(ipc, initial = parametros2, type = "BSM2", outlier = F, otimo = T)
+data.frame(name = parametros2$par$name, 
+           lower = parametros2$par$lower,
+           upper = parametros2$par$upper,
+           initial = round(parametros2$par$value,4), 
+           otimo = round(dcs2$otimizados$par,4))
+ts.plot(ipc,dcs2$out[,"mu"], col = 1:2)
+
+ts.plot(dcs2$out[,"epsilon"], col = 1)
+round(dcs2$out[,"epsilon"],2)
+dcs2$out[,"beta"]
+
+diag_dcs2 <- diag.dcs(out = dcs2, type = "t")
+diag_dcs2$stats
+
+# BSM padrão : mu (sem beta) + gamma + psi ------------------------------------
+
+parametros3 <- list(
+  par = data.frame(
+    name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ,"psi","phi","k3"),
+    value = c(0.1 ,0   ,0.5 ,5   ,6   ,0     ,0        ,as.vector(initial_gamma)[1:11],1    ,0.1  ,0.5),
+    lower = c(0.05,0   ,0.15 ,-Inf,4   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf ,-1   ,0),
+    upper = c(Inf ,0   ,Inf ,Inf ,Inf ,0     ,Inf      ,rep(Inf,11)                   ,Inf  ,1    ,Inf)
+  )
+)
+parametros3
+
+dcs3 <- dcs_fk_estimation(ipc, initial = parametros3, type = "BSM3", outlier = F, otimo = T)
+data.frame(name = parametros3$par$name, 
+           lower = parametros3$par$lower,
+           upper = parametros3$par$upper,
+           initial = round(parametros3$par$value,4), 
+           otimo = round(dcs3$otimizados$par,4))
+ts.plot(ipc,dcs3$out[,"mu"], col = 1:2)
+ts.plot(ipc, dcs3$out[,"mu"], ipc_ma3, col = c(1,1,2), lty = c(3,1,1))
+legend("topright", legend = c("DCS","IBRE"), col = 1:2, lty = 1, bty = "n", cex = 0.9)
+
+ts.plot(dcs3$out[,"mu"], dcs3_normald$out[,"mu"], col = 1:2)
+legend("topright", legend = c("DCS-t","DCS-normal"), col = 1:2, lty = 1, bty = "n", cex = 0.9)
+ts.plot(dcs3$out[,"epsilon"], col = 1)
+ts.plot(dcs3$out[,"gamma"])
+round(dcs3$out[,"epsilon"],2)
+dcs3$out[,"beta"]
+
+
+diag_dcs3 <- diag.dcs(out = dcs3, type = "t")
+diag_dcs3$stats
+
+# BSM padrão : mu (beta[t]) + gamma (normal) ------------------------------------
+
+parametros1_normal <- list(
+  par = data.frame(
+    name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ),
+    value = c(0.1 ,0.5 ,0.5 ,5   ,0   ,0     ,0        ,as.vector(initial_gamma)[1:11]),
+    lower = c(0   ,0   ,0   ,-Inf,0   ,-Inf  ,-Inf     ,rep(-Inf,11)                  ),
+    upper = c(Inf ,Inf ,Inf ,Inf ,0   ,Inf   ,Inf      ,rep(Inf,11)                   )
+  ),
+  Dummy = NA
+)
+parametros1_normal
+
+dcs1_normal <- dcs_fk_estimation(ipc, initial = parametros1_normal, type = "BSM1_normal", outlier = F, otimo = T)
+data.frame(name = parametros1_normal$par$name, 
+           lower = parametros1_normal$par$lower,
+           upper = parametros1_normal$par$upper,
+           initial = round(parametros1_normal$par$value,4), 
+           otimo = round(dcs1_normal$otimizados$par,4))
+ts.plot(ipc,dcs1_normal$out[,"mu"], col = 1:2)
+
+ts.plot(dcs1_normal$out[,"epsilon"], col = 1)
+round(dcs1_normal$out[,"epsilon"],2)
+dcs1_normal$out[,"beta"]
+
+diag_dcs1_normal <- diag.dcs(out = dcs1_normal, type = "norm")
+diag_dcs1_normal$stats
+
+# adicionar dummy
+
+parametros1_normald <- list(
+  par = data.frame(
+    name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ,"d1","d2","d3"),
+    value = c(0.1 ,0.5 ,0.5 ,5   ,0   ,0     ,0        ,as.vector(initial_gamma)[1:11],0   ,0   ,0   ),
+    lower = c(0   ,0   ,0   ,-Inf,0   ,-Inf  ,-Inf     ,rep(-Inf,11)                  ,-Inf,-Inf,-Inf),
+    upper = c(Inf ,Inf ,Inf ,Inf ,0   ,Inf   ,Inf      ,rep(Inf,11)                   , Inf, Inf, Inf)
+  ),
+  Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2000,7)),
+                d2 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11)),
+                d3 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(1999,2)))
+)
+parametros1_normald
+
+dcs1_normald <- dcs_fk_estimation(ipc, initial = parametros1_normald, type = "BSM1_normal", outlier = T, otimo = T)
+
+data.frame(name = parametros1_normald$par$name, 
+           lower = parametros1_normald$par$lower,
+           upper = parametros1_normald$par$upper,
+           initial = round(parametros1_normald$par$value,4), 
+           otimo = round(dcs1_normald$otimizados$par,4))
+ts.plot(ipc,dcs1_normald$out[,"mu"], col = 1:2)
+
+ts.plot(dcs1_normald$out[,"epsilon"], col = 1)
+round(dcs1_normald$out[,"epsilon"],2)
+dcs1_normal$out[,"beta"]
+
+diag_dcs1_normald <- diag.dcs(out = dcs1_normald, type = "norm")
+diag_dcs1_normald$stats
+
+# BSM padrão : mu (sem beta) + gamma (normal) ------------------------------------
+
+parametros2_normal <- list(
+  par = data.frame(
+    name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ),
+    value = c(0.1 ,0   ,0.5 ,5   ,0   ,0     ,0        ,as.vector(initial_gamma)[1:11]),
+    lower = c(0   ,0   ,0   ,-Inf,0   ,0     ,-Inf     ,rep(-Inf,11)                  ),
+    upper = c(Inf ,0   ,Inf ,Inf ,0   ,0     ,Inf      ,rep(Inf,11)                   )
+  ),
+  Dummy = NA
+)
+parametros2_normal
+
+dcs2_normal <- dcs_fk_estimation(ipc, initial = parametros2_normal, type = "BSM2_normal", outlier = F, otimo = T)
+data.frame(name = parametros2_normal$par$name, 
+           lower = parametros2_normal$par$lower,
+           upper = parametros2_normal$par$upper,
+           initial = round(parametros2_normal$par$value,4), 
+           otimo = round(dcs2_normal$otimizados$par,4))
+ts.plot(ipc,dcs2_normal$out[,"mu"], col = 1:2)
+
+ts.plot(dcs2_normal$out[,"epsilon"], col = 1)
+round(dcs2_normal$out[,"epsilon"],2)
+dcs2_normal$out[,"beta"]
+
+diag_dcs2_normal <- diag.dcs(out = dcs2_normal, type = "norm")
+diag_dcs2_normal$stats
+
+# adicionar dummy
+
+parametros2_normald <- list(
+  par = data.frame(
+    name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ,"d1","d2"),
+    value = c(0.1 ,0   ,0.5 ,5   ,0   ,0     ,0        ,as.vector(initial_gamma)[1:11],0   ,0   ),
+    lower = c(0   ,0   ,0   ,-Inf,0   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf,-Inf),
+    upper = c(Inf ,0   ,Inf ,Inf ,0   ,0     ,Inf      ,rep(Inf,11)                   , Inf, Inf)
+  ),
+  Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2000,7)),
+                d2 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11)))
+)
+parametros2_normald
+
+dcs2_normald <- dcs_fk_estimation(ipc, initial = parametros2_normald, type = "BSM2_normal", outlier = T, otimo = T)
+
+data.frame(name = parametros2_normald$par$name, 
+           lower = parametros2_normald$par$lower,
+           upper = parametros2_normald$par$upper,
+           initial = round(parametros2_normald$par$value,4), 
+           otimo = round(dcs2_normald$otimizados$par,4))
+ts.plot(ipc,dcs2_normald$out[,"mu"], col = 1:2)
+
+ts.plot(dcs2_normald$out[,"epsilon"], col = 1)
+round(dcs2_normald$out[,"epsilon"],2)
+dcs2_normal$out[,"beta"]
+
+diag_dcs2_normald <- diag.dcs(out = dcs2_normald, type = "norm")
+diag_dcs2_normald$stats
+
+
+
+
+# BSM padrão : mu (sem beta) + gamma + psi (normal) ------------------------------------
+
+parametros3_normal <- list(
+  par = data.frame(
+    name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ,"psi","phi","k3"),
+    value = c(0.1 ,0   ,0.5 ,5   ,0   ,0     ,0        ,as.vector(initial_gamma)[1:11],1    ,0.1  ,0.5),
+    lower = c(0.05,0   ,0.15   ,-Inf,0   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf ,-1   ,0),
+    upper = c(Inf ,0   ,Inf ,Inf ,0   ,0     ,Inf      ,rep(Inf,11)                   ,Inf  ,1    ,Inf)
+  ),
+  Dummy = NA
+)
+parametros3_normal
+
+dcs3_normal <- dcs_fk_estimation(ipc, initial = parametros3_normal, type = "BSM3_normal", outlier = F, otimo = T)
+data.frame(name = parametros3_normal$par$name, 
+           lower = parametros3_normal$par$lower,
+           upper = parametros3_normal$par$upper,
+           initial = round(parametros3_normal$par$value,4), 
+           otimo = round(dcs3_normal$otimizados$par,4))
+ts.plot(ipc,dcs3_normal$out[,"mu"], col = 1:2)
+
+ts.plot(dcs3_normal$out[,"epsilon"], col = 1)
+round(dcs3_normal$out[,"epsilon"],2)
+dcs3_normal$out[,"beta"]
+
+diag_dcs3_normal <- diag.dcs(out = dcs3_normal, type = "norm")
+diag_dcs3_normal$stats
+
+# adicionar dummy
+
+parametros3_normald <- list(
+  par = data.frame(
+    name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ,"psi","phi","k3","d1","d2"),
+    value = c(0.1 ,0   ,0.5 ,5   ,0   ,0     ,0        ,as.vector(initial_gamma)[1:11],1    ,0.1  ,0.5 ,0   ,0   ),
+    lower = c(0.05,0   ,0.15 ,-Inf,0   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf ,-1   ,0   ,-Inf,-Inf),
+    upper = c(Inf ,0   ,Inf ,Inf ,0   ,0     ,Inf      ,rep(Inf,11)                   ,Inf  ,1    ,Inf ,Inf ,Inf)
+  ),
+  Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2000,7)),
+                d2 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11)))
+)
+parametros3_normald
+
+dcs3_normald <- dcs_fk_estimation(ipc, initial = parametros3_normald, type = "BSM3_normal", outlier = T, otimo = T)
+
+data.frame(name = parametros3_normald$par$name, 
+           lower = parametros3_normald$par$lower,
+           upper = parametros3_normald$par$upper,
+           initial = round(parametros3_normald$par$value,4), 
+           otimo = round(dcs3_normald$otimizados$par,4))
+ts.plot(ipc,dcs3_normald$out[,"mu"], col = 1:2)
+
+ts.plot(dcs3_normald$out[,"epsilon"], col = 1)
+round(dcs3_normald$out[,"epsilon"],2)
+dcs3_normal$out[,"beta"]
+
+diag_dcs3_normald <- diag.dcs(out = dcs3_normald, type = "norm")
+diag_dcs3_normald$stats
+
+
+
 
 # BSM padrão (sem dummy sem psi) -------------------------------------------
 

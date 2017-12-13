@@ -1,4 +1,4 @@
-dcs_estabilidade <- function(y, start = c(2013,1), initial = NULL, type = "BSM2_beta_psi", outlier = F){
+dcs_estabilidade <- function(y, start = c(2013,1), initial = NULL, type = "BSM3", outlier = F){
 
   # pos para cortar e estimar
   pos <- which(start[1] == as.numeric(substr(as.Date(y),1,4)) & start[2] == as.numeric(substr(as.Date(y),6,7)))
@@ -14,11 +14,11 @@ dcs_estabilidade <- function(y, start = c(2013,1), initial = NULL, type = "BSM2_
     # window y
     y0 <- window(y, end = c(datas$ano[i],datas$mes[i]), freq = 12)
     # parametros iniciais
-    initial0$Dummy <- window(initial$Dummy, end = c(datas$ano[i],datas$mes[i]), freq = 12)
+    #initial0$Dummy <- window(initial$Dummy, end = c(datas$ano[i],datas$mes[i]), freq = 12)
     # otimização
     out <- dcs_fk_estimation(y0, initial = initial0, type = type, outlier = outlier, otimo = T)
     # guardar parâmetros otimizados
-    #initial0$par$value <- out$otimizados$par
+    initial0$par$value <- out$otimizados$par
     # guardar núcleo no tempo t
     core_month[i] <- tail(out$out[,"mu"],2)[1]
     message("- date: ", datas$ano[i],"/",datas$mes[i])
