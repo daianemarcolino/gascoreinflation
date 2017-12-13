@@ -93,25 +93,25 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
     # mu[t+1] = mu[t] + beta[t] + a1*u1[t] 
     # beta[t+1] = beta[t] + a2*u1[t] 
     # gamma[t+1] = gamma[t] + k*u[t] 
-    # > estimação via ML para densidade condicional de y t-student com média constante e variância constante no tempo
+    # > estimação via ML para densidade condicional de y t-student com variância constante no tempo
     
-    otimizar <- function(y, par, initial_gamma){
+    otimizar <- function(y, par){
       
       N <- length(y)
       k1 <- par[1]
-      k2 <- k1^2/(2-k1)
-      ks <- par[2]
-      f2 <- par[3]
-      df <- par[4]
-      beta <- par[5]
-      mu <- par[6]
-      alpha <- matrix(NA, ncol = 12, nrow = N)
-      alpha[1,] <- c(initial_gamma, - sum(initial_gamma))  
+      k2 <- par[2]
+      ks <- par[3]
+      f2 <- par[4]
+      df <- par[5]
+      beta <- par[6]
+      mu <- par[7]
+      alpha <- matrix(NA, ncol = 12, nrow = N + 1)
+      alpha[1,] <- c(par[8:18], - sum(par[8:18]))
       j <- cycle(y)
       gamma <- alpha[1,j[1]]
       u1 <- NULL
       
-      for(t in 1:(N-1)){ 
+      for(t in 1:N){ 
         u1[t] <- (y[t] - mu[t] - gamma[t])/(1 + (y[t] - mu[t] - gamma[t])^2/(df*exp(2*f2)))
         mu[t+1] <- mu[t] + beta[t] + k1*u1[t] 
         beta[t+1] <- beta[t] + k2*u1[t]
@@ -120,12 +120,11 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
         alpha[t+1,] <- alpha[t,] + k*u1[t]
         gamma[t+1] <- alpha[t+1,j[t+1]]
       } 
-      t <- N
-      u1[t] <- (y[t] - mu[t] - gamma[t])/(1 + (y[t] - mu[t] - gamma[t])^2/(df*exp(2*f2)))
       
-      mu <- ts(mu, end = end(y), freq = frequency(y))
-      beta <- ts(beta, end = end(y), freq = frequency(y))
-      gamma <- ts(gamma, end = end(y), freq = frequency(y))
+      # transformar componentes em série temporal
+      mu <- ts(mu, start = start(y), freq = frequency(y))
+      beta <- ts(beta, start = start(y), freq = frequency(y))
+      gamma <- ts(gamma, start = start(y), freq = frequency(y))
       
       # loglik
       loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma)^2/(df*exp(2*f2))))
@@ -133,8 +132,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
     }
     
     if(otimo == T){
-      otimizados <- nlminb(start = initial$par$value, objective = otimizar, y = y, 
-                           initial_gamma = initial$gamma, 
+      otimizados <- nlminb(start = initial$par$value, objective = otimizar, y = y,
                            lower = initial$par$lower, upper = initial$par$upper, control = list(eval.max = 10000, iter.max = 10000))
     }else{
       otimizados <- list()
@@ -143,19 +141,19 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
     
     N <- length(y)
     k1 <- otimizados$par[1]
-    k2 <- k1^2/(2-k1)
-    ks <- otimizados$par[2]
-    f2 <- otimizados$par[3]
-    df <- otimizados$par[4]
-    mu <- otimizados$par[6]
-    beta <- otimizados$par[5]
-    alpha <- matrix(NA, ncol = 12, nrow = N)
-    alpha[1,] <- c(initial$gamma, - sum(initial$gamma))
+    k2 <- otimizados$par[2]
+    ks <- otimizados$par[3]
+    f2 <- otimizados$par[4]
+    df <- otimizados$par[5]
+    beta <- otimizados$par[6]
+    mu <- otimizados$par[7]
+    alpha <- matrix(NA, ncol = 12, nrow = N + 1)
+    alpha[1,] <- c(par[8:18], - sum(par[8:18]))
     j <- cycle(y)
     gamma <- alpha[1,j[1]]
     u1 <- NULL
     
-    for(t in 1:(N-1)){ 
+    for(t in 1:N){ 
       u1[t] <- (y[t] - mu[t] - gamma[t])/(1 + (y[t] - mu[t] - gamma[t])^2/(df*exp(2*f2)))
       mu[t+1] <- mu[t] + beta[t] + k1*u1[t] 
       beta[t+1] <- beta[t] + k2*u1[t]
@@ -164,12 +162,11 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
       alpha[t+1,] <- alpha[t,] + k*u1[t]
       gamma[t+1] <- alpha[t+1,j[t+1]]
     } 
-    t <- N
-    u1[t] <- (y[t] - mu[t] - gamma[t])/(1 + (y[t] - mu[t] - gamma[t])^2/(df*exp(2*f2)))
     
-    mu <- ts(mu, end = end(y), freq = frequency(y))
-    beta <- ts(beta, end = end(y), freq = frequency(y))
-    gamma <- ts(gamma, end = end(y), freq = frequency(y))
+    # transformar componentes em série temporal
+    mu <- ts(mu, start = start(y), freq = frequency(y))
+    beta <- ts(beta, start = start(y), freq = frequency(y))
+    gamma <- ts(gamma, start = start(y), freq = frequency(y))
     u1 <- ts(u1, end = end(y), freq = frequency(y))
     loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma)^2/(df*exp(2*f2))))
     epsilon <- (y - mu - gamma)/exp(f2)
@@ -180,7 +177,6 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
     colnames(out) <- c("mu","beta","gamma","f2","sigma","epsilon","nu","score","u","b")
     
     # output
-    #print(otimizados)
     invisible(list(out = out, otimizados = otimizados, loglik = -loglik))
     
   }else if(type == "BSM2_beta"){ 
@@ -467,7 +463,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
       u1 <- NULL
       
       if(outlier){
-        for(t in 1:(N)){ 
+        for(t in 1:N){ 
           u1[t] <- (y[t] - mu[t] - gamma[t] - psi[t] - as.vector(t(d) %*% as.matrix(Dummy)[t,]))/(1 + (y[t] - mu[t] - gamma[t] - psi[t] - as.vector(t(d) %*% as.matrix(Dummy)[t,]))^2/(df*exp(2*f2)))
           mu[t+1] <- beta + mu[t] + k1*u1[t] 
           k <- rep(-ks/11,12) 

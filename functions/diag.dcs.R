@@ -3,15 +3,15 @@ diag.dcs <- function(out, type = "t"){
   # out: saida da fç dcs_fk_estimation
 
   # resíduo de pearson
-  ep <- out$out[,"epsilon"]
+  ep <- na.omit(out$out[,"epsilon"])
   
   if(type == "t"){
     
     # graus de liberdade
-    df <- out$otimizados$par[4]
+    df <- out$otimizados$par[5]
     
     Ft <- pt(ep, df = df, lower.tail = T)
-    rq <- qnorm(Ft)
+    rq <- na.omit(qnorm(Ft))
     
     par(mfrow = c(2,2))
     ts.plot(ep, main = "epsilon")
@@ -31,7 +31,7 @@ diag.dcs <- function(out, type = "t"){
                        nortest::ad.test(ep)$statistic, nortest::ad.test(ep)$p.value,
                        tseries::jarque.bera.test(ep)$statistic, tseries::jarque.bera.test(ep)$p.value)
     
-    set.seed(123)
+    #set.seed(123)
     r1 <- rt(length(ep), df = df)
     r2 <- rnorm(length(rq))
     

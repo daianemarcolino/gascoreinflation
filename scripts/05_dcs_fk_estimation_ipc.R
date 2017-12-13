@@ -25,6 +25,30 @@ ts.plot(ipc, ipc_ma3, col = 1:2)
 # initial gamma (só para inicializar o filtro, obtido via regressão linear)
 initial_gamma <- c(0.48070729,-0.05859547, 0.15370156, 0.10032539,-0.03874261,-0.26932386,-0.12546543,-0.18050091,-0.20419881,-0.07149072, 0.06560687)
 
+# BSM padrão : mu(beta[t]) + gamma ------------------------------------
+
+parametros1 <- list(
+  par = data.frame(
+    name =  c("k1","k2","ks","f2","df","beta[1|0]","mu[1|0]",paste0("gamma",1:11)),
+    value = c(0.1 ,0.5 ,0.5 ,5   ,6   ,0          ,0        , as.vector(initial_gamma)[1:11]),
+    lower = c(0   ,0   ,0   ,-Inf,4   ,-Inf       ,-Inf     ,rep(-Inf,11)),
+    upper = c(Inf ,Inf ,Inf ,Inf ,Inf ,Inf        ,Inf      ,rep(Inf,11))
+  )
+)
+parametros1
+
+dcs1 <- dcs_fk_estimation(ipc, initial = parametros1, type = "BSM1", outlier = F)
+data.frame(name = parametros1$par$name, initial = round(parametros1$par$value,4), value = round(dcs1$otimizados$par,4))
+ts.plot(ipc,dcs1$out[,"mu"], col = 1:2)
+
+ts.plot(dcs1$out[,"epsilon"], col = 1)
+round(dcs1$out[,"epsilon"],2)
+dcs1$out[,"beta"]
+# dois resíduos mt grandes: julho de 2000 e novembro de 2002
+
+diag_dcs1 <- diag.dcs(out = dcs1, type = "t")
+diag_dcs1$stats
+
 # BSM padrão (sem dummy sem psi) -------------------------------------------
 
 parametros <- list(
