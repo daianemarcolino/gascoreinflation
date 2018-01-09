@@ -1,5 +1,16 @@
 library(urca)
 library(dynlm)
+source("functions/ifa_functions.R")
+
+# leitura variações e pesos do IPC
+variacao <- read.csv2("data/arquivosIPC/2 VARIAÇÃO IPC-DI.csv")
+pesos <- read.csv2("data/arquivosIPC/1 PONDERAÇÃO IPC-DI.csv")
+variacao.ts <- ipcts(variacao)
+pesos.ts <- ipcts(pesos)
+ipc <- variacao.ts$ipc
+
+
+
 
 # ler núcleos
 nucleos <- readRDS("dados/tendencias.rds")

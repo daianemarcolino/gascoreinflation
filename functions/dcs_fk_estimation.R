@@ -107,7 +107,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
       mu <- par[7]
       alpha <- matrix(NA, ncol = 12, nrow = N + 1)
       alpha[1,] <- c(par[8:18], - sum(par[8:18]))
-      j <- cycle(y)
+      j <- cycle(ts(c(y,NA), start = start(y), freq = 12))
       gamma <- alpha[1,j[1]]
       u1 <- NULL
       
@@ -149,7 +149,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
     mu <- otimizados$par[7]
     alpha <- matrix(NA, ncol = 12, nrow = N + 1)
     alpha[1,] <- c(otimizados$par[8:18], - sum(otimizados$par[8:18]))
-    j <- cycle(y)
+    j <- cycle(ts(c(y,NA), start = start(y), freq = 12))
     gamma <- alpha[1,j[1]]
     u1 <- NULL
     
@@ -198,7 +198,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
       mu <- par[7]
       alpha <- matrix(NA, ncol = 12, nrow = N + 1)
       alpha[1,] <- c(par[8:18], - sum(par[8:18]))
-      j <- cycle(y)
+      j <- cycle(ts(c(y,NA), start = start(y), freq = 12))
       gamma <- alpha[1,j[1]]
       u1 <- NULL
       
@@ -237,7 +237,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
     mu <- otimizados$par[7]
     alpha <- matrix(NA, ncol = 12, nrow = N + 1)
     alpha[1,] <- c(otimizados$par[8:18], - sum(otimizados$par[8:18]))
-    j <- cycle(y)
+    j <- cycle(ts(c(y,NA), start = start(y), freq = 12))
     gamma <- alpha[1,j[1]]
     u1 <- NULL
     
@@ -286,7 +286,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
       mu <- par[7]
       alpha <- matrix(NA, ncol = 12, nrow = N + 1)
       alpha[1,] <- c(par[8:18], - sum(par[8:18]))
-      j <- cycle(y)
+      j <- cycle(ts(c(y,NA), start = start(y), freq = 12))
       gamma <- alpha[1,j[1]]
       psi <- par[19]
       phi <- par[20]
@@ -330,7 +330,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
     mu <- otimizados$par[7]
     alpha <- matrix(NA, ncol = 12, nrow = N + 1)
     alpha[1,] <- c(otimizados$par[8:18], - sum(otimizados$par[8:18]))
-    j <- cycle(y)
+    j <- cycle(ts(c(y,NA), start = start(y), freq = 12))
     gamma <- alpha[1,j[1]]
     psi <- otimizados$par[19]
     phi <- otimizados$par[20]
@@ -385,7 +385,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
       mu <- par[7]
       alpha <- matrix(NA, ncol = 12, nrow = N + 1)
       alpha[1,] <- c(par[8:18], - sum(par[8:18]))
-      j <- cycle(y)
+      j <- cycle(ts(c(y,NA), start = start(y), freq = 12))
       gamma <- alpha[1,j[1]]
       if(outlier){
         d <- par[19:(19+ncol(data.frame(Dummy))-1)]
@@ -453,7 +453,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
     mu <- otimizados$par[7]
     alpha <- matrix(NA, ncol = 12, nrow = N + 1)
     alpha[1,] <- c(otimizados$par[8:18], - sum(otimizados$par[8:18]))
-    j <- cycle(y)
+    j <- cycle(ts(c(y,NA), start = start(y), freq = 12))
     gamma <- alpha[1,j[1]]
     if(outlier){
       d <- otimizados$par[19:(19+ncol(data.frame(initial$Dummy))-1)]
@@ -528,7 +528,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
       mu <- par[7]
       alpha <- matrix(NA, ncol = 12, nrow = N + 1)
       alpha[1,] <- c(par[8:18], - sum(par[8:18]))
-      j <- cycle(y)
+      j <- cycle(ts(c(y,NA), start = start(y), freq = 12))
       gamma <- alpha[1,j[1]]
       if(outlier){
         d <- par[19:(19+ncol(data.frame(Dummy))-1)]
@@ -592,7 +592,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
     mu <- otimizados$par[7]
     alpha <- matrix(NA, ncol = 12, nrow = N + 1)
     alpha[1,] <- c(otimizados$par[8:18], - sum(otimizados$par[8:18]))
-    j <- cycle(y)
+    j <- cycle(ts(c(y,NA), start = start(y), freq = 12))
     gamma <- alpha[1,j[1]]
     if(outlier){
       d <- otimizados$par[19:(19+ncol(data.frame(initial$Dummy))-1)]
@@ -663,7 +663,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
       mu <- par[7]
       alpha <- matrix(NA, ncol = 12, nrow = N + 1)
       alpha[1,] <- c(par[8:18], - sum(par[8:18]))
-      j <- cycle(y)
+      j <- cycle(ts(c(y,NA), start = start(y), freq = 12))
       gamma <- alpha[1,j[1]]
       psi <- par[19]
       phi <- par[20]
@@ -734,7 +734,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
     mu <- otimizados$par[7]
     alpha <- matrix(NA, ncol = 12, nrow = N + 1)
     alpha[1,] <- c(otimizados$par[8:18], - sum(otimizados$par[8:18]))
-    j <- cycle(y)
+    j <- cycle(ts(c(y,NA), start = start(y), freq = 12))
     gamma <- alpha[1,j[1]]
     psi <- otimizados$par[19]
     phi <- otimizados$par[20]
