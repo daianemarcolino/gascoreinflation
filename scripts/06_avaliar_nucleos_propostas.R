@@ -6,11 +6,11 @@ source("./functions/core.diag.R", encoding = "utf-8")
 
 
 # leitura IPC-Br e núcleos
-ipc  <- readRDS("data/ipc.rds")
+ipc  <- window(readRDS("data/ipc.rds"), start = c(2001,1), freq = 12)
 nucleo_dcs <- readRDS("data/nucleo_dcs.rds")
 nucleo_tf <- readRDS("data/nucleo_tf.rds")
 
-nucleos <- window(cbind(nucleo_tf,nucleo_dcs), start = c(1999,1), freq = 12)
+nucleos <- window(cbind(nucleo_tf[,3],nucleo_dcs), start = c(2001,1), freq = 12)
 colnames(nucleos) <- c("S","DCS")
 
 # gráfico dos núcleos - lado a lado -----------------------------------------
@@ -74,7 +74,7 @@ coint <- core.diag(ipc, nucleos[,"DCS"], test = "coint")
 atratividade <- core.diag(ipc, nucleos[,"S"], test = "attract", 
                           lags_y = c(1:10,12), lags_core = c(1:7,11,12))
 atratividade <- core.diag(ipc, nucleos[,"DCS"], test = "attract", 
-                        lags_y = c(7,12), lags_core = c(1))
+                        lags_y = c(12), lags_core = c(1,9))
 
 
 ipc0 <- window(ipc, start = c(2007,7), freq = 12)
@@ -83,7 +83,7 @@ nucleos0 <- window(nucleos, start = c(2007,7), freq = 12)
 atratividade <- core.diag(ipc0, nucleos0[,"S"], test = "attract", 
                           lags_y = c(1:7,11:12), lags_core = c(1,3,4,7,12))
 atratividade <- core.diag(ipc0, nucleos0[,"DCS"], test = "attract", 
-                          lags_y = c(5:9,11,12), lags_core = c(1,14,15))
+                          lags_y = c(5:9,11,12), lags_core = c(1,14))
 
 # sazonalidade
 

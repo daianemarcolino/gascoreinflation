@@ -20,16 +20,18 @@ diag.dcs <- function(out, type = "t"){
     hist(rq, main = "Resíduo Quantílico")
     par(mfrow = c(1,1))
     
-    x <- data.frame(matrix(NA, ncol = 9, nrow = 2))
-    colnames(x) <- c("Assimetria","Curtose","Média","Mediana","Desvio-padrão","AD.stat","AD.pvalue","JB.stat","JB.pvalue")
+    x <- data.frame(matrix(NA, ncol = 11, nrow = 2))
+    colnames(x) <- c("Assimetria","Curtose","Média","Mediana","Desvio-padrão","AD.stat","AD.pvalue","JB.stat","JB.pvalue","Box.stat","Box.pvalue")
     rownames(x) <- c("epsilon","res_quantilico")
     
     x["res_quantilico",] <- c(TSA::skewness(rq), TSA::kurtosis(rq) + 3, mean(rq), median(rq), sd(rq),
                               nortest::ad.test(rq)$statistic,  nortest::ad.test(rq)$p.value,
-                              tseries::jarque.bera.test(rq)$statistic, tseries::jarque.bera.test(rq)$p.value)
+                              tseries::jarque.bera.test(rq)$statistic, tseries::jarque.bera.test(rq)$p.value,
+                              Box.test(rq, type = "Ljung-Box", lag = 12)$statistic, Box.test(rq, type = "Ljung-Box", lag = 12)$p.value)
     x["epsilon",] <- c(TSA::skewness(ep), TSA::kurtosis(ep) + 3, mean(ep), median(ep), sd(ep), 
                        nortest::ad.test(ep)$statistic, nortest::ad.test(ep)$p.value,
-                       tseries::jarque.bera.test(ep)$statistic, tseries::jarque.bera.test(ep)$p.value)
+                       tseries::jarque.bera.test(ep)$statistic, tseries::jarque.bera.test(ep)$p.value,
+                       Box.test(ep, type = "Ljung-Box", lag = 12)$statistic, Box.test(ep, type = "Ljung-Box", lag = 12)$p.value)
     
     set.seed(123)
     r1 <- rt(length(ep), df = df, ncp = 0)
@@ -43,7 +45,7 @@ diag.dcs <- function(out, type = "t"){
     par(mfrow = c(1,1))
     
     # output
-    list(stats = round(x,2), res_quantilico = rq)
+    list(stats = t(round(x,2)), res_quantilico = rq)
     
   }else if(type == "norm"){
     
@@ -52,13 +54,14 @@ diag.dcs <- function(out, type = "t"){
     hist(ep, main = "epsilon")
     
     
-    x <- data.frame(matrix(NA, ncol = 9, nrow = 1))
-    colnames(x) <- c("Assimetria","Curtose","Média","Mediana","Desvio-padrão","AD.stat","AD.pvalue","JB.stat","JB.pvalue")
+    x <- data.frame(matrix(NA, ncol = 11, nrow = 1))
+    colnames(x) <- c("Assimetria","Curtose","Média","Mediana","Desvio-padrão","AD.stat","AD.pvalue","JB.stat","JB.pvalue","Box.stat","Box.pvalue")
     rownames(x) <- c("epsilon")
     
     x["epsilon",] <- c(TSA::skewness(ep), TSA::kurtosis(ep) + 3, mean(ep), median(ep), sd(ep), 
                        goftest::ad.test(ep, "pnorm")$statistic, goftest::ad.test(ep, "pnorm")$p.value,
-                       tseries::jarque.bera.test(ep)$statistic, tseries::jarque.bera.test(ep)$p.value)
+                       tseries::jarque.bera.test(ep)$statistic, tseries::jarque.bera.test(ep)$p.value,
+                       Box.test(ep, type = "Ljung-Box", lag = 12)$statistic, Box.test(ep, type = "Ljung-Box", lag = 12)$p.value)
     
 
     r1 <- rnorm(length(ep))
@@ -68,7 +71,7 @@ diag.dcs <- function(out, type = "t"){
     par(mfrow = c(1,1))
     
     # output
-    list(stats = round(x,2))
+    list(stats = t(round(x,2)))
   }
 
 }
