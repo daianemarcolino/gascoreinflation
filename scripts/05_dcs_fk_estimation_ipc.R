@@ -250,17 +250,6 @@ parametros2_d <- list(
   ),
   Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11)))
 )
-parametros2_d <- list(
-  par = data.frame(
-    name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ,"d1","d2","d3"),
-    value = c(0.1 ,0   ,0.5 ,5   ,6   ,0     ,0        ,as.vector(initial_gamma)[1:11],0   ,0   ,0   ),
-    lower = c(0   ,0   ,0.2 ,-Inf,4   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf,-Inf,-Inf),
-    upper = c(1 ,0   ,Inf ,Inf ,Inf ,0     ,Inf      ,rep(Inf,11)                   , Inf, Inf, Inf)
-  ),
-  Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11)),
-                d2 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,12)),
-                d2 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2003,01)))
-)
 parametros2_d
 
 dcs2_d <- dcs_fk_estimation(ipc, initial = parametros2_d, type = "BSM2", outlier = T, otimo = T)
@@ -381,7 +370,7 @@ parametros3_d <- list(
   par = data.frame(
     name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ,"psi","phi","k3","d1"),
     value = c(0.1 ,0   ,0.5 ,5   ,6   ,0     ,0        ,as.vector(initial_gamma)[1:11],1    ,0.1  ,0.5 ,0   ),
-    lower = c(0.0 ,0   ,0.1 ,-Inf,4   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf ,-1   ,0   ,-Inf),
+    lower = c(0.0 ,0   ,0   ,-Inf,4   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf ,-1   ,0   ,-Inf),
     upper = c(Inf ,0   ,Inf ,Inf ,Inf ,0     ,Inf      ,rep(Inf,11)                   ,Inf  ,1    ,Inf ,Inf )
   ),
   Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11)))
@@ -418,26 +407,65 @@ data.frame(name = parametros1_normald$par$name,
            m2 = round(dcs1_normald$otimizados$par,4)
            )
 
+# modelos DCS-Normal
+data.frame(name = parametros1_normal$par$name, 
+           lower = parametros1_normal$par$lower,
+           upper = parametros1_normal$par$upper,
+           initial = round(parametros1_normal$par$value,4), 
+           otimo = round(dcs1_normal$otimizados$par,4))
+data.frame(name = parametros1_normald$par$name, 
+           lower = parametros1_normald$par$lower,
+           upper = parametros1_normald$par$upper,
+           initial = round(parametros1_normald$par$value,4), 
+           otimo = round(dcs1_normald$otimizados$par,4))
+data.frame(name = parametros2_normal$par$name, 
+           lower = parametros2_normal$par$lower,
+           upper = parametros2_normal$par$upper,
+           initial = round(parametros2_normal$par$value,4), 
+           otimo = round(dcs2_normal$otimizados$par,4))
 data.frame(name = parametros2_normald$par$name, 
            lower = parametros2_normald$par$lower,
            upper = parametros2_normald$par$upper,
            initial = round(parametros2_normald$par$value,4), 
            otimo = round(dcs2_normald$otimizados$par,4))
+data.frame(name = parametros3_normal$par$name, 
+           lower = parametros3_normal$par$lower,
+           upper = parametros3_normal$par$upper,
+           initial = round(parametros3_normal$par$value,4), 
+           otimo = round(dcs3_normal$otimizados$par,4))
 data.frame(name = parametros3_normald$par$name, 
            lower = parametros3_normald$par$lower,
            upper = parametros3_normald$par$upper,
            initial = round(parametros3_normald$par$value,4), 
            otimo = round(dcs3_normald$otimizados$par,4))
+
+# modelos DCS-t
+
+data.frame(name = parametros1$par$name, 
+           lower = parametros1$par$lower,
+           upper = parametros1$par$upper,
+           initial = round(parametros1$par$value,4), 
+           otimo = round(dcs1$otimizados$par,4))
 data.frame(name = parametros1_d$par$name, 
            lower = parametros1_d$par$lower,
            upper = parametros1_d$par$upper,
            initial = round(parametros1_d$par$value,4), 
            otimo = round(dcs1_d$otimizados$par,4))
+data.frame(name = parametros2$par$name, 
+           lower = parametros2$par$lower,
+           upper = parametros2$par$upper,
+           initial = round(parametros2$par$value,4), 
+           otimo = round(dcs2$otimizados$par,4))
 data.frame(name = parametros2_d$par$name, 
            lower = parametros2_d$par$lower,
            upper = parametros2_d$par$upper,
            initial = round(parametros2_d$par$value,4), 
            otimo = round(dcs2_d$otimizados$par,4))
+data.frame(name = parametros3$par$name, 
+           lower = parametros3$par$lower,
+           upper = parametros3$par$upper,
+           initial = round(parametros3$par$value,4), 
+           otimo = round(dcs3$otimizados$par,4))
 data.frame(name = parametros3_d$par$name, 
            lower = parametros3_d$par$lower,
            upper = parametros3_d$par$upper,
@@ -457,7 +485,7 @@ par(mar = c(2,4,1,2), mfrow = c(1,1))
 # IPC-Br vs. núcleo dcs
 plot(ipc, main = "", lwd = 1, lty = 4, ylim = c(-0.5,3.5),
      col = 1, ylab = "variação mensal percentual (%)", xlab = "")
-lines(dcs3_normald$out[,"mu"], lwd = 2, lty = 1, col = "#1874CD")
+lines(window(dcs3_normald$out[,"mu"], end = end(ipc), freq = 12), lwd = 2, lty = 1, col = "#1874CD")
 abline(h = seq(0,3,1), col = "#C9C9C9", lty = 3)
 abline(v = 1999:2018, col = "#C9C9C9", lty = 3)
 #abline(h = 0, col = "#CC3232", lty = 2)
@@ -466,15 +494,51 @@ legend(2005,3, legend = c("IPC-Br","Núcleo-DCS"), lwd = c(1,2,2), lty = c(4,1),
 
 # as tendências dos três modelos DCS
 
-plot(dcs1_normald$out[,"mu"], main = "", lwd = 1, lty = 4, # ylim = c(-0.5,3.5),
+plot(window(dcs1_normald$out[,"mu"], end = end(ipc), freq = 12), main = "", lwd = 1, lty = 4, # ylim = c(-0.5,3.5),
      col = 1, ylab = "variação mensal percentual (%)", xlab = "")
-lines(dcs2_normald$out[,"mu"], lwd = 2, lty = 5, col = "orangered")
-lines(dcs3_normald$out[,"mu"], lwd = 2, lty = 1, col = "#1874CD")
+lines(window(dcs2_normald$out[,"mu"], end = end(ipc), freq = 12), lwd = 2, lty = 5, col = "orangered")
+lines(window(dcs3_normald$out[,"mu"], end = end(ipc), freq = 12), lwd = 2, lty = 1, col = "#1874CD")
+abline(h = seq(-0.5,3.5,0.5), col = "#C9C9C9", lty = 3)
+abline(v = 1999:2018, col = "#C9C9C9", lty = 3)
+legend(2005,1.8, legend = c("DCS-N 1","DCS-N 2","DCS-N 3"), lwd = c(1,2,2), lty = c(4,5,1), y.intersp = 1.5,
+       col = c(1,"orangered","#1874CD"), cex = 1.2,bg = "white", box.col = "white",box.lwd = 0)
+
+
+plot(dcs1_d$out[,"mu"], main = "", lwd = 1, lty = 4, # ylim = c(-0.5,3.5),
+     col = 1, ylab = "variação mensal percentual (%)", xlab = "")
+lines(dcs2_d$out[,"mu"], lwd = 2, lty = 5, col = "orangered")
+lines(dcs3_d$out[,"mu"], lwd = 2, lty = 1, col = "#1874CD")
 abline(h = seq(-0.5,3.5,0.5), col = "#C9C9C9", lty = 3)
 abline(v = 1999:2018, col = "#C9C9C9", lty = 3)
 legend(2005,1.8, legend = c("DCS-Normal 1","DCS-Normal 2","DCS-Normal 3"), lwd = c(1,2,2), lty = c(4,5,1), y.intersp = 1.5,
        col = c(1,"orangered","#1874CD"), cex = 1.2,bg = "white", box.col = "white",box.lwd = 0)
 
+
+par(mar = c(2,4,1,2), mfrow = c(1,3))
+
+plot(dcs1_d$out[,"mu"], main = "", lwd = 1, lty = 1, ylim = c(-0.2,1.7),
+     col = 1, ylab = "variação mensal percentual (%)", xlab = "")
+lines(dcs1_normald$out[,"mu"], lwd = 1, lty = 4, col = "orangered")
+abline(h = seq(-0.5,3.5,0.5), col = "#C9C9C9", lty = 3)
+abline(v = 1999:2018, col = "#C9C9C9", lty = 3)
+legend(2005,1.7, legend = c("DCS-Normal 1","DCS-t 1"), lwd = c(1,1), lty = c(1,4), y.intersp = 1.5,
+       col = c("orangered",1), cex = 1,bg = "white", box.col = "white",box.lwd = 0)
+
+plot(dcs2_d$out[,"mu"], main = "", lwd = 1, lty = 1, ylim = c(-0.2,1.7),
+     col = 1, ylab = "variação mensal percentual (%)", xlab = "")
+lines(dcs2_normald$out[,"mu"], lwd = 1, lty = 4, col = "orangered")
+abline(h = seq(-0.5,3.5,0.5), col = "#C9C9C9", lty = 3)
+abline(v = 1999:2018, col = "#C9C9C9", lty = 3)
+legend(2005,1.7, legend = c("DCS-Normal 2","DCS-t 2"), lwd = c(1,1), lty = c(1,4), y.intersp = 1.5,
+       col = c("orangered",1), cex = 1,bg = "white", box.col = "white",box.lwd = 0)
+
+plot(dcs3_d$out[,"mu"], main = "", lwd = 1, lty = 1, ylim = c(-0.2,1.7),
+     col = 1, ylab = "variação mensal percentual (%)", xlab = "")
+lines(dcs3_normald$out[,"mu"], lwd = 1, lty = 4, col = "orangered")
+abline(h = seq(-0.5,3.5,0.5), col = "#C9C9C9", lty = 3)
+abline(v = 1999:2018, col = "#C9C9C9", lty = 3)
+legend(2005,1.7, legend = c("DCS-Normal 3","DCS-t 3"), lwd = c(1,1), lty = c(1,4), y.intersp = 1.5,
+       col = c("orangered",1), cex = 1,bg = "white", box.col = "white",box.lwd = 0)
 
 # Exercícios professor -------------------------------------------------------
 
