@@ -8,7 +8,9 @@ variacao <- read.csv2("data/arquivosIPC/2 VARIAÇÃO IPC-DI.csv")
 pesos <- read.csv2("data/arquivosIPC/1 PONDERAÇÃO IPC-DI.csv")
 variacao.ts <- ipcts(variacao)
 pesos.ts <- ipcts(pesos)
-ipc <- variacao.ts$ipc
+ipc <- window(variacao.ts$ipc, start = c(2001,1), freq = 12)
+variacao.ts$subitens <- window(variacao.ts$subitens, start = c(2000,11), freq = 12)
+pesos.ts$subitens <- window(pesos.ts$subitens, start = c(2000,11), freq = 12)
 # saveRDS(ipc, "data/ipc.rds")
 
 # cálculo do ifa --------------------------------
@@ -23,9 +25,8 @@ for(i in 10:20){
   filtro2[[i-9]] <- seas(filtro1[[i-9]], regression.aictest = NULL,
                          transform.function = "none", 
                          arima.model = "(1 1 0)(1 0 0)",
-                         series.modelspan = "2008.jan,2017.dec")$series$s11
-  filtro3[[i-9]] <- geom3(filtro2[[i-9]])
-
+                         series.modelspan = "2009.jan,2017.dec")$series$s11
+  filtro3[[i-9]] <- window(geom3(filtro2[[i-9]]), start = c(2001,1), freq = 12)
   print(i)
 }
 medias <- sapply(filtro3, FUN = mean, na.rm = T)
@@ -33,11 +34,11 @@ medias
 mean(ipc)
 i <- (10:20)[6]
 
-# diag filtro 2: ajuste sazonal
-# f <- seas(filtro1[[6]], regression.aictest = NULL,
+# # diag filtro 2: ajuste sazonal
+# f <- seas(filtro1[[7]], regression.aictest = NULL,
 #           transform.function = "none",
 #           arima.model = "(1 1 0)(1 0 0)",
-#           series.modelspan = "2008.jan,2017.dec")
+#           series.modelspan = "2009.jan,2017.dec")
 # # diagnóstico
 # summary(f)
 # qs(f)
@@ -54,7 +55,7 @@ filtro3_final <- filtro3[[6]]
 
 
 # exportar --------------------
-# ifa <- cbind(filtro1_final,filtro2_final,filtro3_final)
+# ifa <- window(cbind(filtro1_final,filtro2_final,filtro3_final), start = c(2001,1),freq = 12)
 # colnames(ifa) <- paste0("filtro",1:3)
 # saveRDS(ifa, "data/nucleo_tf.rds")
 ifa <- readRDS("data/nucleo_tf.rds")
@@ -62,7 +63,7 @@ ifa <- readRDS("data/nucleo_tf.rds")
 
 par(mar = c(2,4,1,2), mfrow = c(1,1))
 # IPC-Br vs. núcleo
-plot(ipc, main = "", lwd = 1, lty = 4, ylim = c(-0.5,3.5),
+plot(window(ipc, start = c(2001,1), freq = 12), main = "", lwd = 1, lty = 4, ylim = c(-0.5,3.5),
      col = 1, ylab = "variação mensal percentual (%)", xlab = "")
 lines(ifa[,"filtro3"], lwd = 2, lty = 1, col = "#1874CD")
 abline(h = 0:3, col = "#C9C9C9", lty = 3)

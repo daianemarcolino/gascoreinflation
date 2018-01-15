@@ -309,6 +309,7 @@ core.diag <- function(y, core, conf = 0.95, test = "bias", lags_y = 1:12, lags_c
     
     # diag 5: atratividade ----
     erro <- ts(resid(lm(y ~ core)), end = end(core), freq = 12)
+    #print(summary(lm(y ~ core)))
     # dum <- cbind(BETS::BETS.dummy(start = start(data), end = end(data), month = 11, year = 2002),
     #              BETS::BETS.dummy(start = start(data), end = end(data), month = 7, year = 2000),
     #              BETS::BETS.dummy(start = start(data), end = end(data), month = 12, year = 2002))
@@ -351,23 +352,42 @@ core.diag <- function(y, core, conf = 0.95, test = "bias", lags_y = 1:12, lags_c
 
     # diag 6: previsão ----------------------
 
-    # pi12 <- lag(y, k = -12)
-    # pic12 <- lag(core, k = -12)
-    # d <- na.omit(cbind(y - pi12, pic12 - pi12))
-    # colnames(d) <- c("y","x")
-    # 
-    # md <- lm(d[,1] ~ d[,2])
-    # summary(md)
-    # 
-    # pi24 <- lag(y, k = -24)
-    # pic24 <- lag(core, k = -24)
-    # d <- na.omit(cbind(y - pi24, pic24 - pi24))
-    # colnames(d) <- c("y","x")
-    # 
-    # md <- lm(d[,1] ~ d[,2])
-    # summary(md)
+    pi3 <- lag(y, k = -3)
+    pic3 <- lag(core, k = -3)
+    d <- na.omit(cbind(y - pi3, pic3 - pi3))
+    colnames(d) <- c("y","x")
+    
+    md <- lm(d[,1] ~ d[,2])
+    message("h = 3 meses")
+    print(summary(md))
+    
+    pi6 <- lag(y, k = -6)
+    pic6 <- lag(core, k = -6)
+    d <- na.omit(cbind(y - pi6, pic6 - pi6))
+    colnames(d) <- c("y","x")
+    
+    md <- lm(d[,1] ~ d[,2])
+    message("h = 6 meses")
+    print(summary(md))
+    
+    
+    pi12 <- lag(y, k = -12)
+    pic12 <- lag(core, k = -12)
+    d <- na.omit(cbind(y - pi12, pic12 - pi12))
+    colnames(d) <- c("y","x")
 
-    # output
+    md <- lm(d[,1] ~ d[,2])
+    message("h = 12 meses")
+    print(summary(md))
+
+    pi24 <- lag(y, k = -24)
+    pic24 <- lag(core, k = -24)
+    d <- na.omit(cbind(y - pi24, pic24 - pi24))
+    colnames(d) <- c("y","x")
+
+    md <- lm(d[,1] ~ d[,2])
+    message("h = 24 meses")
+    print(summary(md))
 
   }else if(test == "seas"){
     

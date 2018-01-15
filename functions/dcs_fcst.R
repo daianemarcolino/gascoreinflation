@@ -24,16 +24,25 @@ dcs_fcst <- function(y, start = c(2013,1), initial = NULL, type = "BSM2_beta_psi
   k <- length(datas$ano) - 1
   yt <- matrix(NA, nrow = k, ncol = m)
   
-  for(i in 1:m){
-    for(j in 1:k){
-      yt[j,i] <- rt(1, df = out$otimizados$par[5])*tail(out$out[,"sigma"],1) + sum(tail(out$out[,c("mu","gamma","psi")],1))
-      novoy <- ts(c(y0,as.vector(yt[1:j,i])), start = start(y0), freq = 12)
-      if(outlier){
+  if(outlier){
+    for(i in 1:m){
+      for(j in 1:k){
+        yt[j,i] <- rt(1, df = out$otimizados$par[5])*tail(out$out[,"sigma"],1) + sum(tail(out$out[,c("mu","gamma","psi")],1))
+        novoy <- ts(c(y0,as.vector(yt[1:j,i])), start = start(y0), freq = 12)
         initial0$Dummy <- window(initial$Dummy, end = c(datas$ano[j+1],datas$mes[j+1]), freq = 12)
+        out <- dcs_fk_estimation(novoy, initial = initial0, type = type, outlier = outlier, otimo = F)
       }
-      out <- dcs_fk_estimation(novoy, initial = initial0, type = type, outlier = outlier, otimo = F)
+      message("replication ",i)
     }
-    message("replication ",i)
+  }else{
+    for(i in 1:m){
+      for(j in 1:k){
+        yt[j,i] <- rt(1, df = out$otimizados$par[5])*tail(out$out[,"sigma"],1) + sum(tail(out$out[,c("mu","gamma","psi")],1))
+        novoy <- ts(c(y0,as.vector(yt[1:j,i])), start = start(y0), freq = 12)
+        out <- dcs_fk_estimation(novoy, initial = initial0, type = type, outlier = outlier, otimo = F)
+      }
+      message("replication ",i)
+    }
   }
   
   # arrumar dados para exportar
