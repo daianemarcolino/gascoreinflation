@@ -352,6 +352,16 @@ core.diag <- function(y, core, conf = 0.95, test = "bias", lags_y = 1:12, lags_c
 
     # diag 6: previsão ----------------------
 
+    
+    pi1 <- lag(y, k = -1)
+    pic1 <- lag(core, k = -1)
+    d <- na.omit(cbind(y - pi1, pic1 - pi1))
+    colnames(d) <- c("y","x")
+    
+    md <- lm(d[,1] ~ d[,2])
+    message("h = 1 mês")
+    print(summary(md))
+    
     pi3 <- lag(y, k = -3)
     pic3 <- lag(core, k = -3)
     d <- na.omit(cbind(y - pi3, pic3 - pi3))

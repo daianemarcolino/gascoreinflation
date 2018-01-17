@@ -95,7 +95,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
     # gamma[t+1] = gamma[t] + ks*u[t] 
     # > estimação via ML para densidade condicional de y t-student com variância constante no tempo
     
-    otimizar <- function(y, par, Dummy){
+    otimizar <- function(y,par,  Dummy){
       
       N <- length(y)
       k1 <- par[1]
@@ -125,6 +125,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
           k <- rep(-ks/11,12) 
           k[j[t]] <- ks
           alpha[t+1,] <- alpha[t,] + k*u1[t]
+          alpha[t+1,12] <- -sum(alpha[t+1,1:11])
           gamma[t+1] <- alpha[t+1,j[t+1]]
         }
         
@@ -134,7 +135,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
         dum <- ts(t(d %*% t(Dummy)), end = end(y), freq = frequency(y))
         
         # loglik
-        loglik <-  N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma - dum)^2/(df*exp(2*f2))))
+        loglik <-  N*log(gamma((df+1)/2)) - (N/2)*log(pi) - (N/2)*log(df) - N*log(gamma(df/2))  - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma - dum)^2/(df*exp(2*f2))))# + (N/2)*log((df - 2)/df)
         -loglik
         
       }else{
@@ -146,6 +147,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
           k <- rep(-ks/11,12) 
           k[j[t]] <- ks
           alpha[t+1,] <- alpha[t,] + k*u1[t]
+          alpha[t+1,12] <- -sum(alpha[t+1,1:11])
           gamma[t+1] <- alpha[t+1,j[t+1]]
         } 
         
@@ -155,7 +157,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
         gamma <- ts(gamma, start = start(y), freq = frequency(y))
         
         # loglik
-        loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma)^2/(df*exp(2*f2))))
+        loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - (N/2)*log(df) - N*log(gamma(df/2)) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma)^2/(df*exp(2*f2))))# + (N/2)*log((df - 2)/df)
         -loglik
       }
       
@@ -164,7 +166,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
     if(otimo == T){
       otimizados <- nlminb(start = initial$par$value, objective = otimizar, y = y, Dummy = initial$Dummy,
                            lower = initial$par$lower, upper = initial$par$upper, control = list(eval.max = 10000, iter.max = 10000))
-    }else{
+      }else{
       otimizados <- list()
       otimizados$par <- initial$par$value
     }
@@ -197,6 +199,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
         k <- rep(-ks/11,12) 
         k[j[t]] <- ks
         alpha[t+1,] <- alpha[t,] + k*u1[t]
+        alpha[t+1,12] <- -sum(alpha[t+1,1:11])
         gamma[t+1] <- alpha[t+1,j[t+1]]
       }
       
@@ -206,7 +209,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
       beta <- ts(beta, start = start(y), freq = frequency(y))
       gamma <- ts(gamma, start = start(y), freq = frequency(y))
       u1 <- ts(u1, end = end(y), freq = frequency(y))
-      loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma - dum)^2/(df*exp(2*f2))))
+      loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma - dum)^2/(df*exp(2*f2)))) #+ (N/2)*log((df - 2)/df)
       epsilon <- (y - mu - gamma - dum)/exp(f2)
       nu <- (y - mu - gamma - dum)
       score <- (df + 1)/(df*exp(2*f2))*u1
@@ -223,6 +226,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
         k <- rep(-ks/11,12) 
         k[j[t]] <- ks
         alpha[t+1,] <- alpha[t,] + k*u1[t]
+        alpha[t+1,12] <- -sum(alpha[t+1,1:11])
         gamma[t+1] <- alpha[t+1,j[t+1]]
       } 
       
@@ -231,7 +235,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
       beta <- ts(beta, start = start(y), freq = frequency(y))
       gamma <- ts(gamma, start = start(y), freq = frequency(y))
       u1 <- ts(u1, end = end(y), freq = frequency(y))
-      loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma)^2/(df*exp(2*f2))))
+      loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma)^2/(df*exp(2*f2))))# + (N/2)*log((df - 2)/df)
       epsilon <- (y - mu - gamma)/exp(f2)
       nu <- (y - mu - gamma)
       score <- (df + 1)/(df*exp(2*f2))*u1
@@ -283,6 +287,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
           k <- rep(-ks/11,12) 
           k[j[t]] <- ks
           alpha[t+1,] <- alpha[t,] + k*u1[t]
+          alpha[t+1,12] <- -sum(alpha[t+1,1:11])
           gamma[t+1] <- alpha[t+1,j[t+1]]
         }
         
@@ -292,7 +297,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
         dum <- ts(t(d %*% t(Dummy)), end = end(y), freq = frequency(y))
         
         # loglik
-        loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma - dum)^2/(df*exp(2*f2))))
+        loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma - dum)^2/(df*exp(2*f2)))) #+ (N/2)*log((df - 2)/df)
         -loglik
         
       }else{
@@ -303,6 +308,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
           k <- rep(-ks/11,12) 
           k[j[t]] <- ks
           alpha[t+1,] <- alpha[t,] + k*u1[t]
+          alpha[t+1,12] <- -sum(alpha[t+1,1:11])
           gamma[t+1] <- alpha[t+1,j[t+1]]
         } 
         
@@ -312,13 +318,13 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
         gamma <- ts(gamma, start = start(y), freq = frequency(y))
         
         # loglik
-        loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma)^2/(df*exp(2*f2))))
+        loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma)^2/(df*exp(2*f2)))) # + (N/2)*log((df - 2)/df)
         -loglik
       }
     }
     
     if(otimo == T){
-      otimizados <- nlminb(start = initial$par$value, objective = otimizar, y = y,
+      otimizados <- nlminb(start = initial$par$value, objective = otimizar, y = y, 
                            Dummy = initial$Dummy,
                            lower = initial$par$lower, upper = initial$par$upper, control = list(eval.max = 10000, iter.max = 10000))
     }else{
@@ -351,6 +357,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
         k <- rep(-ks/11,12) 
         k[j[t]] <- ks
         alpha[t+1,] <- alpha[t,] + k*u1[t]
+        alpha[t+1,12] <- -sum(alpha[t+1,1:11])
         gamma[t+1] <- alpha[t+1,j[t+1]]
       }
       
@@ -364,7 +371,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
       beta <- ts(NA, start = start(y), freq = frequency(y))
       gamma <- ts(gamma, start = start(y), freq = frequency(y))
       u1 <- ts(u1, end = end(y), freq = frequency(y))
-      loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma - dum)^2/(df*exp(2*f2))))
+      loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma - dum)^2/(df*exp(2*f2)))) #+ (N/2)*log((df - 2)/df)
       epsilon <- (y - mu - gamma - dum)/exp(f2)
       nu <- (y - mu - gamma - dum)
       score <- (df + 1)/(df*exp(2*f2))*u1
@@ -380,6 +387,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
         k <- rep(-ks/11,12) 
         k[j[t]] <- ks
         alpha[t+1,] <- alpha[t,] + k*u1[t]
+        alpha[t+1,12] <- -sum(alpha[t+1,1:11])
         gamma[t+1] <- alpha[t+1,j[t+1]]
       } 
       
@@ -388,7 +396,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
       beta <- ts(NA, start = start(y), freq = frequency(y))
       gamma <- ts(gamma, start = start(y), freq = frequency(y))
       u1 <- ts(u1, end = end(y), freq = frequency(y))
-      loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma)^2/(df*exp(2*f2))))
+      loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma)^2/(df*exp(2*f2))))# + (N/2)*log((df - 2)/df)
       epsilon <- (y - mu - gamma)/exp(f2)
       nu <- (y - mu - gamma)
       score <- (df + 1)/(df*exp(2*f2))*u1
@@ -440,6 +448,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
           k <- rep(-ks/11,12) 
           k[j[t]] <- ks
           alpha[t+1,] <- alpha[t,] + k*u1[t]
+          alpha[t+1,12] <- -sum(alpha[t+1,1:11])
           gamma[t+1] <- alpha[t+1,j[t+1]]
           psi[t+1] <- phi*psi[t] + k3*u1[t]
         } 
@@ -452,7 +461,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
         dum <- ts(t(d %*% t(Dummy)), end = end(y), freq = frequency(y))
         
         # loglik
-        loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma - psi - dum)^2/(df*exp(2*f2))))
+        loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma - psi - dum)^2/(df*exp(2*f2)))) # + (N/2)*log((df - 2)/df)
         -loglik
         
       }else{
@@ -463,6 +472,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
           k <- rep(-ks/11,12) 
           k[j[t]] <- ks
           alpha[t+1,] <- alpha[t,] + k*u1[t]
+          alpha[t+1,12] <- -sum(alpha[t+1,1:11])
           gamma[t+1] <- alpha[t+1,j[t+1]]
           psi[t+1] <- phi*psi[t] + k3*u1[t]
         }
@@ -474,7 +484,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
         psi <- ts(psi, start = start(y), freq = frequency(y))
         
         # loglik
-        loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma - psi)^2/(df*exp(2*f2))))
+        loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma - psi)^2/(df*exp(2*f2)))) # + (N/2)*log((df - 2)/df)
         -loglik
         
       }
@@ -517,6 +527,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
         k <- rep(-ks/11,12) 
         k[j[t]] <- ks
         alpha[t+1,] <- alpha[t,] + k*u1[t]
+        alpha[t+1,12] <- -sum(alpha[t+1,1:11])
         gamma[t+1] <- alpha[t+1,j[t+1]]
         psi[t+1] <- phi*psi[t] + k3*u1[t]
       } 
@@ -529,7 +540,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
       dum <- ts(t(d %*% t(initial$Dummy)), end = end(y), freq = frequency(y))
       
       u1 <- ts(u1, end = end(y), freq = frequency(y))
-      loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma - psi - dum)^2/(df*exp(2*f2))))
+      loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma - psi - dum)^2/(df*exp(2*f2)))) # + (N/2)*log((df - 2)/df)
       epsilon <- (y - mu - gamma - psi - dum)/exp(f2)
       nu <- (y - mu - gamma - psi - dum)
       b <- ((y - mu - gamma - psi - dum)^2/(df*exp(2*f2)))/(1 + (y - mu - gamma - psi - dum)^2/(df*exp(2*f2)))
@@ -545,6 +556,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
         k <- rep(-ks/11,12) 
         k[j[t]] <- ks
         alpha[t+1,] <- alpha[t,] + k*u1[t]
+        alpha[t+1,12] <- -sum(alpha[t+1,1:11])
         gamma[t+1] <- alpha[t+1,j[t+1]]
         psi[t+1] <- phi*psi[t] + k3*u1[t]
       } 
@@ -556,7 +568,7 @@ dcs_fk_estimation <- function(y, initial = NULL, type = "BSM1", outlier = F, oti
       psi <- ts(psi, start = start(y), freq = frequency(y))
       
       u1 <- ts(u1, end = end(y), freq = frequency(y))
-      loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma - psi)^2/(df*exp(2*f2))))
+      loglik <- N*log(gamma((df+1)/2)) - (N/2)*log(pi) - N*log(gamma(df/2)) - (N/2)*log(df) - N*(f2) - ((df + 1)/2)*sum(log(1 + (y - mu - gamma - psi)^2/(df*exp(2*f2)))) # + (N/2)*log((df - 2)/df)
       epsilon <- (y - mu - gamma - psi)/exp(f2)
       nu <- (y - mu - gamma - psi)
       b <- ((y - mu - gamma - psi)^2/(df*exp(2*f2)))/(1 + (y - mu - gamma - psi)^2/(df*exp(2*f2)))

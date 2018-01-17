@@ -1,16 +1,19 @@
 dcs_estabilidade <- function(y, start = c(2013,1), initial = NULL, type = "BSM3", outlier = F){
 
+  
+  # pos para cortar e estimar
+  pos <- which(start[1] == as.numeric(substr(as.Date(y),1,4)) & start[2] == as.numeric(substr(as.Date(y),6,7)))
+  
+  datas <- list(ano = as.numeric(substr(as.Date(y),1,4))[pos:length(y)],
+                mes = as.numeric(substr(as.Date(y),6,7))[pos:length(y)])
+  
+  initial0 <- initial
+  core_month <- ts(NA, start = start, end = end(y), freq = 12)
+  core_full <- ts(NA, start = start, end = end(y), freq = 12)
+  parametros <- ts(matrix(NA, ncol = length(initial$par$value), nrow = length(datas$ano)), start = start, end = end(y), freq = 12)
+  colnames(parametros) <- initial$par$name
+  
   if(outlier){
-    
-    # pos para cortar e estimar
-    pos <- which(start[1] == as.numeric(substr(as.Date(y),1,4)) & start[2] == as.numeric(substr(as.Date(y),6,7)))
-    
-    datas <- list(ano = as.numeric(substr(as.Date(y),1,4))[pos:length(y)],
-                  mes = as.numeric(substr(as.Date(y),6,7))[pos:length(y)])
-    
-    initial0 <- initial
-    core_month <- ts(NA, start = start, end = end(y), freq = 12)
-    core_full <- ts(NA, start = start, end = end(y), freq = 12)
     
     for(i in 1:length(datas$ano)){
       # window y
@@ -24,6 +27,7 @@ dcs_estabilidade <- function(y, start = c(2013,1), initial = NULL, type = "BSM3"
       
       # guardar parâmetros otimizados
       initial0$par$value <- out$otimizados$par
+      parametros[i,] <- out$otimizados$par
       
       # guardar núcleo no tempo t
       core_month[i] <- tail(out$out[,"mu"],2)[1]
@@ -34,14 +38,6 @@ dcs_estabilidade <- function(y, start = c(2013,1), initial = NULL, type = "BSM3"
     
   }else{
     
-    # pos para cortar e estimar
-    pos <- which(start[1] == as.numeric(substr(as.Date(y),1,4)) & start[2] == as.numeric(substr(as.Date(y),6,7)))
-    datas <- list(ano = as.numeric(substr(as.Date(y),1,4))[pos:length(y)],
-                  mes = as.numeric(substr(as.Date(y),6,7))[pos:length(y)])
-    initial0 <- initial
-    core_month <- ts(NA, start = start, end = end(y), freq = 12)
-    core_full <- ts(NA, start = start, end = end(y), freq = 12)
-    
     for(i in 1:length(datas$ano)){
       # window y
       y0 <- window(y, end = c(datas$ano[i],datas$mes[i]), freq = 12)
@@ -51,6 +47,7 @@ dcs_estabilidade <- function(y, start = c(2013,1), initial = NULL, type = "BSM3"
       
       # guardar parâmetros otimizados
       initial0$par$value <- out$otimizados$par
+      parametros[i,] <- out$otimizados$par
       
       # guardar núcleo no tempo t
       core_month[i] <- tail(out$out[,"mu"],2)[1]
@@ -62,7 +59,7 @@ dcs_estabilidade <- function(y, start = c(2013,1), initial = NULL, type = "BSM3"
   }
   
   # output
-  list(out = cbind(core_month, core_full))
+  list(out = cbind(core_month, core_full), parametros = parametros)
 }  
  
  

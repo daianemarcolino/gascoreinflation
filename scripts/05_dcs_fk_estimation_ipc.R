@@ -214,7 +214,7 @@ diag_dcs1_d$stats
 parametros2 <- list(
   par = data.frame(
     name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)),
-    value = c(0.1 ,0   ,0.5 ,5   ,6   ,0     ,0        ,as.vector(initial_gamma)[1:11]),
+    value = c(0.5 ,0   ,0.5 ,5   ,6   ,0     ,0        ,as.vector(initial_gamma)[1:11]),
     lower = c(0   ,0   ,0.0 ,-Inf,4   ,0     ,-Inf     ,rep(-Inf,11)),
     upper = c(Inf ,0   ,Inf ,Inf ,Inf ,0     ,Inf      ,rep(Inf,11))
   ),
@@ -244,7 +244,7 @@ diag_dcs2$stats
 parametros2_d <- list(
   par = data.frame(
     name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11),"d1"),
-    value = c(0.1 ,0   ,0.5 ,5   ,6   ,0     ,0        ,as.vector(initial_gamma)[1:11],0   ),
+    value = c(0.1 ,0   ,0.1 ,-2   ,11   ,0     ,0.5      ,as.vector(initial_gamma)[1:11],2   ),
     lower = c(0   ,0   ,0.0 ,-Inf,4   ,0     ,-Inf     ,rep(-Inf,11),-Inf),
     upper = c(Inf ,0   ,Inf ,Inf ,Inf ,0     ,Inf      ,rep(Inf,11), Inf)
   ),
@@ -309,6 +309,7 @@ parametros3_normald <- list(
 )
 parametros3_normald
 
+parametros3_normald$par$value <- dcs3_normald$otimizados$par
 dcs3_normald <- dcs_fk_estimation(ipc, initial = parametros3_normald, type = "BSM3_normal", outlier = T, otimo = T)
 
 data.frame(name = parametros3_normald$par$name, 
@@ -336,7 +337,7 @@ diag_dcs3_normald$stats
 
 
 # BSM padrão : mu (sem beta) + gamma + psi ------------------------------------
-
+ipc <- window(readRDS("data/ipc.rds"), start = c(2001,1), freq = 12)
 parametros3 <- list(
   par = data.frame(
     name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ,"psi","phi","k3"),
@@ -369,7 +370,7 @@ diag_dcs3$stats
 parametros3_d <- list(
   par = data.frame(
     name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ,"psi","phi","k3","d1"),
-    value = c(0.1 ,0   ,0.5 ,5   ,6   ,0     ,0        ,as.vector(initial_gamma)[1:11],1    ,0.1  ,0.5 ,0   ),
+    value = c(0.3 ,0   ,0.5 ,5   ,8   ,0     ,0.5        ,as.vector(initial_gamma)[1:11],-1    ,0.6  ,0.5 ,0   ),
     lower = c(0.0 ,0   ,0   ,-Inf,4   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf ,-1   ,0   ,-Inf),
     upper = c(Inf ,0   ,Inf ,Inf ,Inf ,0     ,Inf      ,rep(Inf,11)                   ,Inf  ,1    ,Inf ,Inf )
   ),
@@ -392,6 +393,9 @@ diag_dcs3_d <- diag.dcs(out = dcs3_d, type = "t")
 diag_dcs3_d$stats
 
 # saveRDS(dcs3$out[,"mu"], "data/nucleo_dcs.rds")
+
+
+
 
 # COMPARAÇÃO ----------------------------------------
 ts.plot(dcs1_d$out[,"mu"],dcs2_d$out[,"mu"],dcs1_normald$out[,"mu"],dcs2_normald$out[,"mu"])
