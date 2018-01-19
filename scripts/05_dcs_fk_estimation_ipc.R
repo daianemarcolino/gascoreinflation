@@ -51,7 +51,7 @@ parametros1_normal <- list(
   par = data.frame(
     name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ),
     value = c(0.1 ,0.5 ,0.5 ,5   ,0   ,0     ,0        ,as.vector(initial_gamma)[1:11]),
-    lower = c(0   ,0   ,0   ,-Inf,0   ,-Inf  ,-Inf     ,rep(-Inf,11)                  ),
+    lower = c(0   ,0   ,0.05   ,-Inf,0   ,-Inf  ,-Inf     ,rep(-Inf,11)                  ),
     upper = c(Inf ,Inf ,Inf ,Inf ,0   ,Inf   ,Inf      ,rep(Inf,11)                   )
   ),
   Dummy = NA
@@ -78,7 +78,7 @@ parametros1_normald <- list(
   par = data.frame(
     name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ,"d1"),
     value = c(0.1 ,0.5 ,0.5 ,5   ,0   ,0     ,0        ,as.vector(initial_gamma)[1:11],0   ),
-    lower = c(0   ,0   ,0   ,-Inf,0   ,-Inf  ,-Inf     ,rep(-Inf,11)                  ,-Inf),
+    lower = c(0   ,0   ,0.05   ,-Inf,0   ,-Inf  ,-Inf     ,rep(-Inf,11)                  ,-Inf),
     upper = c(Inf ,Inf ,Inf ,Inf ,0   ,Inf   ,Inf      ,rep(Inf,11)                   , Inf)
   ),
   Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11)))
@@ -96,7 +96,6 @@ ts.plot(ipc,dcs1_normald$out[,"mu"], col = 1:2)
 
 ts.plot(dcs1_normald$out[,"epsilon"], col = 1)
 round(dcs1_normald$out[,"epsilon"],2)
-dcs1_normal$out[,"beta"]
 
 diag_dcs1_normald <- diag.dcs(out = dcs1_normald, type = "norm")
 diag_dcs1_normald$stats
@@ -107,7 +106,7 @@ parametros2_normal <- list(
   par = data.frame(
     name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ),
     value = c(0.1 ,0   ,0.5 ,5   ,0   ,0     ,0        ,as.vector(initial_gamma)[1:11]),
-    lower = c(0   ,0   ,0   ,-Inf,0   ,0     ,-Inf     ,rep(-Inf,11)                  ),
+    lower = c(0   ,0   ,0.05,-Inf,0   ,0     ,-Inf     ,rep(-Inf,11)                  ),
     upper = c(Inf ,0   ,Inf ,Inf ,0   ,0     ,Inf      ,rep(Inf,11)                   )
   ),
   Dummy = NA
@@ -134,7 +133,7 @@ parametros2_normald <- list(
   par = data.frame(
     name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ,"d1"),
     value = c(0.1 ,0   ,0.5 ,5   ,0   ,0     ,0        ,as.vector(initial_gamma)[1:11],0   ),
-    lower = c(0   ,0   ,0   ,-Inf,0   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf),
+    lower = c(0   ,0   ,0.05,-Inf,0   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf),
     upper = c(Inf ,0   ,Inf ,Inf ,0   ,0     ,Inf      ,rep(Inf,11)                   , Inf)
   ),
   Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11)))
@@ -163,7 +162,7 @@ parametros1 <- list(
   par = data.frame(
     name =  c("k1","k2","ks","f2","df","beta[1|0]","mu[1|0]",paste0("gamma",1:11)),
     value = c(0.3 ,0.5 ,0.5 ,5   ,6   ,0          ,0        , as.vector(initial_gamma)[1:11]),
-    lower = c(0.0 ,0.0 ,0.0 ,-Inf,4   ,-Inf       ,-Inf     ,rep(-Inf,11)),
+    lower = c(0.0 ,0.0 ,0.05,-Inf,4   ,-Inf       ,-Inf     ,rep(-Inf,11)),
     upper = c(Inf ,Inf ,Inf ,Inf ,Inf ,Inf        ,Inf      ,rep(Inf,11))
   )
 )
@@ -188,7 +187,7 @@ parametros1_d <- list(
   par = data.frame(
     name =  c("k1","k2","ks","f2","df","beta[1|0]","mu[1|0]",paste0("gamma",1:11)          ,"d1"),
     value = c(0.3 ,0.5 ,0.5 ,5   ,6   ,0          ,0        ,as.vector(initial_gamma)[1:11],0   ),
-    lower = c(0.0 ,0.0 ,0.0 ,-Inf,4   ,-Inf       ,-Inf     ,rep(-Inf,11)                  ,-Inf),
+    lower = c(0.0 ,0.0 ,0.05,-Inf,4   ,-Inf       ,-Inf     ,rep(-Inf,11)                  ,-Inf),
     upper = c(Inf ,Inf ,Inf ,Inf ,Inf ,Inf        ,Inf      ,rep(Inf,11)                   , Inf)
   ),
   Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11)))
@@ -215,7 +214,7 @@ parametros2 <- list(
   par = data.frame(
     name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)),
     value = c(0.5 ,0   ,0.5 ,5   ,6   ,0     ,0        ,as.vector(initial_gamma)[1:11]),
-    lower = c(0   ,0   ,0.0 ,-Inf,4   ,0     ,-Inf     ,rep(-Inf,11)),
+    lower = c(0   ,0   ,0.05,-Inf,4   ,0     ,-Inf     ,rep(-Inf,11)),
     upper = c(Inf ,0   ,Inf ,Inf ,Inf ,0     ,Inf      ,rep(Inf,11))
   ),
   Dummy = NA
@@ -245,7 +244,7 @@ parametros2_d <- list(
   par = data.frame(
     name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11),"d1"),
     value = c(0.1 ,0   ,0.1 ,-2   ,11   ,0     ,0.5      ,as.vector(initial_gamma)[1:11],2   ),
-    lower = c(0   ,0   ,0.0 ,-Inf,4   ,0     ,-Inf     ,rep(-Inf,11),-Inf),
+    lower = c(0   ,0   ,0.05,-Inf,4   ,0     ,-Inf     ,rep(-Inf,11),-Inf),
     upper = c(Inf ,0   ,Inf ,Inf ,Inf ,0     ,Inf      ,rep(Inf,11), Inf)
   ),
   Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11)))
@@ -274,7 +273,7 @@ parametros3_normal <- list(
   par = data.frame(
     name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ,"psi","phi","k3"),
     value = c(0.1 ,0   ,0.5 ,5   ,0   ,0     ,0        ,as.vector(initial_gamma)[1:11],1    ,0.1  ,0.5),
-    lower = c(0.0 ,0   ,0.0 ,-Inf,0   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf ,-1   ,0),
+    lower = c(0.0 ,0   ,0.05,-Inf,0   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf ,-1   ,0),
     upper = c(Inf ,0   ,Inf ,Inf ,0   ,0     ,Inf      ,rep(Inf,11)                   ,Inf  ,1    ,Inf)
   ),
   Dummy = NA
@@ -302,14 +301,14 @@ parametros3_normald <- list(
   par = data.frame(
     name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ,"psi","phi","k3","d1"),
     value = c(0.1 ,0   ,0.5 ,5   ,0   ,0     ,0        ,as.vector(initial_gamma)[1:11],1    ,0.1  ,0.5 ,0   ),
-    lower = c(0.0 ,0   ,0.0 ,-Inf,0   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf ,-1   ,0   ,-Inf),
+    lower = c(0.0 ,0   ,0.05,-Inf,0   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf ,-1   ,0   ,-Inf),
     upper = c(Inf ,0   ,Inf ,Inf ,0   ,0     ,Inf      ,rep(Inf,11)                   ,Inf  ,1    ,Inf ,Inf )
   ),
   Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11)))
 )
 parametros3_normald
 
-parametros3_normald$par$value <- dcs3_normald$otimizados$par
+#parametros3_normald$par$value <- dcs3_normald$otimizados$par
 dcs3_normald <- dcs_fk_estimation(ipc, initial = parametros3_normald, type = "BSM3_normal", outlier = T, otimo = T)
 
 data.frame(name = parametros3_normald$par$name, 
@@ -337,12 +336,11 @@ diag_dcs3_normald$stats
 
 
 # BSM padrão : mu (sem beta) + gamma + psi ------------------------------------
-ipc <- window(readRDS("data/ipc.rds"), start = c(2001,1), freq = 12)
 parametros3 <- list(
   par = data.frame(
     name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ,"psi","phi","k3"),
     value = c(0.1 ,0   ,0.5 ,5   ,6   ,0     ,0        ,as.vector(initial_gamma)[1:11],1    ,0.1  ,0.5),
-    lower = c(0.0 ,0   ,0.0 ,-Inf,4   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf ,-1   ,0),
+    lower = c(0.0 ,0   ,0.05,-Inf,4   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf ,-1   ,0),
     upper = c(Inf ,0   ,Inf ,Inf ,Inf ,0     ,Inf      ,rep(Inf,11)                   ,Inf  ,1    ,Inf)
   ),
   Dummy = NA
@@ -371,7 +369,7 @@ parametros3_d <- list(
   par = data.frame(
     name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ,"psi","phi","k3","d1"),
     value = c(0.3 ,0   ,0.5 ,5   ,8   ,0     ,0.5        ,as.vector(initial_gamma)[1:11],-1    ,0.6  ,0.5 ,0   ),
-    lower = c(0.0 ,0   ,0   ,-Inf,4   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf ,-1   ,0   ,-Inf),
+    lower = c(0.0 ,0   ,0.05,-Inf,4   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf ,-1   ,0   ,-Inf),
     upper = c(Inf ,0   ,Inf ,Inf ,Inf ,0     ,Inf      ,rep(Inf,11)                   ,Inf  ,1    ,Inf ,Inf )
   ),
   Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11)))
@@ -384,15 +382,17 @@ data.frame(name = parametros3_d$par$name,
            upper = parametros3_d$par$upper,
            initial = round(parametros3_d$par$value,4), 
            otimo = round(dcs3_d$otimizados$par,4))
-ts.plot(dcs3$out[,"gamma"], col = 1:2)
-ts.plot(dcs3$out[,"psi"], col = 1:2)
-ts.plot(dcs3$out[,"mu"], col = 1:2)
-ts.plot(dcs3$out[,"mu"], nucleo_tf[,3], col = 1:2)
+ts.plot(dcs3_d$out[,"gamma"], col = 1:2)
+ts.plot(dcs3_d$out[,"psi"], col = 1:2)
+ts.plot(dcs3_d$out[,"mu"], col = 1:2)
+ts.plot(dcs3_d$out[,"mu"], nucleo_tf[,3], col = 1:2)
+ts.plot(dcs3_d$out[,"epsilon"], col = 1:2)
+round(dcs3_d$out[,"epsilon"],2)
 
 diag_dcs3_d <- diag.dcs(out = dcs3_d, type = "t")
 diag_dcs3_d$stats
 
-# saveRDS(dcs3$out[,"mu"], "data/nucleo_dcs.rds")
+saveRDS(dcs3_d$out[,"mu"], "data/nucleo_dcs.rds")
 
 
 
@@ -479,8 +479,8 @@ data.frame(name = parametros3_d$par$name,
 ts.plot(dcs2_normald$out[,"mu"], nucleo_tf[,3], col = 1:2)
 ts.plot(dcs2_d$out[,"mu"], nucleo_tf[,3], col = 1:2)
 
-saveRDS(dcs3_d$out[,"mu"], "data/nucleo_dcs.rds")
-saveRDS(dcs3_normald$out[,"mu"], "data/nucleo_dcs_normal.rds")
+# saveRDS(dcs3_d$out[,"mu"], "data/nucleo_dcs.rds")
+# saveRDS(dcs3_normald$out[,"mu"], "data/nucleo_dcs_normal.rds")
 
 
 # gráficos --------------------
@@ -518,30 +518,30 @@ legend(2005,1.8, legend = c("DCS-Normal 1","DCS-Normal 2","DCS-Normal 3"), lwd =
        col = c(1,"orangered","#1874CD"), cex = 1.2,bg = "white", box.col = "white",box.lwd = 0)
 
 
-par(mar = c(2,4,1,2), mfrow = c(1,3))
-
-plot(dcs1_d$out[,"mu"], main = "", lwd = 1, lty = 1, ylim = c(-0.2,1.7),
+par(mar = c(2,4,1,2), mfrow = c(2,2))
+layout(mat = matrix(c(1,2,3,3), byrow = T, ncol = 2))
+plot(dcs1_d$out[,"mu"], main = "", lwd = 2, lty = 1, ylim = c(-0.2,1.8),
      col = 1, ylab = "variação mensal percentual (%)", xlab = "")
-lines(dcs1_normald$out[,"mu"], lwd = 1, lty = 4, col = "orangered")
+lines(dcs1_normald$out[,"mu"], lwd = 2, lty = 5, col = "orangered")
 abline(h = seq(-0.5,3.5,0.5), col = "#C9C9C9", lty = 3)
 abline(v = 1999:2018, col = "#C9C9C9", lty = 3)
-legend(2005,1.7, legend = c("DCS-Normal 1","DCS-t 1"), lwd = c(1,1), lty = c(1,4), y.intersp = 1.5,
+legend(2005,1.7, legend = c("DCS-Normal 1","DCS-t 1"), lwd = c(2,2), lty = c(5,1), y.intersp = 1.5,
        col = c("orangered",1), cex = 1,bg = "white", box.col = "white",box.lwd = 0)
 
-plot(dcs2_d$out[,"mu"], main = "", lwd = 1, lty = 1, ylim = c(-0.2,1.7),
+plot(dcs2_d$out[,"mu"], main = "", lwd = 2, lty = 1, ylim = c(-0.2,1.8),
      col = 1, ylab = "variação mensal percentual (%)", xlab = "")
-lines(dcs2_normald$out[,"mu"], lwd = 1, lty = 4, col = "orangered")
+lines(dcs2_normald$out[,"mu"], lwd = 2, lty = 5, col = "orangered")
 abline(h = seq(-0.5,3.5,0.5), col = "#C9C9C9", lty = 3)
 abline(v = 1999:2018, col = "#C9C9C9", lty = 3)
-legend(2005,1.7, legend = c("DCS-Normal 2","DCS-t 2"), lwd = c(1,1), lty = c(1,4), y.intersp = 1.5,
+legend(2005,1.7, legend = c("DCS-Normal 2","DCS-t 2"), lwd = c(2,2), lty = c(5,1), y.intersp = 1.5,
        col = c("orangered",1), cex = 1,bg = "white", box.col = "white",box.lwd = 0)
 
-plot(dcs3_d$out[,"mu"], main = "", lwd = 1, lty = 1, ylim = c(-0.2,1.7),
+plot(dcs3_d$out[,"mu"], main = "", lwd = 2, lty = 1, ylim = c(-0.2,1.8),
      col = 1, ylab = "variação mensal percentual (%)", xlab = "")
-lines(dcs3_normald$out[,"mu"], lwd = 1, lty = 4, col = "orangered")
+lines(dcs3_normald$out[,"mu"], lwd = 2, lty = 5, col = "orangered")
 abline(h = seq(-0.5,3.5,0.5), col = "#C9C9C9", lty = 3)
 abline(v = 1999:2018, col = "#C9C9C9", lty = 3)
-legend(2005,1.7, legend = c("DCS-Normal 3","DCS-t 3"), lwd = c(1,1), lty = c(1,4), y.intersp = 1.5,
+legend(2005,1.7, legend = c("DCS-Normal 3","DCS-t 3"), lwd = c(2,2), lty = c(5,1), y.intersp = 1.5,
        col = c("orangered",1), cex = 1,bg = "white", box.col = "white",box.lwd = 0)
 
 # Exercícios professor -------------------------------------------------------

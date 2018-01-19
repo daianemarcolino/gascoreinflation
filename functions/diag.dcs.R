@@ -35,6 +35,8 @@ diag.dcs <- function(out, type = "t"){
                        Box.test(ep, type = "Ljung-Box", lag = 12)$statistic, Box.test(ep, type = "Ljung-Box", lag = 12)$p.value,
                        Box.test(ep^2, type = "Ljung-Box", lag = 12)$statistic, Box.test(ep^2, type = "Ljung-Box", lag = 12)$p.value)
     
+    acf(na.omit(ep^2), 48)
+    
     set.seed(123)
     r1 <- rt(length(ep), df = df, ncp = 0)
     r2 <- rnorm(length(rq))
@@ -66,13 +68,12 @@ diag.dcs <- function(out, type = "t"){
                        Box.test(ep, type = "Ljung-Box", lag = 12)$statistic, Box.test(ep, type = "Ljung-Box", lag = 12)$p.value,
                        Box.test(ep^2, type = "Ljung-Box", lag = 12)$statistic, Box.test(ep^2, type = "Ljung-Box", lag = 12)$p.value)
     
-
     r1 <- rnorm(length(ep))
 
     qqplot(y = ep, x = r1, main = "qqplot", xlab = "normal(0,1)", ylim = c(round(min(ep,r1)),round(max(ep,r1))), xlim = c(round(min(ep,r1)),round(max(ep,r1))))
     abline(a = 0, b = 1, lwd = 2)
     par(mfrow = c(1,1))
-    
+
     # output
     list(stats = t(round(x,2)))
   }
