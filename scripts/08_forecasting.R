@@ -8,31 +8,32 @@ source("functions/dcs_fk_estimation.R")
 source("functions/dcs_estabilidade.R")
 source("functions/dcs_fcst.R")
 source("functions/ERRO.R")
-source("functions/bsm.R")
-source("functions/diag.dcs.R", encoding = "utf8")
+source("functions/core.fcst.R")
 
 # leitura -----------
 ipc <- window(readRDS("data/ipc.rds"), start = c(2001,1), freq = 12)
-nucleo_tf <- readRDS("data/nucleo_tf.rds")
+nucleo_tf <- readRDS("data/nucleo_tf.rds")[,3]
+nucleo_dcs <- window(readRDS("data/nucleo_dcs.rds"), end = c(2017,12), freq = 12)
 
-initial_gamma <- c(0.418235294,-0.215294118,-0.011764706,-0.048235294,-0.183529412,-0.445294118,-0.320000000,-0.401764706,-0.374705882,-0.247647059, 0.008823529)
-
-parametros3_normald <- list(
-  par = data.frame(
-    name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ,"psi","phi","k3","d1"),
-    value = c(0.1 ,0   ,0.5 ,5   ,0   ,0     ,0        ,as.vector(initial_gamma)[1:11],1    ,0.1  ,0.5 ,0   ),
-    lower = c(0.0 ,0   ,0.0 ,-Inf,0   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf ,-1   ,0   ,-Inf),
-    upper = c(Inf ,0   ,Inf ,Inf ,0   ,0     ,Inf      ,rep(Inf,11)                   ,Inf  ,1    ,Inf ,Inf )
-  ),
-  Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11)))
-)
-parametros3_normald
-
-# previsão
-
-datas <- list(ano = as.numeric(substr(as.Date(ipc),1,4))[(length(ipc)-35):length(ipc)],
-              mes = as.numeric(substr(as.Date(ipc),6,7))[(length(ipc)-35):length(ipc)])
-
+# previsoes dcs --------------------------------------
+# initial_gamma <- c(0.418235294,-0.215294118,-0.011764706,-0.048235294,-0.183529412,-0.445294118,-0.320000000,-0.401764706,-0.374705882,-0.247647059, 0.008823529)
+# 
+# parametros3_normald <- list(
+#   par = data.frame(
+#     name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ,"psi","phi","k3","d1"),
+#     value = c(0.1 ,0   ,0.5 ,5   ,0   ,0     ,0        ,as.vector(initial_gamma)[1:11],1    ,0.1  ,0.5 ,0   ),
+#     lower = c(0.0 ,0   ,0.0 ,-Inf,0   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf ,-1   ,0   ,-Inf),
+#     upper = c(Inf ,0   ,Inf ,Inf ,0   ,0     ,Inf      ,rep(Inf,11)                   ,Inf  ,1    ,Inf ,Inf )
+#   ),
+#   Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11)))
+# )
+# parametros3_normald
+# 
+# # previsão
+# 
+# datas <- list(ano = as.numeric(substr(as.Date(ipc),1,4))[(length(ipc)-35):length(ipc)],
+#               mes = as.numeric(substr(as.Date(ipc),6,7))[(length(ipc)-35):length(ipc)])
+#
 # iter <- list()
 # for(i in 1:length(datas$ano)){
 #   iter[[i]] <- dcs_fcst(y = ipc, start = c(datas$ano[i], datas$mes[i]), initial = parametros3_normald, type = "BSM3_normal", outlier = T, m = 2000)
@@ -41,6 +42,7 @@ datas <- list(ano = as.numeric(substr(as.Date(ipc),1,4))[(length(ipc)-35):length
 # saveRDS(iter, "data/fcst_dcs.rds")
 iter <- readRDS("data/fcst_dcs_1ano.rds")
 iter <- readRDS("data/fcst_dcs.rds")
+iter <- readRDS("data/fcst_dcs_t_3anos.rds")
 
 par(mfrow = c(1,3))
 ts.plot(round(na.omit(cbind(ipc, iter[[1]]$fcst)),2), col = c(1,2,4,4), lty = c(3,2,1,1))
@@ -74,33 +76,81 @@ View(fcsts_mean)
 
 k <- data.frame(fcsts_mean)
 fcsts_df <- apply(k, MARGIN = 2, FUN = function(x) c(na.omit(x),rep(NA,sum(is.na(x)))))
+k <- data.frame(fcsts_upper)
+fcsts_df_up <- apply(k, MARGIN = 2, FUN = function(x) c(na.omit(x),rep(NA,sum(is.na(x)))))
+k <- data.frame(fcsts_lower)
+fcsts_df_low <- apply(k, MARGIN = 2, FUN = function(x) c(na.omit(x),rep(NA,sum(is.na(x)))))
 
-prev_1frente <- ts(t(fcsts_df)[,1], end = end(fcsts_mean), freq = 12)
-prev_3frente <- ts(na.omit(t(fcsts_df)[,3]), end = end(fcsts_mean), freq = 12)
-prev_6frente <- ts(na.omit(t(fcsts_df)[,6]), end = end(fcsts_mean), freq = 12)
-prev_12frente <- ts(na.omit(t(fcsts_df)[,12]), end = end(fcsts_mean), freq = 12)
 
-ts.plot(na.omit(cbind(ipc,prev_1frente)), col = 1:2)
-ts.plot(na.omit(cbind(ipc,prev_3frente)), col = 1:2)
-ts.plot(na.omit(cbind(ipc,prev_6frente)), col = 1:2)
-ts.plot(na.omit(cbind(ipc,prev_12frente)), col = 1:2)
+prev_1frente <- window(ts(t(fcsts_df)[,1], end = end(fcsts_mean), freq = 12), start = c(2016,1), freq = 12)
+prev_3frente <- window(ts(na.omit(t(fcsts_df)[,3]), end = end(fcsts_mean), freq = 12), start = c(2016,1), freq = 12)
+prev_6frente <- window(ts(na.omit(t(fcsts_df)[,6]), end = end(fcsts_mean), freq = 12), start = c(2016,1), freq = 12)
+prev_12frente <- window(ts(na.omit(t(fcsts_df)[,12]), end = end(fcsts_mean), freq = 12), start = c(2016,1), freq = 12)
 
-par(mar = c(2,4,1,2), mfrow = c(1,1))
+prev_1frente_low <- window(ts(t(fcsts_df_low)[,1], end = end(fcsts_mean), freq = 12), start = c(2016,1), freq = 12)
+prev_3frente_low <- window(ts(na.omit(t(fcsts_df_low)[,3]), end = end(fcsts_mean), freq = 12), start = c(2016,1), freq = 12)
+prev_6frente_low <- window(ts(na.omit(t(fcsts_df_low)[,6]), end = end(fcsts_mean), freq = 12), start = c(2016,1), freq = 12)
+prev_12frente_low <- window(ts(na.omit(t(fcsts_df_low)[,12]), end = end(fcsts_mean), freq = 12), start = c(2016,1), freq = 12)
 
-prevs <- window(cbind(ipc,prev_1frente,prev_3frente,prev_6frente,prev_12frente), start= c(2016,1), freq = 12)
+prev_1frente_up <- window(ts(t(fcsts_df_up)[,1], end = end(fcsts_mean), freq = 12), start = c(2016,1), freq = 12)
+prev_3frente_up <- window(ts(na.omit(t(fcsts_df_up)[,3]), end = end(fcsts_mean), freq = 12), start = c(2016,1), freq = 12)
+prev_6frente_up <- window(ts(na.omit(t(fcsts_df_up)[,6]), end = end(fcsts_mean), freq = 12), start = c(2016,1), freq = 12)
+prev_12frente_up <- window(ts(na.omit(t(fcsts_df_up)[,12]), end = end(fcsts_mean), freq = 12), start = c(2016,1), freq = 12)
 
-plot(prevs[,1], col = 1, lwd = c(2,1,2,2), lty = c(1,1,5,4), ylim = c(-0.3,2),
-     xaxt = "n", ylab = "variação mensal percentual (%)", xlab = "", type = "o")
-lines(prevs[,2], col = "#1874CD", lwd = 1, lty = 1, type = "o")
-lines(prevs[,3], col = "#1874CD", lwd = 1, lty = 3, type = "o")
-lines(prevs[,4], col = "#1874CD", lwd = 1, lty = 5, type = "o")
-lines(prevs[,5], col = "#1874CD", lwd = 1, lty = 5, type = "o")
 
-abline(v = seq(2016,2018,0.0833), h = seq(-0.25,2,0.25),lty = 3, col = "#C9C9C9")
+par(mar = c(2,2,2,1), mfrow = c(2,2))
 
-axis(1, at = seq(2016,2018,0.0833*3) , labels = substr(as.Date(estabilidade_tf$out),1,7)[seq(1,25,3)])
-legend(2017,0.8, legend = c("mês a mês","completo"), lwd = c(1,2), lty = c(5,1),# y.intersp = 1.5,
-       col = c("#1874CD","#1874CD"), cex = 1.1,bg = "white", box.col = "white",box.lwd = 0)
+k1 <- na.omit(cbind(ipc, mean = prev_1frente, low = prev_1frente_low, up = prev_1frente_up))
+k3 <- na.omit(cbind(ipc, mean = prev_3frente, low = prev_3frente_low, up = prev_3frente_up))
+k6 <- na.omit(cbind(ipc, mean = prev_6frente, low = prev_6frente_low, up = prev_6frente_up))
+k12 <- na.omit(cbind(ipc, mean = prev_12frente, low = prev_12frente_low, up = prev_12frente_up))
+
+plot(1:nrow(k1), k[,2], type = "l", ylim = c(-0.5,2), xaxt = "n", main = "1", ylab = "")
+axis(1, at = 1:nrow(k1) , labels = substr(as.Date(k1),1,7))
+polygon(c(1:nrow(k1), rev(1:nrow(k1))),c(k1[,3],rev(k1[,4])),col = "#C6E2FF", border = FALSE)
+abline(v = 1:24, lty = 3, col = "#C9C9C9")
+lines(c(k1[,1]), lty = 4, ylab = "")
+lines(c(k1[,2]), col = 2, lwd = 2, ylab = "")
+lines(c(k1[,3]), col = "#75A1D0", lwd = 1, ylab = "")
+lines(c(k1[,4]), col = "#75A1D0", lwd = 1, ylab = "")
+legend(17,2,legend = c("IPC-Br","Previsão"), col = c(1,2), lwd = c(1,2), lty = c(4,1), 
+       cex = 1.2, bg = "white", box.col = "white", box.lwd = 0)
+
+plot(1:nrow(k3), k3[,2], type = "l", ylim = c(-0.5,2), xaxt = "n", main = "3", ylab = "")
+axis(1, at = 1:nrow(k3) , labels = substr(as.Date(k3),1,7))
+polygon(c(1:nrow(k3), rev(1:nrow(k3))),c(k3[,3],rev(k3[,4])),col = "#C6E2FF", border = FALSE)
+abline(v = 1:24, lty = 3, col = "#C9C9C9")
+lines(c(k3[,1]), lty = 4, ylab = "")
+lines(c(k3[,2]), col = 2, lwd = 2, ylab = "")
+lines(c(k3[,3]), col = "#75A1D0", lwd = 1, ylab = "")
+lines(c(k3[,4]), col = "#75A1D0", lwd = 1, ylab = "")
+legend(17,2,legend = c("IPC-Br","Previsão"), col = c(1,2), lwd = c(1,2), lty = c(4,1), 
+       cex = 1.2, bg = "white", box.col = "white", box.lwd = 0)
+
+plot(1:nrow(k6), k6[,2], type = "l", ylim = c(-0.5,2), xaxt = "n", main = "6", ylab = "")
+axis(1, at = 1:nrow(k6) , labels = substr(as.Date(k6),1,7))
+polygon(c(1:nrow(k6), rev(1:nrow(k6))),c(k6[,3],rev(k6[,4])),col = "#C6E2FF", border = FALSE)
+abline(v = 1:24, lty = 3, col = "#C9C9C9")
+lines(c(k6[,1]), lty = 4, ylab = "")
+lines(c(k6[,2]), col = 2, lwd = 2, ylab = "")
+lines(c(k6[,3]), col = "#75A1D0", lwd = 1, ylab = "")
+lines(c(k6[,4]), col = "#75A1D0", lwd = 1, ylab = "")
+legend(17,2,legend = c("IPC-Br","Previsão"), col = c(1,2), lwd = c(1,2), lty = c(4,1), 
+       cex = 1.2, bg = "white", box.col = "white", box.lwd = 0)
+
+plot(1:nrow(k12), k12[,2], type = "l", ylim = c(-0.5,2), xaxt = "n", main = "12", ylab = "")
+axis(1, at = 1:nrow(k12) , labels = substr(as.Date(k12),1,7))
+polygon(c(1:nrow(k12), rev(1:nrow(k12))),c(k12[,3],rev(k12[,4])),col = "#C6E2FF", border = FALSE)
+abline(v = 1:24, lty = 3, col = "#C9C9C9")
+lines(c(k12[,1]), lty = 4, ylab = "")
+lines(c(k12[,2]), col = 2, lwd = 2, ylab = "")
+lines(c(k12[,3]), col = "#75A1D0", lwd = 1, ylab = "")
+lines(c(k12[,4]), col = "#75A1D0", lwd = 1, ylab = "")
+legend(17,2,legend = c("IPC-Br","Previsão"), col = c(1,2), lwd = c(1,2), lty = c(4,1), 
+       cex = 1.2, bg = "white", box.col = "white", box.lwd = 0)
+
+
+# RMSE
 
 sqrt(mean((prevs[,1] - prevs[,2])^2))
 sqrt(mean((prevs[,1] - prevs[,3])^2))
@@ -119,6 +169,66 @@ for(i in 1:nrow(fcsts_df)){
 barp(rmse[c(1,3,6,12),], names.arg = c(1,3,6,12))
 barp(rmse[1:12], xlab = "passos à frente")
 
+
+# PREVISÕES DE DIFERENÇA -----------------------
+
+# nucleo-dcs
+fcst1_dcs <- core.fcst(ipc, nucleo_dcs, lag = 1, h = 12)
+fcst3_dcs <- core.fcst(ipc, nucleo_dcs, lag = 3, h = 12)
+fcst6_dcs <- core.fcst(ipc, nucleo_dcs, lag = 6, h = 12)
+fcst12_dcs <- core.fcst(ipc, nucleo_dcs, lag = 12, h = 12)
+
+round(sqrt(mean((ipc - lag(ipc, -1) - fcst1_dcs$fcst)^2)),2)
+round(sqrt(mean((ipc - lag(ipc, -3) - fcst3_dcs$fcst)^2)),2)
+round(sqrt(mean((ipc - lag(ipc, -6) - fcst6_dcs$fcst)^2)),2)
+round(sqrt(mean((ipc - lag(ipc, -12) - fcst12_dcs$fcst)^2)),2)
+
+# nucleo-s
+fcst1_tf <- core.fcst(ipc, nucleo_tf, lag = 1, h = 12)
+fcst3_tf <- core.fcst(ipc, nucleo_tf, lag = 3, h = 12)
+fcst6_tf <- core.fcst(ipc, nucleo_tf, lag = 6, h = 12)
+fcst12_tf <- core.fcst(ipc, nucleo_tf, lag = 12, h = 12)
+
+round(sqrt(mean((ipc - lag(ipc, -1)  - fcst1_tf$fcst)^2)),2)
+round(sqrt(mean((ipc - lag(ipc, -3)  - fcst3_tf$fcst)^2)),2)
+round(sqrt(mean((ipc - lag(ipc, -6)  - fcst6_tf$fcst)^2)),2)
+round(sqrt(mean((ipc - lag(ipc, -12) - fcst12_tf$fcst)^2)),2)
+
+ts.plot(na.omit(cbind(fcst1_dcs$fcst, fcst1_tf$fcst, ipc - lag(ipc, -1))))
+ts.plot(na.omit(cbind(fcst3_dcs$fcst, fcst3_tf$fcst, ipc - lag(ipc, -3))))
+ts.plot(na.omit(cbind(fcst6_dcs$fcst, fcst6_tf$fcst, ipc - lag(ipc, -6))))
+ts.plot(na.omit(cbind(fcst12_dcs$fcst, fcst12_tf$fcst, ipc - lag(ipc, -12))))
+
+ipc0 <- window(ipc, start = c(2009,7), freq = 12)
+nucleo_tf0 <- window(nucleo_tf, start = c(2009,7), freq = 12)
+nucleo_dcs0 <- window(nucleo_dcs, start = c(2009,7), freq = 12)
+
+# nucleo-dcs
+fcst1_dcs <- core.fcst(ipc0, nucleo_dcs0, lag = 1, h = 12)
+fcst3_dcs <- core.fcst(ipc0, nucleo_dcs0, lag = 3, h = 12)
+fcst6_dcs <- core.fcst(ipc0, nucleo_dcs0, lag = 6, h = 12)
+fcst12_dcs <- core.fcst(ipc0, nucleo_dcs0, lag = 12, h = 12)
+
+round(sqrt(mean((ipc0 - lag(ipc0, -1) - fcst1_dcs$fcst)^2)),2)
+round(sqrt(mean((ipc0 - lag(ipc0, -3) - fcst3_dcs$fcst)^2)),2)
+round(sqrt(mean((ipc0 - lag(ipc0, -6) - fcst6_dcs$fcst)^2)),2)
+round(sqrt(mean((ipc0 - lag(ipc0, -12) - fcst12_dcs$fcst)^2)),2)
+
+# nucleo-s
+fcst1_tf <- core.fcst(ipc0, nucleo_tf0, lag = 1, h = 12)
+fcst3_tf <- core.fcst(ipc0, nucleo_tf0, lag = 3, h = 12)
+fcst6_tf <- core.fcst(ipc0, nucleo_tf0, lag = 6, h = 12)
+fcst12_tf <- core.fcst(ipc0, nucleo_tf0, lag = 12, h = 12)
+
+round(sqrt(mean((ipc0 - lag(ipc0, -1)  - fcst1_tf$fcst)^2)),2)
+round(sqrt(mean((ipc0 - lag(ipc0, -3)  - fcst3_tf$fcst)^2)),2)
+round(sqrt(mean((ipc0 - lag(ipc0, -6)  - fcst6_tf$fcst)^2)),2)
+round(sqrt(mean((ipc0 - lag(ipc0, -12) - fcst12_tf$fcst)^2)),2)
+
+ts.plot(na.omit(cbind(fcst1_dcs$fcst, fcst1_tf$fcst, ipc - lag(ipc, -1))))
+ts.plot(na.omit(cbind(fcst3_dcs$fcst, fcst3_tf$fcst, ipc - lag(ipc, -3))))
+ts.plot(na.omit(cbind(fcst6_dcs$fcst, fcst6_tf$fcst, ipc - lag(ipc, -6))))
+ts.plot(na.omit(cbind(fcst12_dcs$fcst, fcst12_tf$fcst, ipc - lag(ipc, -12))))
 
 
 # leitura
