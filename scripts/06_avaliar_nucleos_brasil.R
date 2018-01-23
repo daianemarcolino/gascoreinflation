@@ -3,6 +3,7 @@ library(dynlm)
 library(BETS)
 library(seasonal)
 source("./functions/core.diag.R", encoding = "utf-8")
+source("./functions/core.fcst.R", encoding = "utf-8")
 
 # baixar núcleos
 # nucleo_fgv <- BETS.get(4467)
@@ -230,3 +231,27 @@ core.diag(ipca0, nucleos0[,"IPCA_MAS"], test = "fcst")
 core.diag(ipca0, nucleos0[,"IPCA_EX1"], test = "fcst")
 core.diag(ipca0, nucleos0[,"IPCA_EX2"], test = "fcst") # parei aqui
 core.diag(ipca0, nucleos0[,"IPCA_DP"], test = "fcst")
+
+# PREVISÕES DE DIFERENÇA -----------------------
+
+# nucleo-s
+fcst1 <- core.fcst(ipc,  nucleos[,"FGV"], lag = 1, h = 12)
+fcst3 <- core.fcst(ipc,  nucleos[,"FGV"], lag = 3, h = 12)
+fcst6 <- core.fcst(ipc,  nucleos[,"FGV"], lag = 6, h = 12)
+fcst12 <- core.fcst(ipc, nucleos[,"FGV"], lag = 12, h = 12)
+
+round(sqrt(mean((ipc - lag(ipc, -1)  - fcst1$fcst)^2)),2)
+round(sqrt(mean((ipc - lag(ipc, -3)  - fcst3$fcst)^2)),2)
+round(sqrt(mean((ipc - lag(ipc, -6)  - fcst6$fcst)^2)),2)
+round(sqrt(mean((ipc - lag(ipc, -12) - fcst12$fcst)^2)),2)
+
+
+fcst1 <- core.fcst(ipca,  nucleos[,"IPCA_DP"], lag = 1, h = 12)
+fcst3 <- core.fcst(ipca,  nucleos[,"IPCA_DP"], lag = 3, h = 12)
+fcst6 <- core.fcst(ipca,  nucleos[,"IPCA_DP"], lag = 6, h = 12)
+fcst12 <- core.fcst(ipca, nucleos[,"IPCA_DP"], lag = 12, h = 12)
+
+round(sqrt(mean((ipca - lag(ipca, -1)  - fcst1$fcst)^2)),2)
+round(sqrt(mean((ipca - lag(ipca, -3)  - fcst3$fcst)^2)),2)
+round(sqrt(mean((ipca - lag(ipca, -6)  - fcst6$fcst)^2)),2)
+round(sqrt(mean((ipca - lag(ipca, -12) - fcst12$fcst)^2)),2)

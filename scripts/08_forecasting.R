@@ -97,6 +97,11 @@ prev_3frente_up <- window(ts(na.omit(t(fcsts_df_up)[,3]), end = end(fcsts_mean),
 prev_6frente_up <- window(ts(na.omit(t(fcsts_df_up)[,6]), end = end(fcsts_mean), freq = 12), start = c(2016,1), freq = 12)
 prev_12frente_up <- window(ts(na.omit(t(fcsts_df_up)[,12]), end = end(fcsts_mean), freq = 12), start = c(2016,1), freq = 12)
 
+sqrt(mean((ipc - prev_1frente)^2))
+sqrt(mean((ipc - prev_3frente)^2))
+sqrt(mean((ipc - prev_6frente)^2))
+sqrt(mean((ipc - prev_12frente)^2))
+
 
 par(mar = c(2,2,2,1), mfrow = c(2,2))
 

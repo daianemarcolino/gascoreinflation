@@ -10,7 +10,7 @@ ipc  <- window(readRDS("data/ipc.rds"), start = c(2001,1), freq = 12)
 nucleo_dcs <- readRDS("data/nucleo_dcs.rds")
 nucleo_tf <- readRDS("data/nucleo_tf.rds")
 
-nucleos <- window(cbind(nucleo_tf[,3],nucleo_dcs), start = c(2001,1), freq = 12)
+nucleos <- window(cbind(nucleo_tf[,3],nucleo_dcs), start = c(2001,1), end = c(2017,12), freq = 12)
 colnames(nucleos) <- c("S","DCS")
 
 # gráfico dos núcleos - lado a lado -----------------------------------------
@@ -118,6 +118,10 @@ atratividade <- core.diag(ipc0, nucleos0[,"DCS"], test = "attract",
                           lags_y = c(12), lags_core = c(1,2))
 
 # sazonalidade
+
+a <- seas(nucleo_dcs, regression.aictest = NULL, arima.model = "(1 1 0)")
+summary(a)
+qs(a)
 
 core.diag(ipc, nucleos[,"S"], test = "seas")
 core.diag(ipc, nucleos[,"DCS"], test = "seas")
