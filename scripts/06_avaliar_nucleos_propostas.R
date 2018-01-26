@@ -3,7 +3,7 @@ library(dynlm)
 library(BETS)
 library(seasonal)
 source("./functions/core.diag.R", encoding = "utf-8")
-
+source("./functions/core.fcst.R", encoding = "utf-8")
 
 # leitura IPC-Br e núcleos
 ipc  <- window(readRDS("data/ipc.rds"), start = c(2001,1), freq = 12)
@@ -133,4 +133,50 @@ core.diag(ipc, nucleos[,"DCS"], test = "fcst")
 core.diag(ipc0, nucleos0[,"S"], test = "fcst")
 core.diag(ipc0, nucleos0[,"DCS"], test = "fcst")
 
+# PREVISÕES DE DIFERENÇA -----------------------
 
+# nucleo-s
+fcst1 <- core.fcst(ipc,  nucleos[,"S"], lag = 1, h = 12)
+fcst3 <- core.fcst(ipc,  nucleos[,"S"], lag = 3, h = 12)
+fcst6 <- core.fcst(ipc,  nucleos[,"S"], lag = 6, h = 12)
+fcst12 <- core.fcst(ipc, nucleos[,"S"], lag = 12, h = 12)
+
+round(sqrt(mean((ipc - lag(ipc, -1)  - fcst1$fcst)^2)),2)
+round(sqrt(mean((ipc - lag(ipc, -3)  - fcst3$fcst)^2)),2)
+round(sqrt(mean((ipc - lag(ipc, -6)  - fcst6$fcst)^2)),2)
+round(sqrt(mean((ipc - lag(ipc, -12) - fcst12$fcst)^2)),2)
+
+
+# nucleo-dcs
+fcst1 <- core.fcst(ipc,  nucleos[,"DCS"], lag = 1, h = 12)
+fcst3 <- core.fcst(ipc,  nucleos[,"DCS"], lag = 3, h = 12)
+fcst6 <- core.fcst(ipc,  nucleos[,"DCS"], lag = 6, h = 12)
+fcst12 <- core.fcst(ipc, nucleos[,"DCS"], lag = 12, h = 12)
+
+round(sqrt(mean((ipc - lag(ipc, -1)  - fcst1$fcst)^2)),2)
+round(sqrt(mean((ipc - lag(ipc, -3)  - fcst3$fcst)^2)),2)
+round(sqrt(mean((ipc - lag(ipc, -6)  - fcst6$fcst)^2)),2)
+round(sqrt(mean((ipc - lag(ipc, -12) - fcst12$fcst)^2)),2)
+
+# nucleo-s
+fcst1 <- core.fcst(ipc0,  nucleos0[,"S"], lag = 1, h = 12)
+fcst3 <- core.fcst(ipc0,  nucleos0[,"S"], lag = 3, h = 12)
+fcst6 <- core.fcst(ipc0,  nucleos0[,"S"], lag = 6, h = 12)
+fcst12 <- core.fcst(ipc0, nucleos0[,"S"], lag = 12, h = 12)
+
+round(sqrt(mean((ipc0 - lag(ipc0, -1)  - fcst1$fcst)^2)),2)
+round(sqrt(mean((ipc0 - lag(ipc0, -3)  - fcst3$fcst)^2)),2)
+round(sqrt(mean((ipc0 - lag(ipc0, -6)  - fcst6$fcst)^2)),2)
+round(sqrt(mean((ipc0 - lag(ipc0, -12) - fcst12$fcst)^2)),2)
+
+
+# nucleo-dcs
+fcst1 <- core.fcst(ipc0,  nucleos0[,"DCS"], lag = 1, h = 12)
+fcst3 <- core.fcst(ipc0,  nucleos0[,"DCS"], lag = 3, h = 12)
+fcst6 <- core.fcst(ipc0,  nucleos0[,"DCS"], lag = 6, h = 12)
+fcst12 <- core.fcst(ipc0, nucleos0[,"DCS"], lag = 12, h = 12)
+
+round(sqrt(mean((ipc0 - lag(ipc0, -1)  - fcst1$fcst)^2)),2)
+round(sqrt(mean((ipc0 - lag(ipc0, -3)  - fcst3$fcst)^2)),2)
+round(sqrt(mean((ipc0 - lag(ipc0, -6)  - fcst6$fcst)^2)),2)
+round(sqrt(mean((ipc0 - lag(ipc0, -12) - fcst12$fcst)^2)),2)

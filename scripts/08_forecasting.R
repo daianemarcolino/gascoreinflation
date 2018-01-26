@@ -43,6 +43,7 @@ nucleo_dcs <- window(readRDS("data/nucleo_dcs.rds"), end = c(2017,12), freq = 12
 iter <- readRDS("data/fcst_dcs_1ano.rds")
 iter <- readRDS("data/fcst_dcs.rds")
 iter <- readRDS("data/fcst_dcs_t_3anos.rds")
+iter <- readRDS("data/fcst_dcs_t_3anos_exogen.rds")
 
 par(mfrow = c(1,3))
 ts.plot(round(na.omit(cbind(ipc, iter[[1]]$fcst)),2), col = c(1,2,4,4), lty = c(3,2,1,1))

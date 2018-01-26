@@ -255,3 +255,26 @@ round(sqrt(mean((ipca - lag(ipca, -1)  - fcst1$fcst)^2)),2)
 round(sqrt(mean((ipca - lag(ipca, -3)  - fcst3$fcst)^2)),2)
 round(sqrt(mean((ipca - lag(ipca, -6)  - fcst6$fcst)^2)),2)
 round(sqrt(mean((ipca - lag(ipca, -12) - fcst12$fcst)^2)),2)
+
+# nucleo-s
+fcst1 <- core.fcst(ipc0,  nucleos0[,"FGV"], lag = 1, h = 12)
+fcst3 <- core.fcst(ipc0,  nucleos0[,"FGV"], lag = 3, h = 12)
+fcst6 <- core.fcst(ipc0,  nucleos0[,"FGV"], lag = 6, h = 12)
+fcst12 <- core.fcst(ipc0, nucleos0[,"FGV"], lag = 12, h = 12)
+
+round(sqrt(mean((ipc0 - lag(ipc0, -1)  - fcst1$fcst)^2)),2)
+round(sqrt(mean((ipc0 - lag(ipc0, -3)  - fcst3$fcst)^2)),2)
+round(sqrt(mean((ipc0 - lag(ipc0, -6)  - fcst6$fcst)^2)),2)
+round(sqrt(mean((ipc0 - lag(ipc0, -12) - fcst12$fcst)^2)),2)
+
+
+fcst1 <- core.fcst(ipca0,  nucleos0[,"IPCA_DP"], lag = 1, h = 12)
+fcst3 <- core.fcst(ipca0,  nucleos0[,"IPCA_DP"], lag = 3, h = 12)
+fcst6 <- core.fcst(ipca0,  nucleos0[,"IPCA_DP"], lag = 6, h = 12)
+fcst12 <- core.fcst(ipca0, nucleos0[,"IPCA_DP"], lag = 12, h = 12)
+
+round(sqrt(mean((ipca0 - lag(ipca0, -1)  - fcst1$fcst)^2)),2)
+round(sqrt(mean((ipca0 - lag(ipca0, -3)  - fcst3$fcst)^2)),2)
+round(sqrt(mean((ipca0 - lag(ipca0, -6)  - fcst6$fcst)^2)),2)
+round(sqrt(mean((ipca0 - lag(ipca0, -12) - fcst12$fcst)^2)),2)
+
