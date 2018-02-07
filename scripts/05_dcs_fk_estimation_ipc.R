@@ -5,6 +5,7 @@ library(BETS)
 library(TSA)
 library(MARSS)
 library(zoo)
+library(numDeriv)
 source("functions/dcs_fk_estimation.R")
 source("functions/dcs_fk_estimation_exercise.R")
 source("functions/ERRO.R")
@@ -49,16 +50,39 @@ initial_gamma <- c(0.418235294,-0.215294118,-0.011764706,-0.048235294,-0.1835294
 
 parametros1_normal <- list(
   par = data.frame(
-    name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ),
-    value = c(0.1 ,0.5 ,0.5 ,5   ,0   ,0     ,0        ,as.vector(initial_gamma)[1:11]),
-    lower = c(0   ,0   ,0.05   ,-Inf,0   ,-Inf  ,-Inf     ,rep(-Inf,11)                  ),
-    upper = c(Inf ,Inf ,Inf ,Inf ,0   ,Inf   ,Inf      ,rep(Inf,11)                   )
+    name =  c("k1","k2","ks","f2","beta[1|0]","mu[1|0]",paste0("gamma",1:11)          ),
+    value = c(0.1 ,0.5 ,0.5 ,5   ,0          ,0        ,as.vector(initial_gamma)[1:11]),
+    lower = c(0   ,0   ,0.05,-Inf,-Inf       ,-Inf     ,rep(-Inf,11)                  ),
+    upper = c(Inf ,Inf ,Inf ,Inf ,Inf        ,Inf      ,rep(Inf,11)                   )
   ),
   Dummy = NA
 )
-parametros1_normal
 
-dcs1_normal <- dcs_fk_estimation(ipc, initial = parametros1_normal, type = "BSM1_normal", outlier = F, otimo = T)
+parametros1_normal
+dcs1_normal <- dcs_fk_estimation(ipc, initial = parametros1_normal, type = "BSM1_normal", outlier = F, otimo = T, parinitial = F)
+dcs1_normal$otimizados$par/sqrt(diag(MASS::ginv(dcs1_normal$hessian)))
+
+parametros1.2_normal <- list(
+  par = data.frame(
+    name =  c("k1","k2","ks","f2"),
+    value = c(0.1 ,0.5 ,0.5 ,5   ),
+    lower = c(0   ,0   ,0.05,-Inf),
+    upper = c(Inf ,Inf ,Inf ,Inf )
+  ),
+  par2 = data.frame(
+    name =  c("beta[1|0]","mu[1|0]",paste0("gamma",1:11)          ),
+    value = dcs1_normal$otimizados$par[-c(1:4)],
+    lower = c(-Inf       ,-Inf     ,rep(-Inf,11)                  ),
+    upper = c(Inf        ,Inf      ,rep(Inf,11)                   )
+  ),
+  Dummy = NA
+)
+
+parametros1.2_normal
+dcs1.2_normal <- dcs_fk_estimation(ipc, initial = parametros1.2_normal, type = "BSM1_normal", outlier = F, otimo = T, parinitial = T)
+dcs1.2_normal$otimizados$par/sqrt(diag(MASS::ginv(dcs1.2_normal$hessian)))
+cbind(dcs1_normal$otimizados$par[1:4],dcs1.2_normal$otimizados$par)
+
 data.frame(name = parametros1_normal$par$name, 
            lower = parametros1_normal$par$lower,
            upper = parametros1_normal$par$upper,
@@ -76,16 +100,37 @@ diag_dcs1_normal$stats
 
 parametros1_normald <- list(
   par = data.frame(
-    name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ,"d1"),
-    value = c(0.1 ,0.5 ,0.5 ,5   ,0   ,0     ,0        ,as.vector(initial_gamma)[1:11],0   ),
-    lower = c(0   ,0   ,0.05   ,-Inf,0   ,-Inf  ,-Inf     ,rep(-Inf,11)                  ,-Inf),
-    upper = c(Inf ,Inf ,Inf ,Inf ,0   ,Inf   ,Inf      ,rep(Inf,11)                   , Inf)
+    name =  c("k1","k2","ks","f2","beta","mu[1|0]",paste0("gamma",1:11)          ,"d1"),
+    value = c(0.1 ,0.5 ,0.5 ,5   ,0     ,0        ,as.vector(initial_gamma)[1:11],0   ),
+    lower = c(0   ,0   ,0.05,-Inf,-Inf  ,-Inf     ,rep(-Inf,11)                  ,-Inf),
+    upper = c(Inf ,Inf ,Inf ,Inf ,Inf   ,Inf      ,rep(Inf,11)                   , Inf)
   ),
   Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11)))
 )
 parametros1_normald
 
-dcs1_normald <- dcs_fk_estimation(ipc, initial = parametros1_normald, type = "BSM1_normal", outlier = T, otimo = T)
+dcs1_normald <- dcs_fk_estimation(ipc, initial = parametros1_normald, type = "BSM1_normal", outlier = T, otimo = T, parinitial = F)
+dcs1_normald$otimizados$par/sqrt(diag(MASS::ginv(dcs1_normald$hessian)))
+
+parametros1.2_normald <- list(
+  par = data.frame(
+    name =  c("k1","k2","ks","f2"),
+    value = c(0.1 ,0.5 ,0.5 ,5   ),
+    lower = c(0   ,0   ,0.05,-Inf),
+    upper = c(Inf ,Inf ,Inf ,Inf )
+  ),
+  par2 = data.frame(
+    name =  c("beta[1|0]","mu[1|0]",paste0("gamma",1:11)          ,"d1"),
+    value = dcs1_normald$otimizados$par[-c(1:4)],
+    lower = c(-Inf       ,-Inf     ,rep(-Inf,11)                  ,-Inf),
+    upper = c(Inf        ,Inf      ,rep(Inf,11)                   , Inf)
+  ),
+  Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11)))
+)
+parametros1.2_normald
+
+dcs1.2_normald <- dcs_fk_estimation(ipc, initial = parametros1.2_normald, type = "BSM1_normal", outlier = T, otimo = T, parinitial = T)
+dcs1.2_normald$otimizados$par/sqrt(diag(MASS::ginv(dcs1.2_normald$hessian)))
 
 data.frame(name = parametros1_normald$par$name, 
            lower = parametros1_normald$par$lower,
@@ -104,16 +149,38 @@ diag_dcs1_normald$stats
 
 parametros2_normal <- list(
   par = data.frame(
-    name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ),
-    value = c(0.1 ,0   ,0.5 ,5   ,0   ,0     ,0        ,as.vector(initial_gamma)[1:11]),
-    lower = c(0   ,0   ,0.05,-Inf,0   ,0     ,-Inf     ,rep(-Inf,11)                  ),
-    upper = c(Inf ,0   ,Inf ,Inf ,0   ,0     ,Inf      ,rep(Inf,11)                   )
+    name =  c("k1","ks","f2","mu[1|0]",paste0("gamma",1:11)          ),
+    value = c(0.1 ,0.5 ,5   ,0        ,as.vector(initial_gamma)[1:11]),
+    lower = c(0   ,0.05,-Inf,-Inf     ,rep(-Inf,11)                  ),
+    upper = c(Inf ,Inf ,Inf ,Inf      ,rep(Inf,11)                   )
   ),
   Dummy = NA
 )
 parametros2_normal
 
-dcs2_normal <- dcs_fk_estimation(ipc, initial = parametros2_normal, type = "BSM2_normal", outlier = F, otimo = T)
+dcs2_normal <- dcs_fk_estimation(ipc, initial = parametros2_normal, type = "BSM2_normal", outlier = F, otimo = T, parinitial = F)
+dcs2_normal$otimizados$par/sqrt(diag(MASS::ginv(dcs2_normal$hessian)))
+
+parametros2.2_normal <- list(
+  par = data.frame(
+    name =  c("k1","ks","f2"),
+    value = c(0.1 ,0.5 ,5   ),
+    lower = c(0   ,0.05,-Inf),
+    upper = c(Inf ,Inf ,Inf )
+  ),
+  par2 = data.frame(
+    name =  c("mu[1|0]",paste0("gamma",1:11)          ),
+    value = dcs2_normal$otimizados$par[-c(1:3)],
+    lower = c(-Inf     ,rep(-Inf,11)                  ),
+    upper = c(Inf      ,rep(Inf,11)                   )
+  ),
+  Dummy = NA
+)
+parametros2.2_normal
+
+dcs2.2_normal <- dcs_fk_estimation(ipc, initial = parametros2.2_normal, type = "BSM2_normal", outlier = F, otimo = T, parinitial = T)
+dcs2.2_normal$otimizados$par/sqrt(diag(MASS::ginv(dcs2.2_normal$hessian)))
+
 data.frame(name = parametros2_normal$par$name, 
            lower = parametros2_normal$par$lower,
            upper = parametros2_normal$par$upper,
@@ -141,6 +208,8 @@ parametros2_normald <- list(
 parametros2_normald
 
 dcs2_normald <- dcs_fk_estimation(ipc, initial = parametros2_normald, type = "BSM2_normal", outlier = T, otimo = T)
+dcs2_normald$otimizados$par[c(1,3,4,19)]/sqrt(diag(MASS::ginv(dcs2_normald$hessian[c(1,3,4,19),c(1,3,4,19)])))
+
 
 data.frame(name = parametros2_normald$par$name, 
            lower = parametros2_normald$par$lower,
@@ -168,13 +237,38 @@ parametros1 <- list(
 )
 parametros1
 
-dcs1 <- dcs_fk_estimation(ipc, initial = parametros1, type = "BSM1", outlier = F, otimo = T)
+dcs1 <- dcs_fk_estimation(ipc, initial = parametros1, type = "BSM1", outlier = F, otimo = T, parinitial = F)
+dcs1$otimizados$par[c(1,2,3,4,5)]/sqrt(diag(MASS::ginv(dcs1$hessian[c(1,2,3,4,5),c(1,2,3,4,5)])))
+
+parametros1.2 <- list(
+  par = data.frame(
+    name =  c("k1","k2","ks","f2","df"),
+    value = dcs1$otimizados$par[1:5],
+    lower = c(0.0 ,0.0 ,0.05,-Inf,4   ),
+    upper = c(Inf ,Inf ,Inf ,Inf ,Inf )
+  ),
+  par2 = data.frame(
+    name =  c("beta[1|0]","mu[1|0]",paste0("gamma",1:11)),
+    value = c(dcs1$otimizados$par[-c(1:5)]),
+    lower = c(-Inf       ,-Inf     ,rep(-Inf,11)),
+    upper = c(Inf        ,Inf      ,rep(Inf,11))
+  )
+)
+parametros1.2
+
+dcs1.2 <- dcs_fk_estimation(ipc, initial = parametros1.2, type = "BSM1", outlier = F, otimo = T, parinitial = T)
+cbind(dcs1$otimizados$par[1:5],dcs1.2$otimizados$par)
+dcs1.2$otimizados$par/sqrt(diag(MASS::ginv(dcs1.2$hessian)))
+dcs1$otimizados$par[1:5]/sqrt(diag(MASS::ginv(dcs1$hessian[1:5,1:5])))
+
 data.frame(name = parametros1$par$name, 
            lower = parametros1$par$lower,
            upper = parametros1$par$upper,
            initial = round(parametros1$par$value,4), 
            otimo = round(dcs1$otimizados$par,4))
-ts.plot(ipc,dcs1$out[,"mu"], col = 1:2)
+ts.plot(ipc,dcs1$out[,"mu"],dcs1.2$out[,"mu"], col = c(1,2,4))
+ts.plot(dcs1$out[,"mu"],dcs1.2$out[,"mu"], col = c(1,2,4))
+
 ts.plot(dcs1$out[,"epsilon"], col = 1)
 round(dcs1$out[,"epsilon"],2)
 dcs1$out[,"beta"]
@@ -182,11 +276,14 @@ dcs1$out[,"beta"]
 diag_dcs1 <- diag.dcs(out = dcs1, type = "t")
 diag_dcs1$stats
 
+diag_dcs1.2 <- diag.dcs(out = dcs1.2, type = "t")
+diag_dcs1.2$stats
+
 # adicionar dummy
 parametros1_d <- list(
   par = data.frame(
     name =  c("k1","k2","ks","f2","df","beta[1|0]","mu[1|0]",paste0("gamma",1:11)          ,"d1"),
-    value = c(0.3 ,0.5 ,0.5 ,5   ,6   ,0          ,0        ,as.vector(initial_gamma)[1:11],0   ),
+    value = c(dcs1$otimizados$par,0), #c(0.3 ,0.5 ,0.5 ,5   ,6   ,0          ,0        ,as.vector(initial_gamma)[1:11],0   ),
     lower = c(0.0 ,0.0 ,0.05,-Inf,4   ,-Inf       ,-Inf     ,rep(-Inf,11)                  ,-Inf),
     upper = c(Inf ,Inf ,Inf ,Inf ,Inf ,Inf        ,Inf      ,rep(Inf,11)                   , Inf)
   ),
@@ -194,7 +291,34 @@ parametros1_d <- list(
 )
 parametros1_d
 
-dcs1_d <- dcs_fk_estimation(ipc, initial = parametros1_d, type = "BSM1", outlier = T, otimo = T)
+dcs1_d <- dcs_fk_estimation(ipc, initial = parametros1_d, type = "BSM1", outlier = T, otimo = T, parinitial = F)
+dcs1_d$otimizados$par[c(1,3,4,5,19)]/sqrt(diag(MASS::ginv(dcs1_d$hessian[c(1,3,4,5,19),c(1,3,4,5,19)])))
+dcs1_d$otimizados$par/sqrt(diag(MASS::ginv(dcs1_d$hessian)))
+
+parametros1.2_d <- list(
+  par = data.frame(
+    name =  c("k1","k2","ks","f2","df"),
+    value = dcs1_d$otimizados$par[1:5],
+    lower = c(0.0 ,0.0 ,0.05,-Inf,4   ),
+    upper = c(Inf ,Inf ,Inf ,Inf ,Inf )
+  ),
+  par2 = data.frame(
+    name =  c("beta[1|0]","mu[1|0]",paste0("gamma",1:11)          ,"d1"),
+    value = dcs1_d$otimizados$par[-c(1:5)],
+    lower = c(-Inf       ,-Inf     ,rep(-Inf,11)                  ,-Inf),
+    upper = c(Inf        ,Inf      ,rep(Inf,11)                   , Inf)
+  ),
+  Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11)))
+)
+parametros1.2_d
+
+dcs1.2_d <- dcs_fk_estimation(ipc, initial = parametros1.2_d, type = "BSM1", outlier = T, otimo = T, parinitial = T)
+dcs1.2_d$otimizados$par[c(1,3,4,5,19)]/sqrt(diag(MASS::ginv(dcs1_d$hessian[c(1,3,4,5,19),c(1,3,4,5,19)])))
+dcs1.2_d$otimizados$par/sqrt(diag(MASS::ginv(dcs1.2_d$hessian)))
+dcs1_d$otimizados$par/sqrt(diag(MASS::ginv(dcs1_d$hessian)))
+
+cbind(dcs1_d$otimizados$par[1:5],dcs1.2_d$otimizados$par)
+
 data.frame(name = parametros1_d$par$name, 
            lower = parametros1_d$par$lower,
            upper = parametros1_d$par$upper,
@@ -212,17 +336,41 @@ diag_dcs1_d$stats
 
 parametros2 <- list(
   par = data.frame(
-    name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)),
-    value = c(0.5 ,0   ,0.5 ,5   ,6   ,0     ,0        ,as.vector(initial_gamma)[1:11]),
-    lower = c(0   ,0   ,0.05,-Inf,4   ,0     ,-Inf     ,rep(-Inf,11)),
-    upper = c(Inf ,0   ,Inf ,Inf ,Inf ,0     ,Inf      ,rep(Inf,11))
+    name =  c("k1","ks","f2","df","mu[1|0]",paste0("gamma",1:11)),
+    value = c(0.5 ,0.5 ,5   ,6   ,0        ,as.vector(initial_gamma)[1:11]),
+    lower = c(0   ,0.05,-Inf,4   ,-Inf     ,rep(-Inf,11)),
+    upper = c(Inf ,Inf ,Inf ,Inf ,Inf      ,rep(Inf,11))
   ),
   Dummy = NA
 )
 parametros2
 
-
 dcs2 <- dcs_fk_estimation(ipc, initial = parametros2, type = "BSM2", outlier = F, otimo = T)
+dcs2$otimizados$par[c(1,3,4,5)]/sqrt(diag(MASS::ginv(dcs2$hessian[c(1,3,4,5),c(1,3,4,5)])))
+dcs2$otimizados$par/sqrt(diag(MASS::ginv(dcs2$hessian)))
+
+parametros2.2 <- list(
+  par = data.frame(
+    name =  c("k1","ks","f2","df"),
+    value = c(0.5 ,0.5 ,5   ,6   ),
+    lower = c(0   ,0.05,-Inf,4   ),
+    upper = c(Inf ,Inf ,Inf ,Inf )
+  ),
+  par2 = data.frame(
+    name =  c("mu[1|0]",paste0("gamma",1:11)),
+    value = dcs2$otimizados$par[-c(1:4)],
+    lower = c(-Inf,rep(-Inf,11)),
+    upper = c(Inf ,rep(Inf,11))
+  ),
+  Dummy = NA
+)
+parametros2.2
+
+dcs2.2 <- dcs_fk_estimation(ipc, initial = parametros2.2, type = "BSM2", outlier = F, otimo = T, parinitial = T)
+cbind(dcs2$otimizados$par[1:4], dcs2.2$otimizados$par)
+dcs2$otimizados$par/sqrt(diag(MASS::ginv(dcs2$hessian)))
+dcs2.2$otimizados$par/sqrt(diag(MASS::ginv(dcs2.2$hessian)))
+
 data.frame(name = parametros2$par$name, 
            lower = parametros2$par$lower,
            upper = parametros2$par$upper,
@@ -242,16 +390,39 @@ diag_dcs2$stats
 
 parametros2_d <- list(
   par = data.frame(
-    name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11),"d1"),
-    value = c(0.1 ,0   ,0.1 ,-2   ,11   ,0     ,0.5      ,as.vector(initial_gamma)[1:11],2   ),
-    lower = c(0   ,0   ,0.05,-Inf,4   ,0     ,-Inf     ,rep(-Inf,11),-Inf),
-    upper = c(Inf ,0   ,Inf ,Inf ,Inf ,0     ,Inf      ,rep(Inf,11), Inf)
+    name =  c("k1","ks","f2","df","mu[1|0]",paste0("gamma",1:11),"d1"),
+    value = c(0.1 ,0.1 ,-2  ,11  ,0.5      ,as.vector(initial_gamma)[1:11],2   ),
+    lower = c(0   ,0.05,-Inf,4   ,-Inf     ,rep(-Inf,11),-Inf),
+    upper = c(Inf ,Inf ,Inf ,Inf ,Inf      ,rep(Inf,11), Inf)
   ),
   Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11)))
 )
 parametros2_d
 
 dcs2_d <- dcs_fk_estimation(ipc, initial = parametros2_d, type = "BSM2", outlier = T, otimo = T)
+dcs2_d$otimizados$par[c(1,3,4,5,19)]/sqrt(diag(MASS::ginv(dcs2_d$hessian[c(1,3,4,5,19),c(1,3,4,5,19)])))
+dcs2_d$otimizados$par/sqrt(diag(MASS::ginv(dcs2_d$hessian)))
+
+parametros2.2_d <- list(
+  par = data.frame(
+    name =  c("k1","ks","f2","df"),
+    value = c(0.1 ,0.1 ,-2  ,11  ),
+    lower = c(0   ,-Inf,-Inf,4   ),
+    upper = c(Inf ,Inf ,Inf ,Inf )
+  ),
+  par2 = data.frame(
+    name =  c("mu[1|0]",paste0("gamma",1:11),"d1"),
+    value = c(dcs2_d$otimizados$par[-c(1:4)]),
+    lower = c(-Inf     ,rep(-Inf,11),-Inf),
+    upper = c(Inf      ,rep(Inf,11), Inf)
+  ),
+  Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11)))
+)
+parametros2.2_d
+
+dcs2.2_d <- dcs_fk_estimation(ipc, initial = parametros2.2_d, type = "BSM2", outlier = T, otimo = T, parinitial = T)
+dcs2.2_d
+dcs2.2_d$otimizados$par/sqrt(diag(MASS::ginv(dcs2.2_d$hessian)))
 
 data.frame(name = parametros2_d$par$name, 
            lower = parametros2_d$par$lower,
@@ -271,16 +442,39 @@ diag_dcs2_d$stats
 
 parametros3_normal <- list(
   par = data.frame(
-    name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ,"psi","phi","k3"),
-    value = c(0.1 ,0   ,0.5 ,5   ,0   ,0     ,0        ,as.vector(initial_gamma)[1:11],1    ,0.1  ,0.5),
-    lower = c(0.0 ,0   ,0.05,-Inf,0   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf ,-1   ,0),
-    upper = c(Inf ,0   ,Inf ,Inf ,0   ,0     ,Inf      ,rep(Inf,11)                   ,Inf  ,1    ,Inf)
+    name =  c("k1","ks","f2","phi","k3","psi[1|0]", "mu[1|0]",paste0("gamma",1:11)          ),
+    value = c(0.1 ,0.5 ,5   ,0.1  ,0.5 ,1         , 0        ,as.vector(initial_gamma)[1:11]),
+    lower = c(0.0 ,0.05,-Inf,-1   ,0   ,-Inf      , -Inf     ,rep(-Inf,11)                  ),
+    upper = c(Inf ,Inf ,Inf ,1    ,Inf ,Inf       , Inf      ,rep(Inf,11)                   )
   ),
   Dummy = NA
 )
 parametros3_normal
 
-dcs3_normal <- dcs_fk_estimation(ipc, initial = parametros3_normal, type = "BSM3_normal", outlier = F, otimo = T)
+dcs3_normal <- dcs_fk_estimation(ipc, initial = parametros3_normal, type = "BSM3_normal", outlier = F, otimo = T, parinitial = F)
+dcs3_normal$otimizados$par/sqrt(diag(MASS::ginv(dcs3_normal$hessian)))
+
+parametros3.2_normal <- list(
+  par = data.frame(
+    name =  c("k1","ks","f2","phi","k3"),
+    value = c(0.1 ,0.5 ,5   ,0.1  ,0.5 ),
+    lower = c(0.0 ,0.05,-Inf,-1   ,0   ),
+    upper = c(Inf ,Inf ,Inf ,1    ,Inf )
+  ),
+  par2 = data.frame(
+    name =  c("psi[1|0]", "mu[1|0]",paste0("gamma",1:11)          ),
+    value = dcs3_normal$otimizados$par[-c(1:5)],
+    lower = c(-Inf      , -Inf     ,rep(-Inf,11)                  ),
+    upper = c(Inf       , Inf      ,rep(Inf,11)                   )
+  ),
+  Dummy = NA
+)
+parametros3.2_normal
+
+dcs3.2_normal <- dcs_fk_estimation(ipc, initial = parametros3.2_normal, type = "BSM3_normal", outlier = F, otimo = T, parinitial = T)
+dcs3.2_normal$otimizados$par/sqrt(diag(MASS::ginv(dcs3.2_normal$hessian)))
+cbind(dcs3_normal$otimizados$par[1:5],dcs3.2_normal$otimizados$par)
+
 data.frame(name = parametros3_normal$par$name, 
            lower = parametros3_normal$par$lower,
            upper = parametros3_normal$par$upper,
@@ -299,17 +493,40 @@ diag_dcs3_normal$stats
 
 parametros3_normald <- list(
   par = data.frame(
-    name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ,"psi","phi","k3","d1"),
-    value = c(0.1 ,0   ,0.5 ,5   ,0   ,0     ,0        ,as.vector(initial_gamma)[1:11],1    ,0.1  ,0.5 ,0   ),
-    lower = c(0.0 ,0   ,0.05,-Inf,0   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf ,-1   ,0   ,-Inf),
-    upper = c(Inf ,0   ,Inf ,Inf ,0   ,0     ,Inf      ,rep(Inf,11)                   ,Inf  ,1    ,Inf ,Inf )
+    name =  c("k1","ks","f2","phi","k3","psi[1|0]","mu[1|0]",paste0("gamma",1:11)          ,"d1"),
+    value = c(0.1 ,0.5 ,5   ,0.1  ,0.5 ,1         ,0        ,as.vector(initial_gamma)[1:11],0   ),
+    lower = c(0.0 ,0.05,-Inf,-1   ,0   ,-Inf      ,-Inf     ,rep(-Inf,11)                  ,-Inf),
+    upper = c(Inf ,Inf ,Inf ,1    ,Inf ,Inf       ,Inf      ,rep(Inf,11)                   ,Inf )
   ),
-  Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11)))
+  Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11))
+  )
 )
 parametros3_normald
 
 #parametros3_normald$par$value <- dcs3_normald$otimizados$par
-dcs3_normald <- dcs_fk_estimation(ipc, initial = parametros3_normald, type = "BSM3_normal", outlier = T, otimo = T)
+dcs3_normald <- dcs_fk_estimation(ipc, initial = parametros3_normald, type = "BSM3_normal", outlier = T, otimo = T, parinitial = F)
+dcs3_normald$otimizados$par/sqrt(diag(MASS::ginv(dcs3_normald$hessian)))
+
+parametros3.2_normald <- list(
+  par = data.frame(
+    name =  c("k1","ks","f2","phi","k3"),
+    value = c(0.1 ,0.5 ,5   ,0.1  ,0.5 ),
+    lower = c(0.0 ,0.05,-Inf,-1   ,0   ),
+    upper = c(Inf ,Inf ,Inf ,1    ,Inf )
+  ),
+  par2 = data.frame(
+    name =  c("psi[1|0]","mu[1|0]",paste0("gamma",1:11)          ,"d1"),
+    value = dcs3_normald$otimizados$par[-c(1:5)],
+    lower = c(-Inf      ,-Inf     ,rep(-Inf,11)                  ,-Inf),
+    upper = c(Inf       ,Inf      ,rep(Inf,11)                   ,Inf )
+  ),
+  Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11)))
+)
+parametros3.2_normald
+
+dcs3.2_normald <- dcs_fk_estimation(ipc, initial = parametros3.2_normald, type = "BSM3_normal", outlier = T, otimo = T, parinitial = T)
+dcs3.2_normald$otimizados$par/sqrt(diag(MASS::ginv(dcs3.2_normald$hessian)))
+cbind(dcs3_normald$otimizados$par[1:5],dcs3.2_normald$otimizados$par)
 
 data.frame(name = parametros3_normald$par$name, 
            lower = parametros3_normald$par$lower,
@@ -317,6 +534,7 @@ data.frame(name = parametros3_normald$par$name,
            initial = round(parametros3_normald$par$value,4), 
            otimo = round(dcs3_normald$otimizados$par,4))
 ts.plot(ipc,dcs3_normald$out[,"mu"], col = 1:2)
+ts.plot(dcs3_normald$out[,"mu"],dcs3.2_normald$out[,"mu"], col = 1:2)
 
 ts.plot(dcs3_normald$out[,"epsilon"], col = 1)
 round(dcs3_normald$out[,"epsilon"],2)
@@ -324,6 +542,9 @@ dcs3_normal$out[,"beta"]
 
 diag_dcs3_normald <- diag.dcs(out = dcs3_normald, type = "norm")
 diag_dcs3_normald$stats
+
+diag_dcs3.2_normald <- diag.dcs(out = dcs3.2_normald, type = "norm")
+diag_dcs3.2_normald$stats
 
 
 # exportar resíduos
@@ -338,16 +559,39 @@ diag_dcs3_normald$stats
 # BSM padrão : mu (sem beta) + gamma + psi ------------------------------------
 parametros3 <- list(
   par = data.frame(
-    name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ,"psi","phi","k3"),
-    value = c(0.1 ,0   ,0.5 ,5   ,6   ,0     ,0        ,as.vector(initial_gamma)[1:11],1    ,0.1  ,0.5),
-    lower = c(0.0 ,0   ,0.05,-Inf,4   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf ,-1   ,0),
-    upper = c(Inf ,0   ,Inf ,Inf ,Inf ,0     ,Inf      ,rep(Inf,11)                   ,Inf  ,1    ,Inf)
+    name =  c("k1","ks","f2","df","phi","k3","psi[1|0]","mu[1|0]",paste0("gamma",1:11)          ),
+    value = c(0.1 ,0.5 ,5   ,6   ,0.1  ,0.5 ,1         ,0        ,as.vector(initial_gamma)[1:11]),
+    lower = c(0.0 ,0.05,-Inf,4   ,-1   ,-Inf,-Inf      ,0        ,rep(-Inf,11)                  ),
+    upper = c(Inf ,Inf ,Inf ,Inf ,1    ,Inf ,Inf       ,Inf      ,rep(Inf,11)                   )
   ),
   Dummy = NA
 )
 parametros3
 
-dcs3 <- dcs_fk_estimation(ipc, initial = parametros3, type = "BSM3", outlier = F, otimo = T)
+dcs3 <- dcs_fk_estimation(ipc, initial = parametros3, type = "BSM3", outlier = F, otimo = T, parinitial = F)
+dcs3$otimizados$par/sqrt(diag(MASS::ginv(dcs3$hessian)))
+
+
+parametros3.2 <- list(
+  par = data.frame(
+    name =  c("k1","ks","f2","df","phi","k3"),
+    value = c(0.1 ,0.5 ,5   ,6   ,0.1  ,0.5 ),
+    lower = c(0.0 ,0.05,-Inf,4   ,-1   ,-Inf),
+    upper = c(Inf ,Inf ,Inf ,Inf ,1    ,Inf )
+  ),
+  par2 = data.frame(
+    name =  c("psi[1|0]","mu[1|0]",paste0("gamma",1:11)          ),
+    value = dcs3$otimizados$par[-c(1:6)],
+    lower = c(-Inf      ,0        ,rep(-Inf,11)                  ),
+    upper = c(Inf       ,Inf      ,rep(Inf,11)                   )
+  ),
+  Dummy = NA
+)
+parametros3.2
+
+dcs3.2 <- dcs_fk_estimation(ipc, initial = parametros3.2, type = "BSM3", outlier = F, otimo = T, parinitial = T)
+dcs3.2$otimizados$par/sqrt(diag(MASS::ginv(dcs3.2$hessian)))
+
 data.frame(name = parametros3$par$name, 
            lower = parametros3$par$lower,
            upper = parametros3$par$upper,
@@ -369,14 +613,21 @@ parametros3_d <- list(
   par = data.frame(
     name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ,"psi","phi","k3","d1"),
     value = c(0.3 ,0   ,0.5 ,5   ,8   ,0     ,0.5        ,as.vector(initial_gamma)[1:11],-1    ,0.6  ,0.5 ,0   ),
-    lower = c(0.0 ,0   ,0.05,-Inf,4   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf ,-1   ,0   ,-Inf),
+    lower = c(0.0 ,0   ,0.00,-Inf,4   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf ,-1   ,0   ,-Inf),
     upper = c(Inf ,0   ,Inf ,Inf ,Inf ,0     ,Inf      ,rep(Inf,11)                   ,Inf  ,1    ,Inf ,Inf )
   ),
   Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2002,11)))
 )
 parametros3_d
 
+parametros3_d$par$value <- dcs3_d$otimizados$par
 dcs3_d <- dcs_fk_estimation(ipc, initial = parametros3_d, type = "BSM3", outlier = T, otimo = T)
+dcs3_d$otimizados$par[c(1,3,4,5,20,21,22)]/sqrt(abs(diag(MASS::ginv(dcs3_d$hessian[c(1,3,4,5,20,21,22),c(1,3,4,5,20,21,22)]))))
+
+dcs3_d$otimizados$par[c(1,3,4,5,20,21,22)] + 1.96*sqrt(abs(diag(MASS::ginv(dcs3_d$hessian[c(1,3,4,5,20,21,22),c(1,3,4,5,20,21,22)]))))
+dcs3_d$otimizados$par[c(1,3,4,5,20,21,22)] - 1.96*sqrt(abs(diag(MASS::ginv(dcs3_d$hessian[c(1,3,4,5,20,21,22),c(1,3,4,5,20,21,22)]))))
+
+
 data.frame(name = parametros3_d$par$name, 
            lower = parametros3_d$par$lower,
            upper = parametros3_d$par$upper,

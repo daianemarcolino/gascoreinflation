@@ -65,32 +65,32 @@ fcsts_mean1  <- do.call(cbind, fcst_mean1)
 fcsts_lower1 <- do.call(cbind, fcst_lower1)
 fcsts_upper1 <- do.call(cbind, fcst_upper1)
 
-fcst_mean2 <- sapply(iter2, FUN = function(x)  x$fcst[,2])
-fcst_lower2 <- sapply(iter2, FUN = function(x)  x$fcst[,2])
-fcst_upper2 <- sapply(iter2, FUN = function(x)  x$fcst[,3])
-
-fcsts_mean2  <- do.call(cbind, fcst_mean2)
-fcsts_lower2 <- do.call(cbind, fcst_lower2)
-fcsts_upper2 <- do.call(cbind, fcst_upper2)
-
-fcst_mean3 <- sapply(iter3, FUN = function(x)  x$fcst[,3])
-fcst_lower3 <- sapply(iter3, FUN = function(x)  x$fcst[,2])
-fcst_upper3 <- sapply(iter3, FUN = function(x)  x$fcst[,3])
-
-fcsts_mean3  <- do.call(cbind, fcst_mean3)
-fcsts_lower3 <- do.call(cbind, fcst_lower3)
-fcsts_upper3 <- do.call(cbind, fcst_upper3)
+# fcst_mean2 <- sapply(iter2, FUN = function(x)  x$fcst[,1])
+# fcst_lower2 <- sapply(iter2, FUN = function(x)  x$fcst[,2])
+# fcst_upper2 <- sapply(iter2, FUN = function(x)  x$fcst[,3])
+# 
+# fcsts_mean2  <- do.call(cbind, fcst_mean2)
+# fcsts_lower2 <- do.call(cbind, fcst_lower2)
+# fcsts_upper2 <- do.call(cbind, fcst_upper2)
+# 
+# fcst_mean3 <- sapply(iter3, FUN = function(x)  x$fcst[,1])
+# fcst_lower3 <- sapply(iter3, FUN = function(x)  x$fcst[,2])
+# fcst_upper3 <- sapply(iter3, FUN = function(x)  x$fcst[,3])
+# 
+# fcsts_mean3  <- do.call(cbind, fcst_mean3)
+# fcsts_lower3 <- do.call(cbind, fcst_lower3)
+# fcsts_upper3 <- do.call(cbind, fcst_upper3)
 
 
 colnames(fcsts_mean1) = colnames(fcsts_lower1) = colnames(fcsts_upper1) <- paste0("fcst", 1:ncol(fcsts_mean1))
-colnames(fcsts_mean2) = colnames(fcsts_lower2) = colnames(fcsts_upper2) <- paste0("fcst", 1:ncol(fcsts_mean2))
-colnames(fcsts_mean3) = colnames(fcsts_lower3) = colnames(fcsts_upper3) <- paste0("fcst", 1:ncol(fcsts_mean3))
+# colnames(fcsts_mean2) = colnames(fcsts_lower2) = colnames(fcsts_upper2) <- paste0("fcst", 1:ncol(fcsts_mean2))
+# colnames(fcsts_mean3) = colnames(fcsts_lower3) = colnames(fcsts_upper3) <- paste0("fcst", 1:ncol(fcsts_mean3))
 
 ts.plot(ipc, fcsts_lower1[,1], fcsts_mean1[,1], fcsts_upper1[,1], col = c(1,4,2,4))
-ts.plot(ipc, fcsts_lower2[,1], fcsts_mean2[,1], fcsts_upper2[,1], col = c(1,4,2,4))
-ts.plot(ipc, fcsts_lower3[,1], fcsts_mean3[,1], fcsts_upper3[,1], col = c(1,4,2,4))
+# ts.plot(ipc, fcsts_lower2[,1], fcsts_mean2[,1], fcsts_upper2[,1], col = c(1,4,2,4))
+# ts.plot(ipc, fcsts_lower3[,1], fcsts_mean3[,1], fcsts_upper3[,1], col = c(1,4,2,4))
 
-iter <- iter2
+#iter <- iter2
 
 # previsoes 1 passo a frente
 
@@ -103,20 +103,20 @@ fcsts_df_up1 <- apply(k, MARGIN = 2, FUN = function(x) c(na.omit(x),rep(NA,sum(i
 k <- data.frame(fcsts_lower1)
 fcsts_df_low1 <- apply(k, MARGIN = 2, FUN = function(x) c(na.omit(x),rep(NA,sum(is.na(x)))))
 
-k <- data.frame(fcsts_mean2)
-fcsts_df2 <- apply(k, MARGIN = 2, FUN = function(x) c(na.omit(x),rep(NA,sum(is.na(x)))))
-k <- data.frame(fcsts_upper2)
-fcsts_df_up2 <- apply(k, MARGIN = 2, FUN = function(x) c(na.omit(x),rep(NA,sum(is.na(x)))))
-k <- data.frame(fcsts_lower2)
-fcsts_df_low2 <- apply(k, MARGIN = 2, FUN = function(x) c(na.omit(x),rep(NA,sum(is.na(x)))))
-
-
-k <- data.frame(fcsts_mean3)
-fcsts_df3 <- apply(k, MARGIN = 2, FUN = function(x) c(na.omit(x),rep(NA,sum(is.na(x)))))
-k <- data.frame(fcsts_upper3)
-fcsts_df_up3 <- apply(k, MARGIN = 2, FUN = function(x) c(na.omit(x),rep(NA,sum(is.na(x)))))
-k <- data.frame(fcsts_lower3)
-fcsts_df_low3 <- apply(k, MARGIN = 2, FUN = function(x) c(na.omit(x),rep(NA,sum(is.na(x)))))
+# k <- data.frame(fcsts_mean2)
+# fcsts_df2 <- apply(k, MARGIN = 2, FUN = function(x) c(na.omit(x),rep(NA,sum(is.na(x)))))
+# k <- data.frame(fcsts_upper2)
+# fcsts_df_up2 <- apply(k, MARGIN = 2, FUN = function(x) c(na.omit(x),rep(NA,sum(is.na(x)))))
+# k <- data.frame(fcsts_lower2)
+# fcsts_df_low2 <- apply(k, MARGIN = 2, FUN = function(x) c(na.omit(x),rep(NA,sum(is.na(x)))))
+# 
+# 
+# k <- data.frame(fcsts_mean3)
+# fcsts_df3 <- apply(k, MARGIN = 2, FUN = function(x) c(na.omit(x),rep(NA,sum(is.na(x)))))
+# k <- data.frame(fcsts_upper3)
+# fcsts_df_up3 <- apply(k, MARGIN = 2, FUN = function(x) c(na.omit(x),rep(NA,sum(is.na(x)))))
+# k <- data.frame(fcsts_lower3)
+# fcsts_df_low3 <- apply(k, MARGIN = 2, FUN = function(x) c(na.omit(x),rep(NA,sum(is.na(x)))))
 
 
 prev_1frente1 <- window(ts(t(fcsts_df1)[,1], end = end(fcsts_mean1), freq = 12), start = c(2016,1), freq = 12)
@@ -135,35 +135,35 @@ prev_6frente_up1 <- window(ts(na.omit(t(fcsts_df_up1)[,6]), end = end(fcsts_mean
 prev_12frente_up1 <- window(ts(na.omit(t(fcsts_df_up1)[,12]), end = end(fcsts_mean1), freq = 12), start = c(2016,1), freq = 12)
 
 
-prev_1frente2 <- window(ts(t(fcsts_df2)[,1], end = end(fcsts_mean2), freq = 12), start = c(2016,1), freq = 12)
-prev_3frente2 <- window(ts(na.omit(t(fcsts_df2)[,3]), end = end(fcsts_mean2), freq = 12), start = c(2016,1), freq = 12)
-prev_6frente2 <- window(ts(na.omit(t(fcsts_df2)[,6]), end = end(fcsts_mean2), freq = 12), start = c(2016,1), freq = 12)
-prev_12frente2 <- window(ts(na.omit(t(fcsts_df2)[,12]), end = end(fcsts_mean2), freq = 12), start = c(2016,1), freq = 12)
-
-prev_1frente_low2 <- window(ts(t(fcsts_df_low2)[,1], end = end(fcsts_mean2), freq = 12), start = c(2016,1), freq = 12)
-prev_3frente_low2 <- window(ts(na.omit(t(fcsts_df_low2)[,3]), end = end(fcsts_mean2), freq = 12), start = c(2016,1), freq = 12)
-prev_6frente_low2 <- window(ts(na.omit(t(fcsts_df_low2)[,6]), end = end(fcsts_mean2), freq = 12), start = c(2016,1), freq = 12)
-prev_12frente_low2 <- window(ts(na.omit(t(fcsts_df_low2)[,12]), end = end(fcsts_mean2), freq = 12), start = c(2016,1), freq = 12)
-
-prev_1frente_up2 <- window(ts(t(fcsts_df_up2)[,1], end = end(fcsts_mean2), freq = 12), start = c(2016,1), freq = 12)
-prev_3frente_up2 <- window(ts(na.omit(t(fcsts_df_up2)[,3]), end = end(fcsts_mean2), freq = 12), start = c(2016,1), freq = 12)
-prev_6frente_up2 <- window(ts(na.omit(t(fcsts_df_up2)[,6]), end = end(fcsts_mean2), freq = 12), start = c(2016,1), freq = 12)
-prev_12frente_up2 <- window(ts(na.omit(t(fcsts_df_up2)[,12]), end = end(fcsts_mean2), freq = 12), start = c(2016,1), freq = 12)
-
-prev_1frente3 <- window(ts(t(fcsts_df3)[,1], end = end(fcsts_mean3), freq = 12), start = c(2016,1), freq = 12)
-prev_3frente3 <- window(ts(na.omit(t(fcsts_df3)[,3]), end = end(fcsts_mean3), freq = 12), start = c(2016,1), freq = 12)
-prev_6frente3 <- window(ts(na.omit(t(fcsts_df3)[,6]), end = end(fcsts_mean3), freq = 12), start = c(2016,1), freq = 12)
-prev_12frente3 <- window(ts(na.omit(t(fcsts_df3)[,12]), end = end(fcsts_mean3), freq = 12), start = c(2016,1), freq = 12)
-
-prev_1frente_low3 <- window(ts(t(fcsts_df_low3)[,1], end = end(fcsts_mean3), freq = 12), start = c(2016,1), freq = 12)
-prev_3frente_low3 <- window(ts(na.omit(t(fcsts_df_low3)[,3]), end = end(fcsts_mean3), freq = 12), start = c(2016,1), freq = 12)
-prev_6frente_low3 <- window(ts(na.omit(t(fcsts_df_low3)[,6]), end = end(fcsts_mean3), freq = 12), start = c(2016,1), freq = 12)
-prev_12frente_low3 <- window(ts(na.omit(t(fcsts_df_low3)[,12]), end = end(fcsts_mean3), freq = 12), start = c(2016,1), freq = 12)
-
-prev_1frente_up3 <- window(ts(t(fcsts_df_up3)[,1], end = end(fcsts_mean3), freq = 12), start = c(2016,1), freq = 12)
-prev_3frente_up3 <- window(ts(na.omit(t(fcsts_df_up3)[,3]), end = end(fcsts_mean3), freq = 12), start = c(2016,1), freq = 12)
-prev_6frente_up3 <- window(ts(na.omit(t(fcsts_df_up3)[,6]), end = end(fcsts_mean3), freq = 12), start = c(2016,1), freq = 12)
-prev_12frente_up3 <- window(ts(na.omit(t(fcsts_df_up3)[,12]), end = end(fcsts_mean3), freq = 12), start = c(2016,1), freq = 12)
+# prev_1frente2 <- window(ts(t(fcsts_df2)[,1], end = end(fcsts_mean2), freq = 12), start = c(2016,1), freq = 12)
+# prev_3frente2 <- window(ts(na.omit(t(fcsts_df2)[,3]), end = end(fcsts_mean2), freq = 12), start = c(2016,1), freq = 12)
+# prev_6frente2 <- window(ts(na.omit(t(fcsts_df2)[,6]), end = end(fcsts_mean2), freq = 12), start = c(2016,1), freq = 12)
+# prev_12frente2 <- window(ts(na.omit(t(fcsts_df2)[,12]), end = end(fcsts_mean2), freq = 12), start = c(2016,1), freq = 12)
+# 
+# prev_1frente_low2 <- window(ts(t(fcsts_df_low2)[,1], end = end(fcsts_mean2), freq = 12), start = c(2016,1), freq = 12)
+# prev_3frente_low2 <- window(ts(na.omit(t(fcsts_df_low2)[,3]), end = end(fcsts_mean2), freq = 12), start = c(2016,1), freq = 12)
+# prev_6frente_low2 <- window(ts(na.omit(t(fcsts_df_low2)[,6]), end = end(fcsts_mean2), freq = 12), start = c(2016,1), freq = 12)
+# prev_12frente_low2 <- window(ts(na.omit(t(fcsts_df_low2)[,12]), end = end(fcsts_mean2), freq = 12), start = c(2016,1), freq = 12)
+# 
+# prev_1frente_up2 <- window(ts(t(fcsts_df_up2)[,1], end = end(fcsts_mean2), freq = 12), start = c(2016,1), freq = 12)
+# prev_3frente_up2 <- window(ts(na.omit(t(fcsts_df_up2)[,3]), end = end(fcsts_mean2), freq = 12), start = c(2016,1), freq = 12)
+# prev_6frente_up2 <- window(ts(na.omit(t(fcsts_df_up2)[,6]), end = end(fcsts_mean2), freq = 12), start = c(2016,1), freq = 12)
+# prev_12frente_up2 <- window(ts(na.omit(t(fcsts_df_up2)[,12]), end = end(fcsts_mean2), freq = 12), start = c(2016,1), freq = 12)
+# 
+# prev_1frente3 <- window(ts(t(fcsts_df3)[,1], end = end(fcsts_mean3), freq = 12), start = c(2016,1), freq = 12)
+# prev_3frente3 <- window(ts(na.omit(t(fcsts_df3)[,3]), end = end(fcsts_mean3), freq = 12), start = c(2016,1), freq = 12)
+# prev_6frente3 <- window(ts(na.omit(t(fcsts_df3)[,6]), end = end(fcsts_mean3), freq = 12), start = c(2016,1), freq = 12)
+# prev_12frente3 <- window(ts(na.omit(t(fcsts_df3)[,12]), end = end(fcsts_mean3), freq = 12), start = c(2016,1), freq = 12)
+# 
+# prev_1frente_low3 <- window(ts(t(fcsts_df_low3)[,1], end = end(fcsts_mean3), freq = 12), start = c(2016,1), freq = 12)
+# prev_3frente_low3 <- window(ts(na.omit(t(fcsts_df_low3)[,3]), end = end(fcsts_mean3), freq = 12), start = c(2016,1), freq = 12)
+# prev_6frente_low3 <- window(ts(na.omit(t(fcsts_df_low3)[,6]), end = end(fcsts_mean3), freq = 12), start = c(2016,1), freq = 12)
+# prev_12frente_low3 <- window(ts(na.omit(t(fcsts_df_low3)[,12]), end = end(fcsts_mean3), freq = 12), start = c(2016,1), freq = 12)
+# 
+# prev_1frente_up3 <- window(ts(t(fcsts_df_up3)[,1], end = end(fcsts_mean3), freq = 12), start = c(2016,1), freq = 12)
+# prev_3frente_up3 <- window(ts(na.omit(t(fcsts_df_up3)[,3]), end = end(fcsts_mean3), freq = 12), start = c(2016,1), freq = 12)
+# prev_6frente_up3 <- window(ts(na.omit(t(fcsts_df_up3)[,6]), end = end(fcsts_mean3), freq = 12), start = c(2016,1), freq = 12)
+# prev_12frente_up3 <- window(ts(na.omit(t(fcsts_df_up3)[,12]), end = end(fcsts_mean3), freq = 12), start = c(2016,1), freq = 12)
 
 
 sqrt(mean((ipc - prev_1frente1)^2))
@@ -190,18 +190,18 @@ k3 <- na.omit(cbind(ipc, mean = prev_3frente1, low = prev_3frente_low1, up = pre
 k6 <- na.omit(cbind(ipc, mean = prev_6frente1, low = prev_6frente_low1, up = prev_6frente_up1))
 k12 <- na.omit(cbind(ipc, mean = prev_12frente1, low = prev_12frente_low1, up = prev_12frente_up1))
 
-k1 <- na.omit(cbind(ipc, mean = prev_1frente2, low = prev_1frente_low2, up = prev_1frente_up2))
-k3 <- na.omit(cbind(ipc, mean = prev_3frente2, low = prev_3frente_low2, up = prev_3frente_up2))
-k6 <- na.omit(cbind(ipc, mean = prev_6frente2, low = prev_6frente_low2, up = prev_6frente_up2))
-k12 <- na.omit(cbind(ipc, mean = prev_12frente2, low = prev_12frente_low2, up = prev_12frente_up2))
+# k1 <- na.omit(cbind(ipc, mean = prev_1frente2, low = prev_1frente_low2, up = prev_1frente_up2))
+# k3 <- na.omit(cbind(ipc, mean = prev_3frente2, low = prev_3frente_low2, up = prev_3frente_up2))
+# k6 <- na.omit(cbind(ipc, mean = prev_6frente2, low = prev_6frente_low2, up = prev_6frente_up2))
+# k12 <- na.omit(cbind(ipc, mean = prev_12frente2, low = prev_12frente_low2, up = prev_12frente_up2))
+# 
+# k1 <- na.omit(cbind(ipc, mean = prev_1frente3, low = prev_1frente_low3, up = prev_1frente_up3))
+# k3 <- na.omit(cbind(ipc, mean = prev_3frente3, low = prev_3frente_low3, up = prev_3frente_up3))
+# k6 <- na.omit(cbind(ipc, mean = prev_6frente3, low = prev_6frente_low3, up = prev_6frente_up3))
+# k12 <- na.omit(cbind(ipc, mean = prev_12frente3, low = prev_12frente_low3, up = prev_12frente_up3))
 
-k1 <- na.omit(cbind(ipc, mean = prev_1frente3, low = prev_1frente_low3, up = prev_1frente_up3))
-k3 <- na.omit(cbind(ipc, mean = prev_3frente3, low = prev_3frente_low3, up = prev_3frente_up3))
-k6 <- na.omit(cbind(ipc, mean = prev_6frente3, low = prev_6frente_low3, up = prev_6frente_up3))
-k12 <- na.omit(cbind(ipc, mean = prev_12frente3, low = prev_12frente_low3, up = prev_12frente_up3))
 
-
-plot(1:nrow(k1), k1[,2], type = "l", ylim = c(-0.5,2), xaxt = "n", main = "1", ylab = "")
+plot(1:nrow(k1), k1[,2], type = "l", ylim = c(-0.5,2), xaxt = "n", main = "1 mês à frente", ylab = "")
 axis(1, at = 1:nrow(k1) , labels = substr(as.Date(k1),1,7))
 polygon(c(1:nrow(k1), rev(1:nrow(k1))),c(k1[,3],rev(k1[,4])),col = "#C6E2FF", border = FALSE)
 abline(v = 1:24, lty = 3, col = "#C9C9C9")
@@ -212,7 +212,7 @@ lines(c(k1[,4]), col = "#75A1D0", lwd = 1, ylab = "")
 legend(17,2,legend = c("IPC-Br","Previsão"), col = c(1,2), lwd = c(1,2), lty = c(4,1), 
        cex = 1.2, bg = "white", box.col = "white", box.lwd = 0)
 
-plot(1:nrow(k3), k3[,2], type = "l", ylim = c(-0.5,2), xaxt = "n", main = "3", ylab = "")
+plot(1:nrow(k3), k3[,2], type = "l", ylim = c(-0.5,2), xaxt = "n", main = "3 meses à frente", ylab = "")
 axis(1, at = 1:nrow(k3) , labels = substr(as.Date(k3),1,7))
 polygon(c(1:nrow(k3), rev(1:nrow(k3))),c(k3[,3],rev(k3[,4])),col = "#C6E2FF", border = FALSE)
 abline(v = 1:24, lty = 3, col = "#C9C9C9")
@@ -223,7 +223,7 @@ lines(c(k3[,4]), col = "#75A1D0", lwd = 1, ylab = "")
 legend(17,2,legend = c("IPC-Br","Previsão"), col = c(1,2), lwd = c(1,2), lty = c(4,1), 
        cex = 1.2, bg = "white", box.col = "white", box.lwd = 0)
 
-plot(1:nrow(k6), k6[,2], type = "l", ylim = c(-0.5,2), xaxt = "n", main = "6", ylab = "")
+plot(1:nrow(k6), k6[,2], type = "l", ylim = c(-0.5,2), xaxt = "n", main = "6 meses à frente", ylab = "")
 axis(1, at = 1:nrow(k6) , labels = substr(as.Date(k6),1,7))
 polygon(c(1:nrow(k6), rev(1:nrow(k6))),c(k6[,3],rev(k6[,4])),col = "#C6E2FF", border = FALSE)
 abline(v = 1:24, lty = 3, col = "#C9C9C9")
@@ -234,7 +234,7 @@ lines(c(k6[,4]), col = "#75A1D0", lwd = 1, ylab = "")
 legend(17,2,legend = c("IPC-Br","Previsão"), col = c(1,2), lwd = c(1,2), lty = c(4,1), 
        cex = 1.2, bg = "white", box.col = "white", box.lwd = 0)
 
-plot(1:nrow(k12), k12[,2], type = "l", ylim = c(-0.5,2), xaxt = "n", main = "12", ylab = "")
+plot(1:nrow(k12), k12[,2], type = "l", ylim = c(-0.5,2), xaxt = "n", main = "12 meses à frente", ylab = "")
 axis(1, at = 1:nrow(k12) , labels = substr(as.Date(k12),1,7))
 polygon(c(1:nrow(k12), rev(1:nrow(k12))),c(k12[,3],rev(k12[,4])),col = "#C6E2FF", border = FALSE)
 abline(v = 1:24, lty = 3, col = "#C9C9C9")

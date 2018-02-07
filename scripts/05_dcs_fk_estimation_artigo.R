@@ -17,6 +17,7 @@ plot(turistas)
 
 # replicar artigo ------------------------------------------------- 
 bsm0 <- dcs_fk_estimation(turistas, type = "BSM_artigo")
+sqrt(diag(solve(bsm0$hessian)))
 
 pseudo.y <- (1 - bsm0$out[,"b"])*turistas + bsm0$out[,"b"]*bsm0$out[,"mu"]
 ts.plot(turistas, pseudo.y, col = 1:2)

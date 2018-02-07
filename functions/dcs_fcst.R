@@ -1,4 +1,13 @@
-dcs_fcst <- function(y, start = c(2018,1), h = 12, initial = NULL, type = "BSM3_normal", outlier = F, m = 1000, out = F){
+dcs_fcst <- function(y, out = F, start = c(2018,1), h = 12, initial = NULL, type = "BSM3", outlier = F, m = 2000, dist = "t"){
+  
+  # out: previsão dentro ou fora da amostra
+  # start: inicio da previsao dentro da amostra (out = F)
+  # h: número de passos para prever fora da amostra (out = T)
+  # initial: parametros usados na função de otimização
+  # type: tipo do modelo DCS (ver dcs_fk_estimation)
+  # outler: se tem outlier no modelo
+  # m: número de replicações para a previsão, default = 2000
+  # dist: distribuição do erro
   
   if(!out){
     
@@ -16,6 +25,7 @@ dcs_fcst <- function(y, start = c(2018,1), h = 12, initial = NULL, type = "BSM3_
     if(outlier){
       initial0$Dummy <- window(initial$Dummy, end = c(datas$ano[1],datas$mes[1]), freq = 12)
     }
+    
     # primeira e única otimização
     out <- dcs_fk_estimation(y0, initial = initial0, type = type, outlier = outlier, otimo = T)
     
@@ -31,7 +41,8 @@ dcs_fcst <- function(y, start = c(2018,1), h = 12, initial = NULL, type = "BSM3_
       for(i in 1:m){
         out0 <- out
         for(j in 1:k){
-          yt[j,i] <- rnorm(1, mean = sum(tail(out0$out[,c("psi","mu","gamma")],1)), sd = tail(out0$out[,"sigma"],1))
+          yt[j,i] <- ifelse(dist == "norm", rnorm(1, mean = sum(tail(out0$out[,c("psi","mu","gamma")],1)), sd = tail(out0$out[,"sigma"],1)),
+                            sum(tail(out0$out[,c("psi","mu","gamma")],1)) +  tail(out0$out[,"sigma"],1)*rt(1, df = out0$otimizados$par[5]))
           mut[j,i] <- tail(out0$out[,"mu"],1)
           novoy <- ts(c(y0,as.vector(yt[1:j,i])), start = start(y0), freq = 12)
           initial0$Dummy <- window(initial$Dummy, end = c(datas$ano[j+1],datas$mes[j+1]), freq = 12)
@@ -43,7 +54,8 @@ dcs_fcst <- function(y, start = c(2018,1), h = 12, initial = NULL, type = "BSM3_
       for(i in 1:m){
         out0 <- out
         for(j in 1:k){
-          yt[j,i] <-  rnorm(1, mean = sum(tail(out0$out[,c("psi","mu","gamma")],1)), sd = tail(out0$out[,"sigma"],1))
+          yt[j,i] <-  ifelse(dist == "norm", rnorm(1, mean = sum(tail(out0$out[,c("psi","mu","gamma")],1)), sd = tail(out0$out[,"sigma"],1)),
+                             sum(tail(out0$out[,c("psi","mu","gamma")],1)) +  tail(out0$out[,"sigma"],1)*rt(1, df = out0$otimizados$par[5]))
           mut[j,i] <- tail(out0$out[,"mu"],1)
           novoy <- ts(c(y0,as.vector(yt[1:j,i])), start = start(y0), freq = 12)
           out0 <- dcs_fk_estimation(novoy, initial = initial0, type = type, outlier = outlier, otimo = F)
@@ -73,26 +85,28 @@ dcs_fcst <- function(y, start = c(2018,1), h = 12, initial = NULL, type = "BSM3_
     
   }else{
     
+    # parametros iniciais
+    initial0 <- initial
+    
     # primeira e única otimização
-    out <- dcs_fk_estimation(y, initial = initial, type = type, outlier = outlier, otimo = T)
+    out <- dcs_fk_estimation(y, initial = initial0, type = type, outlier = outlier, otimo = T)
     
     # guardar parâmetros otimizados
-    initial0 <- initial
     initial0$par$value <- out$otimizados$par
     
     # definir o número de passos a frente e criar matriz de armazenamento
-    k <- length(datas$ano) - 1
-    yt <- matrix(NA, nrow = k, ncol = m)
-    mut <- matrix(NA, nrow = k, ncol = m)
+    yt <- matrix(NA, nrow = h, ncol = m)
+    mut <- matrix(NA, nrow = h, ncol = m)
     
     if(outlier){
       for(i in 1:m){
         out0 <- out
-        for(j in 1:k){
-          yt[j,i] <- rnorm(1, mean = sum(tail(out0$out[,c("psi","mu","gamma")],1)), sd = tail(out0$out[,"sigma"],1))
+        for(j in 1:h){
+          yt[j,i] <- ifelse(dist == "norm", rnorm(1, mean = sum(tail(out0$out[,c("psi","mu","gamma")],1)), sd = tail(out0$out[,"sigma"],1)),
+                            sum(tail(out0$out[,c("psi","mu","gamma")],1)) +  tail(out0$out[,"sigma"],1)*rt(1, df = out0$otimizados$par[5]))
           mut[j,i] <- tail(out0$out[,"mu"],1)
-          novoy <- ts(c(y0,as.vector(yt[1:j,i])), start = start(y0), freq = 12)
-          initial0$Dummy <- window(initial$Dummy, end = c(datas$ano[j+1],datas$mes[j+1]), freq = 12)
+          novoy <- ts(c(y,as.vector(yt[1:j,i])), start = start(y), freq = 12)
+          initial0$Dummy <- ts(c(initial$Dummy,rep(0,j)), start = start(initial0$Dummy), freq = 12)
           out0 <- dcs_fk_estimation(novoy, initial = initial0, type = type, outlier = outlier, otimo = F)
         }
         message("replication ",i)
@@ -101,9 +115,10 @@ dcs_fcst <- function(y, start = c(2018,1), h = 12, initial = NULL, type = "BSM3_
       for(i in 1:m){
         out0 <- out
         for(j in 1:k){
-          yt[j,i] <-  rnorm(1, mean = sum(tail(out0$out[,c("psi","mu","gamma")],1)), sd = tail(out0$out[,"sigma"],1))
+          yt[j,i] <-  ifelse(dist == "norm", rnorm(1, mean = sum(tail(out0$out[,c("psi","mu","gamma")],1)), sd = tail(out0$out[,"sigma"],1)),
+                             sum(tail(out0$out[,c("psi","mu","gamma")],1)) +  tail(out0$out[,"sigma"],1)*rt(1, df = out0$otimizados$par[5]))
           mut[j,i] <- tail(out0$out[,"mu"],1)
-          novoy <- ts(c(y0,as.vector(yt[1:j,i])), start = start(y0), freq = 12)
+          novoy <- ts(c(y,as.vector(yt[1:j,i])), start = start(y), freq = 12)
           out0 <- dcs_fk_estimation(novoy, initial = initial0, type = type, outlier = outlier, otimo = F)
         }
         message("replication ",i)
