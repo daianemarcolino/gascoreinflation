@@ -298,7 +298,7 @@ diag_dcs1.2$stats
 parametros1_d <- list(
   par = data.frame(
     name =  c("k1","k2","ks","f2","df","beta[1|0]","mu[1|0]",paste0("gamma",1:11)          ,"d1"),
-    value = c(dcs1$otimizados$par,0), #c(0.3 ,0.5 ,0.5 ,5   ,6   ,0          ,0        ,as.vector(initial_gamma)[1:11],0   ),
+    value = c(0.3 ,0.5 ,0.5 ,5   ,6   ,0          ,0        ,as.vector(initial_gamma)[1:11],0   ),
     lower = c(0.0 ,0.0 ,0.05,-Inf,4   ,-Inf       ,-Inf     ,rep(-Inf,11)                  ,-Inf),
     upper = c(Inf ,Inf ,Inf ,Inf ,Inf ,Inf        ,Inf      ,rep(Inf,11)                   , Inf)
   ),
@@ -675,7 +675,7 @@ round(dcs3_d$out[,"epsilon"],2)
 diag_dcs3_d <- diag.dcs(out = dcs3_d, type = "t")
 diag_dcs3_d$stats
 
-saveRDS(dcs3_d$out[,"mu"], "data/nucleo_dcs.rds")
+#saveRDS(dcs3_d$out[,"mu"], "data/nucleo_dcs.rds")
 
 
 parametros_otimos <- c(0.1195, 0.0000, 0.0500,-1.3745,23.0410, 0.0000, 0.6920, 0.5998,-0.0366, 0.1132, 0.1348,-0.0234,-0.2988,-0.1661,-0.2255,-0.2229,-0.1013, 0.0470,-0.6622, 0.5447, 0.5387, 1.7590)
@@ -773,8 +773,8 @@ par(mar = c(2,4,1,2), mfrow = c(1,1))
 plot(ipc, main = "", lwd = 1, lty = 4, ylim = c(-0.5,3.5),
      col = 1, ylab = "variação mensal percentual (%)", xlab = "")
 lines(window(dcs3_normald$out[,"mu"], end = end(ipc), freq = 12), lwd = 2, lty = 1, col = "#1874CD")
-abline(h = seq(0,3,1), col = "#C9C9C9", lty = 3)
-abline(v = 1999:2018, col = "#C9C9C9", lty = 3)
+abline(h = seq(0,3,1), col = "#B0B0B0", lty = 3)
+abline(v = 1999:2018, col = "#B0B0B0", lty = 3)
 #abline(h = 0, col = "#CC3232", lty = 2)
 legend(2005,3, legend = c("IPC-Br","Núcleo-DCS"), lwd = c(1,2,2), lty = c(4,1), y.intersp = 1.5,
        col = c(1,"#1874CD","#CD0000"), cex = 1.3,bg = "white", box.col = "white",box.lwd = 0)
@@ -785,8 +785,8 @@ plot(window(dcs1_normald$out[,"mu"], end = end(ipc), freq = 12), main = "", lwd 
      col = 1, ylab = "variação mensal percentual (%)", xlab = "")
 lines(window(dcs2_normald$out[,"mu"], end = end(ipc), freq = 12), lwd = 2, lty = 5, col = "orangered")
 lines(window(dcs3_normald$out[,"mu"], end = end(ipc), freq = 12), lwd = 2, lty = 1, col = "#1874CD")
-abline(h = seq(-0.5,3.5,0.5), col = "#C9C9C9", lty = 3)
-abline(v = 1999:2018, col = "#C9C9C9", lty = 3)
+abline(h = seq(-0.5,3.5,0.5), col = "#B0B0B0", lty = 3)
+abline(v = 1999:2018, col = "#B0B0B0", lty = 3)
 legend(2005,1.8, legend = c("DCS-N 1","DCS-N 2","DCS-N 3"), lwd = c(1,2,2), lty = c(4,5,1), y.intersp = 1.5,
        col = c(1,"orangered","#1874CD"), cex = 1.2,bg = "white", box.col = "white",box.lwd = 0)
 
@@ -795,9 +795,9 @@ plot(dcs1_d$out[,"mu"], main = "", lwd = 1, lty = 4, # ylim = c(-0.5,3.5),
      col = 1, ylab = "variação mensal percentual (%)", xlab = "")
 lines(dcs2_d$out[,"mu"], lwd = 2, lty = 5, col = "orangered")
 lines(dcs3_d$out[,"mu"], lwd = 2, lty = 1, col = "#1874CD")
-abline(h = seq(-0.5,3.5,0.5), col = "#C9C9C9", lty = 3)
-abline(v = 1999:2018, col = "#C9C9C9", lty = 3)
-legend(2005,1.8, legend = c("DCS-Normal 1","DCS-Normal 2","DCS-Normal 3"), lwd = c(1,2,2), lty = c(4,5,1), y.intersp = 1.5,
+abline(h = seq(-0.5,3.5,0.5), col = "#B0B0B0", lty = 3)
+abline(v = 1999:2018, col = "#B0B0B0", lty = 3)
+legend(2005,1.8, legend = c("DCS-t 1","DCS-t 2","DCS-t 3"), lwd = c(1,2,2), lty = c(4,5,1), y.intersp = 1.5,
        col = c(1,"orangered","#1874CD"), cex = 1.2,bg = "white", box.col = "white",box.lwd = 0)
 
 
@@ -806,24 +806,24 @@ layout(mat = matrix(c(1,2,3,3), byrow = T, ncol = 2))
 plot(dcs1_d$out[,"mu"], main = "", lwd = 2, lty = 1, ylim = c(-0.2,1.8),
      col = 1, ylab = "variação mensal percentual (%)", xlab = "")
 lines(dcs1_normald$out[,"mu"], lwd = 2, lty = 5, col = "orangered")
-abline(h = seq(-0.5,3.5,0.5), col = "#C9C9C9", lty = 3)
-abline(v = 1999:2018, col = "#C9C9C9", lty = 3)
+abline(h = seq(-0.5,3.5,0.5), col = "#B0B0B0", lty = 3)
+abline(v = 1999:2018, col = "#B0B0B0", lty = 3)
 legend(2005,1.7, legend = c("DCS-Normal 1","DCS-t 1"), lwd = c(2,2), lty = c(5,1), y.intersp = 1.5,
        col = c("orangered",1), cex = 1,bg = "white", box.col = "white",box.lwd = 0)
 
 plot(dcs2_d$out[,"mu"], main = "", lwd = 2, lty = 1, ylim = c(-0.2,1.8),
      col = 1, ylab = "variação mensal percentual (%)", xlab = "")
 lines(dcs2_normald$out[,"mu"], lwd = 2, lty = 5, col = "orangered")
-abline(h = seq(-0.5,3.5,0.5), col = "#C9C9C9", lty = 3)
-abline(v = 1999:2018, col = "#C9C9C9", lty = 3)
+abline(h = seq(-0.5,3.5,0.5), col = "#B0B0B0", lty = 3)
+abline(v = 1999:2018, col = "#B0B0B0", lty = 3)
 legend(2005,1.7, legend = c("DCS-Normal 2","DCS-t 2"), lwd = c(2,2), lty = c(5,1), y.intersp = 1.5,
        col = c("orangered",1), cex = 1,bg = "white", box.col = "white",box.lwd = 0)
 
 plot(dcs3_d$out[,"mu"], main = "", lwd = 2, lty = 1, ylim = c(-0.2,1.8),
      col = 1, ylab = "variação mensal percentual (%)", xlab = "")
 lines(dcs3_normald$out[,"mu"], lwd = 2, lty = 5, col = "orangered")
-abline(h = seq(-0.5,3.5,0.5), col = "#C9C9C9", lty = 3)
-abline(v = 1999:2018, col = "#C9C9C9", lty = 3)
+abline(h = seq(-0.5,3.5,0.5), col = "#B0B0B0", lty = 3)
+abline(v = 1999:2018, col = "#B0B0B0", lty = 3)
 legend(2005,1.7, legend = c("DCS-Normal 3","DCS-t 3"), lwd = c(2,2), lty = c(5,1), y.intersp = 1.5,
        col = c("orangered",1), cex = 1,bg = "white", box.col = "white",box.lwd = 0)
 

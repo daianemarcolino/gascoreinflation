@@ -66,8 +66,8 @@ par(mar = c(2,4,1,2), mfrow = c(1,1))
 plot(window(ipc, start = c(2001,1), freq = 12), main = "", lwd = 1, lty = 4, ylim = c(-0.5,3.5),
      col = 1, ylab = "variação mensal percentual (%)", xlab = "")
 lines(ifa[,"filtro3"], lwd = 2, lty = 1, col = "#1874CD")
-abline(h = 0:3, col = "#C9C9C9", lty = 3)
-abline(v = 1999:2018, col = "#C9C9C9", lty = 3)
+abline(h = 0:3, col = "#B0B0B0", lty = 3)
+abline(v = 1999:2018, col = "#B0B0B0", lty = 3)
 #abline(h = 0, col = "#CC3232", lty = 2)
 legend(2005,3, legend = c("IPC-Br","Núcleo-S"), lwd = c(1,2), lty = c(4,1), y.intersp = 1.5,
        col = c(1,"#1874CD"), cex = 1.3,bg = "white", box.col = "white",box.lwd = 0)
@@ -78,8 +78,8 @@ plot(ifa[,1], main = "", lwd = 1, lty = 4, # ylim = c(-0.5,3.5),
      col = 1, ylab = "variação mensal percentual (%)", xlab = "")
 lines(ifa[,2], lwd = 2, lty = 5, col = "orangered")
 lines(ifa[,3], lwd = 2, lty = 1, col = "#1874CD")
-abline(h = seq(-0.5,3.5,0.5), col = "#C9C9C9", lty = 3)
-abline(v = 1999:2018, col = "#C9C9C9", lty = 3)
+abline(h = seq(0.2,3.5,0.2), col = "#B0B0B0", lty = 3)
+abline(v = 1999:2018, col = "#B0B0B0", lty = 3)
 abline(h = 0, col = "#CC3232", lty = 2)
 legend(2005,1.5, legend = c("passo 1: médias ap.","passo 2: aj. sazonal","passo 3: núcleo final"), lwd = c(1,2,2), lty = c(4,5,1), y.intersp = 1.5,
        col = c(1,"orangered","#1874CD"), cex = 1.3,bg = "white", box.col = "white",box.lwd = 0)

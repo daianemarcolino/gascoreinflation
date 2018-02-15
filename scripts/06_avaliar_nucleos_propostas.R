@@ -21,8 +21,8 @@ plot(ipc, main = "", lwd = 1, lty = 4, ylim = c(-0.5,3.5),
         col = 1, ylab = "variação mensal percentual (%)", xlab = "")
 lines(nucleos[,"DCS"], lwd = 2, lty = 1, col = "#CD0000")
 lines(nucleos[,"S"], lwd = 2, lty = 5, col = "#1874CD")
-abline(h = seq(-0.5,3.5,0.5), col = "#C9C9C9", lty = 3)
-abline(v = 1999:2018, col = "#C9C9C9", lty = 3)
+abline(h = seq(-0.5,3.5,0.5), col = "#B0B0B0", lty = 3)
+abline(v = 1999:2018, col = "#B0B0B0", lty = 3)
 #abline(h = 0, col = "#CC3232", lty = 2)
 legend(2005,3.5, legend = c("IPC-Br","Núcleo-S","Núcleo-DCS"), lwd = c(1,2,2), lty = c(4,5,1), y.intersp = 1.5,
        col = c(1,"#1874CD","#CD0000"), cex = 1.3,bg = "white", box.col = "white",box.lwd = 0)
@@ -32,8 +32,8 @@ legend(2005,3.5, legend = c("IPC-Br","Núcleo-S","Núcleo-DCS"), lwd = c(1,2,2),
 plot(nucleos[,"DCS"], lwd = 2, lty = 1, col = "#CD0000", ylim = c(0.1,1.2),
      ylab = "variação mensal percentual (%)", xlab = "")
 lines(nucleos[,"S"], lwd = 2, lty = 5, col = "#1874CD")
-abline(h = seq(0.2,1.2,0.2), col = "#C9C9C9", lty = 3)
-abline(v = 1999:2018, col = "#C9C9C9", lty = 3)
+abline(h = seq(0.2,1.2,0.2), col = "#B0B0B0", lty = 3)
+abline(v = 1999:2018, col = "#B0B0B0", lty = 3)
 #abline(h = 0, col = "#CC3232", lty = 2)
 legend(2005,1.2, legend = c("Núcleo-S","Núcleo-DCS"), lwd = c(2,2), lty = c(5,1), y.intersp = 1.5,
        col = c("#1874CD","#CD0000"), cex = 1.3,bg = "white", box.col = "white",box.lwd = 0)
@@ -43,8 +43,8 @@ legend(2005,1.2, legend = c("Núcleo-S","Núcleo-DCS"), lwd = c(2,2), lty = c(5,
 plot(ipc, main = "", lwd = 1, lty = 4, ylim = c(-0.5,3.5),
      col = 1, ylab = "variação mensal percentual (%)", xlab = "")
 lines(nucleos[,"DCS"], lwd = 2, lty = 1, col = "#CD0000")
-abline(h = seq(-0.5,3.5,0.5), col = "#C9C9C9", lty = 3)
-abline(v = 1999:2018, col = "#C9C9C9", lty = 3)
+abline(h = seq(-0.5,3.5,0.5), col = "#B0B0B0", lty = 3)
+abline(v = 1999:2018, col = "#B0B0B0", lty = 3)
 #abline(h = 0, col = "#CC3232", lty = 2)
 legend(2005,3.5, legend = c("IPC-Br","Núcleo-DCS"), lwd = c(1,2), lty = c(4,1), y.intersp = 1.5,
        col = c(1,"#CD0000"), cex = 1.3,bg = "white", box.col = "white",box.lwd = 0)
@@ -53,8 +53,8 @@ legend(2005,3.5, legend = c("IPC-Br","Núcleo-DCS"), lwd = c(1,2), lty = c(4,1),
 plot(ipc, main = "", lwd = 1, lty = 4, ylim = c(-0.5,3.5),
      col = 1, ylab = "variação mensal percentual (%)", xlab = "")
 lines(nucleos[,"S"], lwd = 2, lty = 5, col = "#1874CD")
-abline(h = seq(-0.5,3.5,0.5), col = "#C9C9C9", lty = 3)
-abline(v = 1999:2018, col = "#C9C9C9", lty = 3)
+abline(h = seq(-0.5,3.5,0.5), col = "#B0B0B0", lty = 3)
+abline(v = 1999:2018, col = "#B0B0B0", lty = 3)
 #abline(h = 0, col = "#CC3232", lty = 2)
 legend(2005,3.5, legend = c("IPC-Br","Núcleo-S"), lwd = c(1,2), lty = c(4,1), y.intersp = 1.5,
        col = c(1,"#1874CD"), cex = 1.3,bg = "white", box.col = "white",box.lwd = 0)

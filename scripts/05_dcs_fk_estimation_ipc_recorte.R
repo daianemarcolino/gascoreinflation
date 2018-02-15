@@ -201,24 +201,28 @@ diag_dcs2$stats
 
 parametros3_normal <- list(
   par = data.frame(
-    name =  c("k1","k2","ks","f2","df","beta","mu[1|0]",paste0("gamma",1:11)          ,"psi","phi","k3"),
-    value = c(0.5 ,0   ,0.5 ,1   ,0   ,0     ,0.5        ,as.vector(initial_gamma)[1:11],0.2    ,0.5  ,0.2),
-    lower = c(0.0 ,0   ,0.05,-Inf,0   ,0     ,-Inf     ,rep(-Inf,11)                  ,-Inf ,-1   ,0),
-    upper = c(Inf ,0   ,Inf ,Inf ,0   ,0     ,Inf      ,rep(Inf,11)                   ,Inf  ,1    ,Inf)
+    name =  c("k1","ks","f2","phi","k3","psi[1|0]", "mu[1|0]",paste0("gamma",1:11)          ),
+    value = c(0.1 ,0.5 ,5   ,0.1  ,0.5 ,1         , 0        ,as.vector(initial_gamma)[1:11]),
+    lower = c(0.0 ,0.05,-Inf,-1   ,0   ,-Inf      , -Inf     ,rep(-Inf,11)                  ),
+    upper = c(Inf ,Inf ,Inf ,1    ,Inf ,Inf       , Inf      ,rep(Inf,11)                   )
   ),
   Dummy = NA
 )
 parametros3_normal
 
+
 dcs3_normal <- dcs_fk_estimation(ipc, initial = parametros3_normal, type = "BSM3_normal", outlier = F, otimo = T)
 dcs3_normal$otimizados$par/sqrt(diag(MASS::ginv(dcs3_normal$hessian)))
 
 
-data.frame(name = parametros3_normal$par$name, 
-           lower = parametros3_normal$par$lower,
-           upper = parametros3_normal$par$upper,
-           initial = round(parametros3_normal$par$value,4), 
-           otimo = round(dcs3_normal$otimizados$par,4))
+k <- data.frame(name = parametros3_normal$par$name, 
+                #lower = parametros3_normal$par$lower,
+                #upper = parametros3_normal$par$upper,
+                #initial = round(parametros3_normal$par$value,4), 
+                otimo = round(dcs3_normal$otimizados$par,4),
+                desvio = round(sqrt(diag(MASS::ginv(dcs3_normal$hessian))),4))
+k$stat <- round(k$otimo/k$desvio,4)
+k
 ts.plot(ipc,dcs3_normal$out[,"mu"], col = 1:2)
 
 ts.plot(dcs3_normal$out[,"epsilon"], col = 1)
@@ -232,21 +236,25 @@ diag_dcs3_normal$stats
 parametros3_normald <- list(
   par = data.frame(
     name =  c("k1","ks","f2","phi","k3","psi[1|0]","mu[1|0]",paste0("gamma",1:11)          ,"d1"),
-    value = c(0.5 ,0.5 ,5   ,0.1  ,0.5 ,1         ,0        ,as.vector(initial_gamma)[1:11],0   ),
+    value = c(0.1 ,0.5 ,5   ,0.1  ,0.5 ,1         ,0        ,as.vector(initial_gamma)[1:11],0   ),
     lower = c(0.0 ,0.05,-Inf,-1   ,0   ,-Inf      ,-Inf     ,rep(-Inf,11)                  ,-Inf),
     upper = c(Inf ,Inf ,Inf ,1    ,Inf ,Inf       ,Inf      ,rep(Inf,11)                   ,Inf )
   ),
-  Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2016,1)))
+  Dummy = cbind(d1 = BETS.dummy(start = start(ipc), end = end(ipc), freq = 12, date = c(2016,1))
+  )
 )
 parametros3_normald
 
 dcs3_normald <- dcs_fk_estimation(ipc, initial = parametros3_normald, type = "BSM3_normal", outlier = T, otimo = T)
 
-data.frame(name = parametros3_normald$par$name, 
-           lower = parametros3_normald$par$lower,
-           upper = parametros3_normald$par$upper,
-           initial = round(parametros3_normald$par$value,4), 
-           otimo = round(dcs3_normald$otimizados$par,4))
+k <- data.frame(name = parametros3_normald$par$name, 
+                #lower = parametros3_normald$par$lower,
+                #upper = parametros3_normald$par$upper,
+                #initial = round(parametros3_normald$par$value,4), 
+                otimo = round(dcs3_normald$otimizados$par,4),
+                desvio = round(sqrt(diag(MASS::ginv(dcs3_normald$hessian))),4))
+k$stat <- round(k$otimo/k$desvio,4)
+k
 ts.plot(ipc,dcs3_normald$out[,"mu"], col = 1:2)
 ts.plot(ipc,dcs3_normald$out[,"psi"], col = 1:2)
 
@@ -271,43 +279,26 @@ diag_dcs3_normald$stats
 parametros3 <- list(
   par = data.frame(
     name =  c("k1","ks","f2","df","phi","k3","psi[1|0]","mu[1|0]",paste0("gamma",1:11)          ),
-    value = c(0.1 ,0.3 ,5   ,6   ,0.1  ,0.5 ,1         ,0        ,as.vector(initial_gamma)[1:11]),
-    lower = c(0.0 ,0.05,-Inf,4   ,-1   ,0   ,-Inf      ,-Inf     ,rep(-Inf,11)                  ),
+    value = c(0.1 ,0.5 ,5   ,6   ,0.1  ,0.5 ,1         ,0        ,as.vector(initial_gamma)[1:11]),
+    lower = c(0.0 ,0.05,-Inf,4   ,-1   ,-Inf,-Inf      ,0        ,rep(-Inf,11)                  ),
     upper = c(Inf ,Inf ,Inf ,Inf ,1    ,Inf ,Inf       ,Inf      ,rep(Inf,11)                   )
   ),
   Dummy = NA
 )
 parametros3
 
-dcs3 <- dcs_fk_estimation(ipc, initial = parametros3, type = "BSM3", outlier = F, otimo = T)
+dcs3 <- dcs_fk_estimation(ipc, initial = parametros3, type = "BSM3", outlier = F, otimo = T, parinitial = F)
 dcs3$otimizados$par/sqrt(diag(MASS::ginv(dcs3$hessian)))
 
 
-parametros3.2 <- list(
-  par = data.frame(
-    name =  c("k1","ks","f2","df","phi","k3"),
-    value = c(0.1 ,0.3 ,5   ,6   ,0.1  ,0.5 ),
-    lower = c(0.0 ,0.05,-Inf,4   ,-1   ,0   ),
-    upper = c(Inf ,Inf ,Inf ,Inf ,1    ,Inf )
-  ),
-  par2 = data.frame(
-    name =  c("psi[1|0]","mu[1|0]",paste0("gamma",1:11)          ),
-    value = dcs3$otimizados$par[-c(1:6)],
-    lower = c(-Inf      ,-Inf     ,rep(-Inf,11)                  ),
-    upper = c(Inf       ,Inf      ,rep(Inf,11)                   )
-  ),
-  Dummy = NA
-)
-parametros3.2
-
-dcs3.2 <- dcs_fk_estimation(ipc, initial = parametros3.2, type = "BSM3", outlier = F, otimo = T, parinitial = T)
-dcs3.2$otimizados$par/sqrt(diag(MASS::ginv(dcs3.2$hessian)))
-cbind(dcs3$otimizados$par[1:6],dcs3.2$otimizados$par)
-data.frame(name = parametros3$par$name, 
-           lower = parametros3$par$lower,
-           upper = parametros3$par$upper,
-           initial = round(parametros3$par$value,4), 
-           otimo = round(dcs3$otimizados$par,4))
+k <- data.frame(name = parametros3$par$name, 
+                #lower = parametros3$par$lower,
+                #upper = parametros3$par$upper,
+                #initial = round(parametros3$par$value,4), 
+                otimo = round(dcs3$otimizados$par,4),
+                desvio = round(sqrt(diag(MASS::ginv(dcs3$hessian))),4))
+k$stat <- round(k$otimo/k$desvio,4)
+k
 ts.plot(dcs3$out[,"gamma"], col = 1:2)
 ts.plot(dcs3$out[,"psi"], col = 1:2)
 ts.plot(dcs3$out[,"mu"], col = 1:2)
